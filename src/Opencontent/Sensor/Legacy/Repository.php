@@ -9,7 +9,7 @@ use OpenContent\Sensor\Legacy\PostService;
 use OpenContent\Sensor\Legacy\MessageService;
 use OpenContent\Sensor\Legacy\ParticipantService;
 use OpenContent\Sensor\Legacy\EventService;
-use OpenContent\Sensor\Api\SearchService;
+use OpenContent\Sensor\Legacy\SearchService;
 use OpenContent\Sensor\Utils\TreeNode;
 use OpenContent\Sensor\Utils\TreeNodeItem;
 use eZContentObjectTreeNode;
@@ -113,7 +113,11 @@ abstract class Repository extends CoreRepository
 
     public function getSearchService()
     {
-        // TODO: Implement getSearchService() method.
+        if ( $this->searchService === null )
+        {
+            $this->searchService = new SearchService( $this );
+        }
+        return $this->searchService;
     }
 
     /**

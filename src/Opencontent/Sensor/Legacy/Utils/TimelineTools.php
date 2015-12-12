@@ -54,6 +54,32 @@ class TimelineTools
         return $result;
     }
 
+    public static function getType( $text )
+    {
+        $parts = explode( ' by ', $text );
+        if ( !isset( $parts[1] ) )
+        {
+            $parts = explode( ' to ', $text );
+        }
+        $type = ltrim( $parts[0], '_' );
+        return $type;
+    }
+
+    public static function getExtra( $text )
+    {
+        $extras = array();
+        $parts = explode( ' by ', $text );
+        if ( !isset( $parts[1] ) )
+        {
+            $parts = explode( ' to ', $text );
+        }
+        if ( isset( $parts[1] ) )
+        {
+            $extras = explode( '::', $parts[1] );
+        }
+        return $extras;
+    }
+
     public static function getText( $text, ParticipantCollection $participants )
     {
         $result = '';

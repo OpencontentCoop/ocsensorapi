@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: luca
- * Date: 23/11/15
- * Time: 18:58
- */
 
 namespace OpenContent\Sensor\Legacy;
 
@@ -168,6 +162,8 @@ class MessageService extends MessageServiceBase
                     {
                         $message = new Message\TimelineItem();
                         $type = 'timeline';
+                        $message->type = TimelineTools::getType( $simpleMessage->attribute( 'data_text1' ));
+                        $message->extra = TimelineTools::getExtra( $simpleMessage->attribute( 'data_text1' ));
                         $message->text = TimelineTools::getText(
                             $simpleMessage->attribute( 'data_text1' ),
                             $this->repository->getParticipantService()->loadPostParticipants( $post )
@@ -178,13 +174,12 @@ class MessageService extends MessageServiceBase
                         $message = new Message\PrivateMessage();
                         $type = 'private';
                         $message->text = $simpleMessage->attribute( 'data_text1' );
-
                         /** @var eZCollaborationItemMessageLink $link */
                         foreach( $messageItem['links'] as $link )
                         {
-                            $message->receivers[$link->attribute( 'participant_id' )] = $this->repository->getParticipantService()
+                            $message->receivers[$link->attribute( 'message_type' )] = $this->repository->getParticipantService()
                                                                      ->loadPostParticipants( $post )
-                                                                     ->getUserById( $link->attribute( 'participant_id' ) );
+                                                                     ->getUserById( $link->attribute( 'message_type' ) );
                         }
                     }
                     $message->id = $simpleMessage->attribute( 'id' );

@@ -3,6 +3,7 @@
 namespace OpenContent\Sensor\Core;
 
 use OpenContent\Sensor\Api\SearchService as SearchServiceInterface;
+use OpenContent\Sensor\Api\Values\Post;
 
 abstract class SearchService implements SearchServiceInterface
 {

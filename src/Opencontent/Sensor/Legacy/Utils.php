@@ -5,6 +5,7 @@ namespace OpenContent\Sensor\Legacy;
 use OpenContent\Sensor\Api\Exception\BaseException;
 use DateTime;
 use DateInterval;
+use DateTimeImmutable;
 use ezpI18n;
 use OpenContent\Sensor\Api\Values\User;
 use OpenContent\Sensor\Utils\DateDiffResult;
@@ -151,5 +152,12 @@ class Utils
         $result->interval = $interval;
         $result->format = $format;
         return $result;
+    }
+
+    public static function getDateIntervalSeconds( DateInterval $dateInterval )
+    {
+        $reference = new DateTimeImmutable;
+        $endTime = $reference->add( $dateInterval );
+        return $endTime->getTimestamp() - $reference->getTimestamp();
     }
 }

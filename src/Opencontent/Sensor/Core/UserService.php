@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: luca
- * Date: 24/11/15
- * Time: 12:51
- */
 
 namespace OpenContent\Sensor\Core;
 

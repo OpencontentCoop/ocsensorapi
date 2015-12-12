@@ -25,7 +25,7 @@ class WorkflowStatus extends Exportable
     public static function instanceByCode( $code )
     {
         $instance = new self();
-        $instance->code = $code;
+        $instance->code = intval( $code );
         $instance->identifier = $instance->getIdentifierByCode( $code );
         return $instance;
     }

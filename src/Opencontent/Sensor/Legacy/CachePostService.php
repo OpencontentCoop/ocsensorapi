@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: luca
- * Date: 23/11/15
- * Time: 22:44
- */
 
 namespace OpenContent\Sensor\Legacy;
 
@@ -76,7 +70,7 @@ class CachePostService extends PostService
 
     }
 
-    public function clearCache( $postId )
+    public static function clearCache( $postId )
     {
         $languages = eZContentLanguage::fetchLocaleList();
         if ( !empty( $languages ) )

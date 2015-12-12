@@ -1,6 +1,7 @@
 <?php
 
 namespace OpenContent\Sensor\Api\Values;
+
 use OpenContent\Sensor\Api\Values\PermissionCollection;
 use OpenContent\Sensor\Api\Exportable;
 use DateTime;
@@ -22,6 +23,8 @@ class User extends Exportable
      * @var DateTime
      */
     public $lastAccessDateTime;
+
+    public $hasRead = 0;
 
     public $moderationMode;
 

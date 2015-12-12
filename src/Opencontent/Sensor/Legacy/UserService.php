@@ -52,6 +52,7 @@ class UserService extends UserServiceBase
         if ( $itemStatus instanceof eZCollaborationItemStatus )
         {
             $user->lastAccessDateTime = Utils::getDateTimeFromTimestamp( $itemStatus->attribute( 'last_read' ) );
+            $user->hasRead = $itemStatus->attribute( 'is_read' );
         }
         $user->permissions = $this->repository->getPermissionService()->loadUserPostPermissionCollection( $user, $post );
         return $user;

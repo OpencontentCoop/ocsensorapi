@@ -233,16 +233,15 @@ class PostService extends PostServiceBase
             $post
         );
 
-        $messageUserPostAware = new PrivateMessageCollection();
-        foreach( $post->privateMessages->messages as $message )
+        $post->privateMessages = new PrivateMessageCollection();
+        foreach( $this->repository->getMessageService()->loadPrivateMessageCollectionByPost( $post )->messages as $message )
         {
             if ( $message->getReceiverById( $this->repository->getCurrentUser()->id )
                  || $message->creator->id == $this->repository->getCurrentUser()->id )
             {
-                $messageUserPostAware->addMessage( $message );
+                $post->privateMessages->addMessage( $message );
             }
         }
-        $post->privateMessages = $messageUserPostAware;
     }
 
     protected function getCommentsIsOpen( Post $post )
@@ -325,13 +324,12 @@ class PostService extends PostServiceBase
     protected function getPostResolutionInfo( Post $post )
     {
         $resolutionInfo = null;
-        if ( $this->getPostWorkflowStatus()->code == Post\WorkflowStatus::CLOSED )
+        if ( $this->getPostWorkflowStatus()->is( Post\WorkflowStatus::CLOSED ) )
         {
-            $lastTimelineItem = $this->repository->getMessageService(
-            )->loadTimelineItemCollectionByPost( $post )->lastMessage;
-            $diffResult = Utils::getDateDiff( $post->published, $lastTimelineItem->published );
+            $closedItem = $this->repository->getMessageService()->loadTimelineItemCollectionByPost( $post )->getByType( 'closed' )->last();
+            $diffResult = Utils::getDateDiff( $post->published, $closedItem->published );
             $resolutionInfo = new Post\ResolutionInfo();
-            $resolutionInfo->resolutionDateTime = $lastTimelineItem->published;
+            $resolutionInfo->resolutionDateTime = $closedItem->published;
             $resolutionInfo->creationDateTime = $post->published;
             $resolutionInfo->text = $diffResult->getText();
         }

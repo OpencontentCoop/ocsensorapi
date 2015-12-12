@@ -39,7 +39,7 @@ class Participant extends Exportable implements \IteratorAggregate
 
     public function getIterator()
     {
-        return new \ArrayIterator( $this->users );
+        return new \ArrayIterator( (array)$this->users );
     }
 
 }

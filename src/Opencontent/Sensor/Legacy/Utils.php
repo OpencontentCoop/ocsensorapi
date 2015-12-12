@@ -149,7 +149,7 @@ class Utils
 
     public static function getDateIntervalSeconds( DateInterval $dateInterval )
     {
-        $reference = new DateTimeImmutable;
+        $reference = new DateTime();
         $endTime = $reference->add( $dateInterval );
         return $endTime->getTimestamp() - $reference->getTimestamp();
     }

@@ -128,14 +128,7 @@ class Utils
         }
         if ( $interval->s !== 0 )
         {
-            if ( !count( $format ) )
-            {
-                return ezpI18n::tr( 'sensor/expiring', 'meno di un minuto' );
-            }
-            else
-            {
-                $format[] = "%s " . $translate( $interval->s, "second" );
-            }
+            $format[] = "%s " . $translate( $interval->s, "second" );
         }
 
         // We use the two biggest parts

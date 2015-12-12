@@ -109,15 +109,19 @@ class MessageService extends MessageServiceBase
                 $simpleMessageIdList[] = $messageLink->attribute( 'message_id' );
             }
 
-            /** @var eZCollaborationSimpleMessage[] $simpleMessages */
-            $simpleMessages = eZPersistentObject::fetchObjectList(
-                eZCollaborationSimpleMessage::definition(),
-                null,
-                array( 'id' => array( $simpleMessageIdList ) ),
-                array( 'created' => 'asc' ),
-                null,
-                true
-            );
+            $simpleMessages = array();
+            if ( !empty( $simpleMessageIdList ) )
+            {
+                /** @var eZCollaborationSimpleMessage[] $simpleMessages */
+                $simpleMessages = eZPersistentObject::fetchObjectList(
+                    eZCollaborationSimpleMessage::definition(),
+                    null,
+                    array( 'id' => array( $simpleMessageIdList ) ),
+                    array( 'created' => 'asc' ),
+                    null,
+                    true
+                );
+            }
 
             $messageData = array();
             foreach( $simpleMessages as $simpleMessage )

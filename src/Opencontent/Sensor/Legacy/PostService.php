@@ -198,11 +198,14 @@ class PostService extends PostServiceBase
             )
         );
 
-        $post->author = clone $post->reporter;
-        $authorName = $this->getPostAuthorName();
-        if ( $authorName )
+        if ( $post->reporter )
         {
-            $post->author->name = $authorName;
+            $post->author = clone $post->reporter;
+            $authorName = $this->getPostAuthorName();
+            if ( $authorName )
+            {
+                $post->author->name = $authorName;
+            }
         }
 
         $post->comments = $this->repository->getMessageService()->loadCommentCollectionByPost( $post );
@@ -327,11 +330,14 @@ class PostService extends PostServiceBase
         if ( $this->getPostWorkflowStatus()->is( Post\WorkflowStatus::CLOSED ) )
         {
             $closedItem = $this->repository->getMessageService()->loadTimelineItemCollectionByPost( $post )->getByType( 'closed' )->last();
-            $diffResult = Utils::getDateDiff( $post->published, $closedItem->published );
-            $resolutionInfo = new Post\ResolutionInfo();
-            $resolutionInfo->resolutionDateTime = $closedItem->published;
-            $resolutionInfo->creationDateTime = $post->published;
-            $resolutionInfo->text = $diffResult->getText();
+            if ( $closedItem )
+            {
+                $diffResult = Utils::getDateDiff( $post->published, $closedItem->published );
+                $resolutionInfo = new Post\ResolutionInfo();
+                $resolutionInfo->resolutionDateTime = $closedItem->published;
+                $resolutionInfo->creationDateTime = $post->published;
+                $resolutionInfo->text = $diffResult->getText();
+            }
         }
 
         return $resolutionInfo;

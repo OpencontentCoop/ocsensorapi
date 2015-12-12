@@ -150,7 +150,8 @@ class Utils
     public static function getDateIntervalSeconds( DateInterval $dateInterval )
     {
         $reference = new DateTime();
-        $endTime = $reference->add( $dateInterval );
+        $endTime = clone $reference;
+        $endTime = $endTime->add( $dateInterval );
         return $endTime->getTimestamp() - $reference->getTimestamp();
     }
 }

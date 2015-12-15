@@ -258,9 +258,9 @@ class SearchService extends BaseSearchService
         $solr = new \OCSolr();
 
         $facet = array();
-        foreach( $query->facets as $facet )
+        foreach( $query->facets as $facetString )
         {
-            $facet[] = array( 'field' => $this->fieldsMapper[$facet], 'limit' => $query->facetLimit );
+            $facet[] = array( 'field' => $this->fieldsMapper[$facetString], 'limit' => $query->facetLimit );
         }
 
         $sort = array();

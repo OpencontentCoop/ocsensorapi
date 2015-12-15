@@ -7,6 +7,7 @@ class SearchQuery
     protected $availableFields = array(
         'internalId',
         'subject',
+        'type',
         'status',
         'workflow_status',
         'privacy',

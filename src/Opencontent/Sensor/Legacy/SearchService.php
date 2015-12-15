@@ -16,6 +16,7 @@ class SearchService extends BaseSearchService
     protected $fieldsMapper = array (
         'internalId' => 'sensor_internalid_si',
         'subject' => 'sensor_subject_t',
+        'type' => 'sensor_type_s',
         'status' => 'sensor_status_lk',
         'workflow_status' => 'sensor_workflow_status_lk',
         'privacy' => 'sensor_privacy_lk',
@@ -72,6 +73,7 @@ class SearchService extends BaseSearchService
 
         $data['sensor_internalid_si'] = $post->internalId;
         $data['sensor_subject_t'] = $post->subject;
+        $data['sensor_type_s'] = $post->type->identifier;
         $data['sensor_status_lk'] = $post->status->identifier;
         $data['sensor_workflow_status_lk'] = $post->workflowStatus->identifier;
         $data['sensor_privacy_lk'] = $post->privacy->identifier;

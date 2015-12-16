@@ -14,6 +14,8 @@ class SearchService extends BaseSearchService
     protected $repository;
 
     protected $fieldsMapper = array (
+
+        'id' => 'sensor_id_si',
         'internalId' => 'sensor_internalid_si',
         'subject' => 'sensor_subject_t',
 
@@ -86,6 +88,7 @@ class SearchService extends BaseSearchService
     {
         $data = array();
 
+        $data['sensor_id_si'] = $post->id;
         $data['sensor_internalid_si'] = $post->internalId;
         $data['sensor_subject_t'] = $post->subject;
         $data['sensor_type_s'] = $post->type->identifier;

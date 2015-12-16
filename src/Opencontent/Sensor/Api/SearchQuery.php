@@ -5,6 +5,8 @@ namespace OpenContent\Sensor\Api;
 class SearchQuery
 {
     protected $availableFields = array(
+
+        'id',
         'internalId',
         'subject',
 

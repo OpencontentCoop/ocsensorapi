@@ -293,6 +293,8 @@ class SearchService extends BaseSearchService
         {
             $fields[] = $this->fieldsMapper[$field];
         }
+        
+        $filter[] = \eZSolr::getMetaFieldName( 'installation_id' ) . ':' . \eZSolr::installationID();
 
         $params = array(
             'SearchOffset' => $query->limits[1],
@@ -312,7 +314,7 @@ class SearchService extends BaseSearchService
             'EnableElevation' => true,
             'ForceElevation' => true,
             'SearchDate' => null,
-            'DistributedSearch' => null,
+            'DistributedSearch' => false,
             'FieldsToReturn' => $fields,
             'SearchResultClustering' => null,
             'ExtendedAttributeFilter' => array()

@@ -71,36 +71,6 @@ abstract class Repository implements RepositoryInterface
      */
     protected $actionDefinitions = array();
 
-    /**
-     * @return Settings
-     */
-    abstract public function getSensorSettings();
-
-    /**
-     * @return PostService
-     */
-    abstract public function getPostService();
-
-    /**
-     * @return MessageService
-     */
-    abstract public function getMessageService();
-
-    /**
-     * @return SearchService
-     */
-    abstract public function getSearchService();
-
-    /**
-     * @return UserService
-     */
-    abstract public function getUserService();
-
-    /**
-     * @return ParticipantService
-     */
-    abstract public function getParticipantService();
-
     public function getCurrentUser()
     {
         return $this->user;

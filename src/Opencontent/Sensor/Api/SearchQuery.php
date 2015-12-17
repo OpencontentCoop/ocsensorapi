@@ -120,6 +120,12 @@ class SearchQuery
         return $this;
     }
 
+    public function filters( $filters )
+    {
+        $this->filters = array_merge_recursive( $this->filters, $filters );
+        return $this;
+    }
+
     public function fields( array $fields )
     {
         foreach ( $fields as $field )

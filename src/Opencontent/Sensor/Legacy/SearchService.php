@@ -318,12 +318,17 @@ class SearchService extends BaseSearchService
         {
             if ( is_array( $filterValue ) )
             {
-                $filterValueArray = count( $filterValue ) > 1 ? array( 'or' ) : array();
-                foreach( $filterValue as $value )
+                if ( count( $filterValue ) > 1 )
                 {
-                    $filterValueArray[] = $this->fieldsMapper[$filterName] . ':' . $value;
+                    $filterValueArray = array( 'or' );
+                    foreach ( $filterValue as $value )
+                    {
+                        $filterValueArray[] = $this->fieldsMapper[$filterName] . ':' . $value;
+                    }
+                    $filter[] = $filterValueArray;
                 }
-                $filter[] = $filterValueArray;
+                else
+                    $filter[] = $this->fieldsMapper[$filterName] . ':' . $filterValue[0];
             }
             else
             {

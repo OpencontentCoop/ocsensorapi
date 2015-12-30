@@ -105,6 +105,11 @@ class TreeNodeItem
         return in_array( $name, $this->attributes() );
     }
 
+    /**
+     * @param $name
+     *
+     * @return int|string|TreeNodeItem[]
+     */
     public function attribute( $name )
     {
         if ( $name == 'id' )

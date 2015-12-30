@@ -12,6 +12,12 @@ use eZLocale;
 
 class TreeNode
 {
+    /**
+     * @param eZContentObjectTreeNode $node
+     * @param array $parameters
+     *
+     * @return TreeNodeItem
+     */
     public static function walk( eZContentObjectTreeNode $node, $parameters = array() )
     {
         if ( !isset( $parameters['classes'] ) )

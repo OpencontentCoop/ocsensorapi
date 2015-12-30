@@ -288,12 +288,12 @@ class SearchService extends BaseSearchService
     public function mappedField( $solrField )
     {
         $values = array_flip( $this->fieldsMapper );
-        return $values[$solrField];
+        return isset( $values[$solrField] ) ? $values[$solrField] : null;
     }
 
     public function field( $field )
     {
-        return $this->fieldsMapper[$field];
+        return isset( $this->fieldsMapper[$field] ) ? $this->fieldsMapper[$field] : null;
     }
 
     public function query( SearchQuery $query )

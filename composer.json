@@ -1,0 +1,12 @@
+{
+    "name": "opencontent/ocsensorapi",
+    "description": "Opencontent Sensor",    
+    "authors": [        
+        {
+            "name": "OpenContent",
+            "homepage": "http://www.opencontent.it"
+        }
+    ],
+    "license": "GPL-2.0",    
+    "minimum-stability": "dev"
+}

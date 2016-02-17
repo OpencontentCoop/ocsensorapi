@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenContent\Sensor\Api;
+namespace Opencontent\Sensor\Api;
 
 abstract class Collection extends Exportable implements \IteratorAggregate
 {

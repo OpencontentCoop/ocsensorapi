@@ -1,14 +1,14 @@
 <?php
 
-namespace OpenContent\Sensor\Legacy;
+namespace Opencontent\Sensor\Legacy;
 
-use OpenContent\Sensor\Api\Values\Message;
-use OpenContent\Sensor\Api\Values\Participant;
-use OpenContent\Sensor\Api\Values\User;
-use OpenContent\Sensor\Core\MessageService as MessageServiceBase;
-use OpenContent\Sensor\Api\Values\MessageStruct;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Exception\BaseException;
+use Opencontent\Sensor\Api\Values\Message;
+use Opencontent\Sensor\Api\Values\Participant;
+use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Core\MessageService as MessageServiceBase;
+use Opencontent\Sensor\Api\Values\MessageStruct;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Exception\BaseException;
 use eZPersistentObject;
 use eZCollaborationItem;
 use eZCollaborationSimpleMessage;
@@ -16,7 +16,7 @@ use eZCollaborationItemMessageLink;
 use ezpI18n;
 use eZUser;
 use eZTemplate;
-use OpenContent\Sensor\Utils\TimelineTools;
+use Opencontent\Sensor\Utils\TimelineTools;
 
 class MessageService extends MessageServiceBase
 {

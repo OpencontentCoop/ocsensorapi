@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Legacy;
+namespace Opencontent\Sensor\Legacy;
 
-use OpenContent\Sensor\Core\EventService as BaseEventService;
+use Opencontent\Sensor\Core\EventService as BaseEventService;
 
 class EventService extends BaseEventService
 {

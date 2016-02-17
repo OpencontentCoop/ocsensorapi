@@ -1,10 +1,10 @@
 <?php
 
-namespace OpenContent\Sensor\Api;
+namespace Opencontent\Sensor\Api;
 
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Values\PostCreateStruct;
-use OpenContent\Sensor\Api\Values\PostUpdateStruct;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\PostCreateStruct;
+use Opencontent\Sensor\Api\Values\PostUpdateStruct;
 
 
 interface PostService

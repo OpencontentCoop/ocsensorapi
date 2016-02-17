@@ -1,9 +1,9 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Values;
+namespace Opencontent\Sensor\Api\Values;
 
-use OpenContent\Sensor\Api\Values\PermissionCollection;
-use OpenContent\Sensor\Api\Exportable;
+use Opencontent\Sensor\Api\Values\PermissionCollection;
+use Opencontent\Sensor\Api\Exportable;
 use DateTime;
 
 class User extends Exportable

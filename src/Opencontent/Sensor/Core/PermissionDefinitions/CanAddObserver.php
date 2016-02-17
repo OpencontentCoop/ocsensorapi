@@ -1,11 +1,11 @@
 <?php
 
-namespace OpenContent\Sensor\Core\PermissionDefinitions;
+namespace Opencontent\Sensor\Core\PermissionDefinitions;
 
-use OpenContent\Sensor\Api\Values\Participant;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Values\User;
-use OpenContent\Sensor\Api\Values\ParticipantRole;
+use Opencontent\Sensor\Api\Values\Participant;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Values\ParticipantRole;
 
 class CanAddObserver extends UserIs
 {

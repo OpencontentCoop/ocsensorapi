@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Values;
+namespace Opencontent\Sensor\Api\Values;
 
-use OpenContent\Sensor\Api\Exportable;
+use Opencontent\Sensor\Api\Exportable;
 
 class Post extends Exportable
 {

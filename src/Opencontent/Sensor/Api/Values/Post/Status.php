@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Values\Post;
+namespace Opencontent\Sensor\Api\Values\Post;
 
-use OpenContent\Sensor\Api\Exportable;
+use Opencontent\Sensor\Api\Exportable;
 
 class Status extends Exportable
 {

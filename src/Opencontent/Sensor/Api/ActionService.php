@@ -1,13 +1,13 @@
 <?php
 
-namespace OpenContent\Sensor\Api;
+namespace Opencontent\Sensor\Api;
 
-use OpenContent\Sensor\Api\Action\ActionDefinition;
-use OpenContent\Sensor\Api\Action\Action;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Values\User;
-use OpenContent\Sensor\Api\Exception\PermissionException;
-use OpenContent\Sensor\Api\Exception\InvalidParameterException;
+use Opencontent\Sensor\Api\Action\ActionDefinition;
+use Opencontent\Sensor\Api\Action\Action;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Exception\PermissionException;
+use Opencontent\Sensor\Api\Exception\InvalidParameterException;
 
 interface ActionService
 {

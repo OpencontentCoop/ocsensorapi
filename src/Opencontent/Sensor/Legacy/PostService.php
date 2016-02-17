@@ -1,15 +1,15 @@
 <?php
 
-namespace OpenContent\Sensor\Legacy;
+namespace Opencontent\Sensor\Legacy;
 
-use OpenContent\Sensor\Api\Values\Message\PrivateMessageCollection;
-use OpenContent\Sensor\Api\Values\Participant;
-use OpenContent\Sensor\Core\PostService as PostServiceBase;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Values\PostCreateStruct;
-use OpenContent\Sensor\Api\Values\PostUpdateStruct;
-use OpenContent\Sensor\Api\Values\ParticipantRole;
-use OpenContent\Sensor\Api\Exception\BaseException;
+use Opencontent\Sensor\Api\Values\Message\PrivateMessageCollection;
+use Opencontent\Sensor\Api\Values\Participant;
+use Opencontent\Sensor\Core\PostService as PostServiceBase;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\PostCreateStruct;
+use Opencontent\Sensor\Api\Values\PostUpdateStruct;
+use Opencontent\Sensor\Api\Values\ParticipantRole;
+use Opencontent\Sensor\Api\Exception\BaseException;
 use eZPersistentObject;
 use eZCollaborationItem;
 use eZContentObject;
@@ -18,10 +18,10 @@ use eZContentObjectState;
 use eZImageAliasHandler;
 use DateInterval;
 use ezpI18n;
-use OpenContent\Sensor\Api\Values\Message\TimelineItemStruct;
+use Opencontent\Sensor\Api\Values\Message\TimelineItemStruct;
 use eZContentCacheManager;
 use eZSearch;
-use OpenContent\Sensor\Utils\ExpiryTools;
+use Opencontent\Sensor\Utils\ExpiryTools;
 
 class PostService extends PostServiceBase
 {

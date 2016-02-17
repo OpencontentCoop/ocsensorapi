@@ -1,9 +1,9 @@
 <?php
 
-namespace OpenContent\Sensor\Legacy;
+namespace Opencontent\Sensor\Legacy;
 
-use OpenContent\Sensor\Legacy\UserService;
-use OpenContent\Sensor\Api\Exception\BaseException;
+use Opencontent\Sensor\Legacy\UserService;
+use Opencontent\Sensor\Api\Exception\BaseException;
 use eZContentLanguage;
 use eZDir;
 use eZSys;
@@ -14,15 +14,15 @@ class CachedUserService extends UserService
     public function loadUser( $userId )
     {
         return $this->getCacheManager( $userId )->processCache(
-            array( 'OpenContent\Sensor\Legacy\CachedUserService', 'retrieveCache' ),
-            array( 'OpenContent\Sensor\Legacy\CachedUserService', 'generateCache' ),
+            array( 'Opencontent\Sensor\Legacy\CachedUserService', 'retrieveCache' ),
+            array( 'Opencontent\Sensor\Legacy\CachedUserService', 'generateCache' ),
             null,
             null,
             array( $userId, get_class( $this->repository ) )
         );
     }
 
-    public function refreshUser( \OpenContent\Sensor\Api\Values\User $user )
+    public function refreshUser( \Opencontent\Sensor\Api\Values\User $user )
     {
         $this->clearCache( $user->id );
     }
@@ -36,7 +36,7 @@ class CachedUserService extends UserService
     public static function generateCache( $file, $args )
     {
         list( $userId, $repositoryClassName ) = $args;
-        if ( !class_implements( $repositoryClassName, 'OpenContent\Sensor\Api\Repository' ) )
+        if ( !class_implements( $repositoryClassName, 'Opencontent\Sensor\Api\Repository' ) )
             throw new BaseException( "$repositoryClassName not valid repository class" );
         $repository = $repositoryClassName::instance();
         $service = new UserService( $repository );

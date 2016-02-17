@@ -1,10 +1,10 @@
 <?php
 
-namespace OpenContent\Sensor\Legacy;
+namespace Opencontent\Sensor\Legacy;
 
-use OpenContent\Sensor\Core\UserService as UserServiceBase;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Legacy\Values\User as User;
+use Opencontent\Sensor\Core\UserService as UserServiceBase;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Legacy\Values\User as User;
 use eZUser;
 use eZCollaborationItemStatus;
 use SocialUser;
@@ -38,7 +38,7 @@ class UserService extends UserServiceBase
         return $this->users[$id];
     }
 
-    public function refreshUser( \OpenContent\Sensor\Api\Values\User $user )
+    public function refreshUser( \Opencontent\Sensor\Api\Values\User $user )
     {
 
     }
@@ -58,7 +58,7 @@ class UserService extends UserServiceBase
         return $user;
     }
 
-    public function setBlockMode( \OpenContent\Sensor\Api\Values\User $user, $enable = true )
+    public function setBlockMode( \Opencontent\Sensor\Api\Values\User $user, $enable = true )
     {
         $socialUser = SocialUser::instance($this->loadUser($user->id)->ezUser);
         $socialUser->setBlockMode($enable);
@@ -66,7 +66,7 @@ class UserService extends UserServiceBase
         $this->refreshUser( $user );
     }
 
-    public function setCommentMode( \OpenContent\Sensor\Api\Values\User $user, $enable = true )
+    public function setCommentMode( \Opencontent\Sensor\Api\Values\User $user, $enable = true )
     {
         $socialUser = SocialUser::instance($this->getEzUser($user->id));
         $socialUser->setDenyCommentMode(!$enable);
@@ -74,7 +74,7 @@ class UserService extends UserServiceBase
         $this->refreshUser( $user );
     }
 
-    public function setBehalfOfMode( \OpenContent\Sensor\Api\Values\User $user, $enable = true )
+    public function setBehalfOfMode( \Opencontent\Sensor\Api\Values\User $user, $enable = true )
     {
         $socialUser = SocialUser::instance($this->getEzUser($user->id));
         $socialUser->setCanBehalfOfMode($enable);
@@ -82,13 +82,13 @@ class UserService extends UserServiceBase
         $this->refreshUser( $user );
     }
 
-    public function getAlerts( \OpenContent\Sensor\Api\Values\User $user )
+    public function getAlerts( \Opencontent\Sensor\Api\Values\User $user )
     {
         $socialUser = SocialUser::instance($this->getEzUser($user->id));
         return $socialUser->attribute( 'alerts' );
     }
 
-    public function addAlerts( \OpenContent\Sensor\Api\Values\User $user, $message, $level )
+    public function addAlerts( \Opencontent\Sensor\Api\Values\User $user, $message, $level )
     {
         $socialUser = SocialUser::instance($this->getEzUser($user->id));
         $socialUser->addFlashAlert($message, $level);
@@ -101,7 +101,7 @@ class UserService extends UserServiceBase
         return $user;
     }
 
-    public function setLastAccessDateTime( \OpenContent\Sensor\Api\Values\User $user, Post $post )
+    public function setLastAccessDateTime( \Opencontent\Sensor\Api\Values\User $user, Post $post )
     {
         $timestamp = time();
         eZCollaborationItemStatus::setLastRead( $post->internalId, $user->id, $timestamp );

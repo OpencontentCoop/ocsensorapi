@@ -1,6 +1,6 @@
 <?php
 
-use OpenContent\Sensor\Legacy\UserService as UserServiceBase;
+use Opencontent\Sensor\Legacy\UserService as UserServiceBase;
 
 class OpenPaSensorUserService extends UserServiceBase
 {

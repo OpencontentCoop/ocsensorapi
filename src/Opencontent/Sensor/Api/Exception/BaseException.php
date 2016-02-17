@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Exception;
+namespace Opencontent\Sensor\Api\Exception;
 
 use Exception;
 

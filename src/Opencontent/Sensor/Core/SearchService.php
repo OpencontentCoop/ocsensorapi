@@ -1,9 +1,9 @@
 <?php
 
-namespace OpenContent\Sensor\Core;
+namespace Opencontent\Sensor\Core;
 
-use OpenContent\Sensor\Api\SearchService as SearchServiceInterface;
-use OpenContent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\SearchService as SearchServiceInterface;
+use Opencontent\Sensor\Api\Values\Post;
 
 abstract class SearchService implements SearchServiceInterface
 {

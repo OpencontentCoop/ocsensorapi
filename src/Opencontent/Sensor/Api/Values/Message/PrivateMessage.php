@@ -1,9 +1,9 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Values\Message;
+namespace Opencontent\Sensor\Api\Values\Message;
 
-use OpenContent\Sensor\Api\Values\Message;
-use OpenContent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Values\Message;
+use Opencontent\Sensor\Api\Values\User;
 
 class PrivateMessage extends Message
 {

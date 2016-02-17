@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Core;
+namespace Opencontent\Sensor\Core;
 
-use OpenContent\Sensor\Api\MessageService as MessageServiceInterface;
+use Opencontent\Sensor\Api\MessageService as MessageServiceInterface;
 
 
 abstract class MessageService implements MessageServiceInterface

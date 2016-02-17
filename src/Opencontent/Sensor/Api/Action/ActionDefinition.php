@@ -1,13 +1,13 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Action;
+namespace Opencontent\Sensor\Api\Action;
 
-use OpenContent\Sensor\Api\Exception\InvalidParameterException;
-use OpenContent\Sensor\Api\Exception\PermissionException;
-use OpenContent\Sensor\Api\Repository;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Values\User;
-use OpenContent\Sensor\Api\Values\Event;
+use Opencontent\Sensor\Api\Exception\InvalidParameterException;
+use Opencontent\Sensor\Api\Exception\PermissionException;
+use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Values\Event;
 
 abstract class ActionDefinition
 {
@@ -27,7 +27,7 @@ abstract class ActionDefinition
 
     /**
      * @param Repository $repository
-     * @param \OpenContent\Sensor\Api\Action\Action $action
+     * @param \Opencontent\Sensor\Api\Action\Action $action
      * @param Post $post
      * @param User $user
      *

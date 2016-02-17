@@ -1,13 +1,13 @@
 <?php
 
-namespace OpenContent\Sensor\Core\ActionDefinitions;
+namespace Opencontent\Sensor\Core\ActionDefinitions;
 
-use OpenContent\Sensor\Api\Action\Action;
-use OpenContent\Sensor\Api\Action\ActionDefinition;
-use OpenContent\Sensor\Api\Repository;
-use OpenContent\Sensor\Api\Values\ParticipantRole;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Action\Action;
+use Opencontent\Sensor\Api\Action\ActionDefinition;
+use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\ParticipantRole;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\User;
 
 class FixAction extends ActionDefinition
 {

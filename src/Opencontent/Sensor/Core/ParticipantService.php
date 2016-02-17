@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Core;
+namespace Opencontent\Sensor\Core;
 
-use OpenContent\Sensor\Api\ParticipantService as ParticipantServiceInterface;
+use Opencontent\Sensor\Api\ParticipantService as ParticipantServiceInterface;
 
 abstract class ParticipantService implements ParticipantServiceInterface
 {

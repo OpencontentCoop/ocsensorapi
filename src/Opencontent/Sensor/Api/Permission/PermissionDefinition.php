@@ -1,9 +1,9 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Permission;
+namespace Opencontent\Sensor\Api\Permission;
 
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\User;
 
 abstract class PermissionDefinition
 {

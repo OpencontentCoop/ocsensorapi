@@ -1,14 +1,14 @@
 <?php
 
-namespace OpenContent\Sensor\Legacy;
+namespace Opencontent\Sensor\Legacy;
 
-use OpenContent\Sensor\Api\Exception\BaseException;
+use Opencontent\Sensor\Api\Exception\BaseException;
 use DateTime;
 use DateInterval;
 use DateTimeImmutable;
 use ezpI18n;
-use OpenContent\Sensor\Api\Values\User;
-use OpenContent\Sensor\Utils\DateDiffResult;
+use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Utils\DateDiffResult;
 use eZUser;
 
 class Utils

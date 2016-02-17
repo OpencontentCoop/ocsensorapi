@@ -1,17 +1,17 @@
 <?php
 
-namespace OpenContent\Sensor\Api;
+namespace Opencontent\Sensor\Api;
 
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Values\User;
-use OpenContent\Sensor\Api\Values\Participant;
-use OpenContent\Sensor\Api\Values\ParticipantCollection;
-use OpenContent\Sensor\Api\Values\Participant\ApproverCollection;
-use OpenContent\Sensor\Api\Values\Participant\OwnerCollection;
-use OpenContent\Sensor\Api\Values\Participant\ObserverCollection;
-use OpenContent\Sensor\Api\Values\Participant\ReporterCollection;
-use OpenContent\Sensor\Api\Values\ParticipantRoleCollection;
-use OpenContent\Sensor\Api\Values\ParticipantRole;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Values\Participant;
+use Opencontent\Sensor\Api\Values\ParticipantCollection;
+use Opencontent\Sensor\Api\Values\Participant\ApproverCollection;
+use Opencontent\Sensor\Api\Values\Participant\OwnerCollection;
+use Opencontent\Sensor\Api\Values\Participant\ObserverCollection;
+use Opencontent\Sensor\Api\Values\Participant\ReporterCollection;
+use Opencontent\Sensor\Api\Values\ParticipantRoleCollection;
+use Opencontent\Sensor\Api\Values\ParticipantRole;
 
 interface ParticipantService
 {

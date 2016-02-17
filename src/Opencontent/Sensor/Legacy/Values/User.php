@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Legacy\Values;
+namespace Opencontent\Sensor\Legacy\Values;
 
-use OpenContent\Sensor\Api\Values\User as BaseUser;
+use Opencontent\Sensor\Api\Values\User as BaseUser;
 
 class User extends BaseUser
 {

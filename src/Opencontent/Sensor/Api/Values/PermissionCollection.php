@@ -1,9 +1,9 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Values;
+namespace Opencontent\Sensor\Api\Values;
 
-use OpenContent\Sensor\Api\Collection;
-use OpenContent\Sensor\Api\Values\Permission;
+use Opencontent\Sensor\Api\Collection;
+use Opencontent\Sensor\Api\Values\Permission;
 
 class PermissionCollection extends Collection implements \IteratorAggregate
 {

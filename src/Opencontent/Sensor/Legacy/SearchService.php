@@ -1,10 +1,10 @@
 <?php
 
-namespace OpenContent\Sensor\Legacy;
+namespace Opencontent\Sensor\Legacy;
 
-use OpenContent\Sensor\Core\SearchService as BaseSearchService;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\SearchQuery;
+use Opencontent\Sensor\Core\SearchService as BaseSearchService;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\SearchQuery;
 
 class SearchService extends BaseSearchService
 {

@@ -1,13 +1,13 @@
 <?php
 
-namespace OpenContent\Sensor\Core;
+namespace Opencontent\Sensor\Core;
 
-use OpenContent\Sensor\Api\Action\ActionDefinition;
-use OpenContent\Sensor\Api\Action\Action;
-use OpenContent\Sensor\Api\ActionService as ActionServiceInterface;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Values\User;
-use OpenContent\Sensor\Api\Exception\BaseException;
+use Opencontent\Sensor\Api\Action\ActionDefinition;
+use Opencontent\Sensor\Api\Action\Action;
+use Opencontent\Sensor\Api\ActionService as ActionServiceInterface;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Exception\BaseException;
 
 class ActionService implements ActionServiceInterface
 {

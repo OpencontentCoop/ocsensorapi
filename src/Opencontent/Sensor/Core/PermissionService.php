@@ -1,14 +1,14 @@
 <?php
 
-namespace OpenContent\Sensor\Core;
+namespace Opencontent\Sensor\Core;
 
-use OpenContent\Sensor\Api\Permission\PermissionDefinition;
-use OpenContent\Sensor\Api\PermissionService as PermissionServiceInterface;
-use OpenContent\Sensor\Api\Values\Permission;
-use OpenContent\Sensor\Api\Values\PermissionCollection;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Values\User;
-use OpenContent\Sensor\Api\Exception\BaseException;
+use Opencontent\Sensor\Api\Permission\PermissionDefinition;
+use Opencontent\Sensor\Api\PermissionService as PermissionServiceInterface;
+use Opencontent\Sensor\Api\Values\Permission;
+use Opencontent\Sensor\Api\Values\PermissionCollection;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Exception\BaseException;
 
 class PermissionService implements PermissionServiceInterface
 {

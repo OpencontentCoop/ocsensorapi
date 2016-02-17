@@ -1,11 +1,11 @@
 <?php
 
-namespace OpenContent\Sensor\Api;
+namespace Opencontent\Sensor\Api;
 
-use OpenContent\Sensor\Api\Permission\PermissionDefinition;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Values\User;
-use OpenContent\Sensor\Api\Values\PermissionCollection;
+use Opencontent\Sensor\Api\Permission\PermissionDefinition;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Values\PermissionCollection;
 
 interface PermissionService
 {

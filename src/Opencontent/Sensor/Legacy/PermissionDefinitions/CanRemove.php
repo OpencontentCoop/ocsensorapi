@@ -1,10 +1,10 @@
 <?php
 
-namespace OpenContent\Sensor\Legacy\PermissionDefinitions;
+namespace Opencontent\Sensor\Legacy\PermissionDefinitions;
 
-use OpenContent\Sensor\Api\Permission\PermissionDefinition;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Permission\PermissionDefinition;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\User;
 
 class CanRemove extends PermissionDefinition
 {

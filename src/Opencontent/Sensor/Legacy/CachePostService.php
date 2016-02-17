@@ -1,9 +1,9 @@
 <?php
 
-namespace OpenContent\Sensor\Legacy;
+namespace Opencontent\Sensor\Legacy;
 
-use OpenContent\Sensor\Legacy\PostService;
-use OpenContent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Legacy\PostService;
+use Opencontent\Sensor\Api\Values\Post;
 use eZCollaborationItem;
 use eZDir;
 use eZSys;
@@ -12,15 +12,15 @@ use eZINI;
 use eZLocale;
 use eZContentLanguage;
 use eZPersistentObject;
-use OpenContent\Sensor\Api\Exception\BaseException;
+use Opencontent\Sensor\Api\Exception\BaseException;
 
 class CachePostService extends PostService
 {
     public function loadPost( $postId )
     {
         return $this->getCacheManager( $postId )->processCache(
-            array( 'OpenContent\Sensor\Legacy\CachePostService', 'retrieveCache' ),
-            array( 'OpenContent\Sensor\Legacy\CachePostService', 'generateCache' ),
+            array( 'Opencontent\Sensor\Legacy\CachePostService', 'retrieveCache' ),
+            array( 'Opencontent\Sensor\Legacy\CachePostService', 'generateCache' ),
             null,
             null,
             array( $postId, get_class( $this->repository ) )
@@ -47,7 +47,7 @@ class CachePostService extends PostService
     {
         $post = include( $file );
         list( $postId, $repositoryClassName ) = $args;
-        if ( !class_implements( $repositoryClassName, 'OpenContent\Sensor\Api\Repository' ) )
+        if ( !class_implements( $repositoryClassName, 'Opencontent\Sensor\Api\Repository' ) )
             throw new BaseException( "$repositoryClassName not valid repository class" );
         $repository = $repositoryClassName::instance();
         $service = new PostService( $repository );
@@ -58,7 +58,7 @@ class CachePostService extends PostService
     public static function generateCache( $file, $args )
     {
         list( $postId, $repositoryClassName ) = $args;
-        if ( !class_implements( $repositoryClassName, 'OpenContent\Sensor\Api\Repository' ) )
+        if ( !class_implements( $repositoryClassName, 'Opencontent\Sensor\Api\Repository' ) )
             throw new BaseException( "$repositoryClassName not valid repository class" );
         $repository = $repositoryClassName::instance();
         $service = new PostService( $repository );

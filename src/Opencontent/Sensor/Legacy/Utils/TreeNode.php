@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenContent\Sensor\Utils;
+namespace Opencontent\Sensor\Utils;
 
 use eZContentObjectTreeNode;
 use eZContentLanguage;
@@ -25,8 +25,8 @@ class TreeNode
 
         $treeId = $node->attribute( 'node_id' );
         return self::getCacheManager( $treeId )->processCache(
-            array( 'OpenContent\Sensor\Utils\TreeNode', 'retrieveCache' ),
-            array( 'OpenContent\Sensor\Utils\TreeNode', 'generateCache' ),
+            array( 'Opencontent\Sensor\Utils\TreeNode', 'retrieveCache' ),
+            array( 'Opencontent\Sensor\Utils\TreeNode', 'generateCache' ),
             null,
             null,
             array( $node, $parameters )

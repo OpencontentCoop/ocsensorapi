@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Values\Message;
+namespace Opencontent\Sensor\Api\Values\Message;
 
-use OpenContent\Sensor\Api\Values\MessageCollection;
+use Opencontent\Sensor\Api\Values\MessageCollection;
 
 class ResponseCollection extends MessageCollection
 {

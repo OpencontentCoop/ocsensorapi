@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Values;
+namespace Opencontent\Sensor\Api\Values;
 
-use OpenContent\Sensor\Api\Collection;
+use Opencontent\Sensor\Api\Collection;
 
 class ParticipantRoleCollection extends Collection
 {

@@ -1,9 +1,9 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Values;
+namespace Opencontent\Sensor\Api\Values;
 
 use DateTime;
-use OpenContent\Sensor\Api\Exportable;
+use Opencontent\Sensor\Api\Exportable;
 
 abstract class Message extends Exportable
 {

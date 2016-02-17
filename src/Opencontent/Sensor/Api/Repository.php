@@ -1,18 +1,18 @@
 <?php
 
-namespace OpenContent\Sensor\Api;
+namespace Opencontent\Sensor\Api;
 
-use OpenContent\Sensor\Api\Values\User;
-use OpenContent\Sensor\Api\Values\Post;
-use OpenContent\Sensor\Api\PostService;
-use OpenContent\Sensor\Api\MessageService;
-use OpenContent\Sensor\Api\SearchService;
-use OpenContent\Sensor\Api\ParticipantService;
-use OpenContent\Sensor\Api\PermissionService;
-use OpenContent\Sensor\Api\ActionService;
-use OpenContent\Sensor\Api\UserService;
-use OpenContent\Sensor\Api\EventService;
-use OpenContent\Sensor\Api\Values\Settings;
+use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\PostService;
+use Opencontent\Sensor\Api\MessageService;
+use Opencontent\Sensor\Api\SearchService;
+use Opencontent\Sensor\Api\ParticipantService;
+use Opencontent\Sensor\Api\PermissionService;
+use Opencontent\Sensor\Api\ActionService;
+use Opencontent\Sensor\Api\UserService;
+use Opencontent\Sensor\Api\EventService;
+use Opencontent\Sensor\Api\Values\Settings;
 
 interface Repository
 {

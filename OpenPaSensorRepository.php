@@ -1,10 +1,10 @@
 <?php
 
-use OpenContent\Sensor\Legacy\Repository as CoreRepository;
-use OpenContent\Sensor\Api\Exception\BaseException;
-use OpenContent\Sensor\Core\PermissionDefinitions;
-use OpenContent\Sensor\Core\ActionDefinitions;
-use OpenContent\Sensor\Api\Values\Settings;
+use Opencontent\Sensor\Legacy\Repository as CoreRepository;
+use Opencontent\Sensor\Api\Exception\BaseException;
+use Opencontent\Sensor\Core\PermissionDefinitions;
+use Opencontent\Sensor\Core\ActionDefinitions;
+use Opencontent\Sensor\Api\Values\Settings;
 
 class OpenPaSensorRepository extends CoreRepository
 {
@@ -38,8 +38,8 @@ class OpenPaSensorRepository extends CoreRepository
         $permissionDefinitions[] = new PermissionDefinitions\CanSendPrivateMessage();
         $permissionDefinitions[] = new PermissionDefinitions\CanSetExpiryDays();
         $permissionDefinitions[] = new PermissionDefinitions\CanReopen( $this->getSensorSettings()->get('ApproverCanReopen') );
-        $permissionDefinitions[] = new \OpenContent\Sensor\Legacy\PermissionDefinitions\CanEdit();
-        $permissionDefinitions[] = new \OpenContent\Sensor\Legacy\PermissionDefinitions\CanRemove();
+        $permissionDefinitions[] = new \Opencontent\Sensor\Legacy\PermissionDefinitions\CanEdit();
+        $permissionDefinitions[] = new \Opencontent\Sensor\Legacy\PermissionDefinitions\CanRemove();
         $this->setPermissionDefinitions( $permissionDefinitions );
 
         $actionDefinitions = array();

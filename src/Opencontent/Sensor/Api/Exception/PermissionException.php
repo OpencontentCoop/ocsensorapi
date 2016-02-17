@@ -1,10 +1,10 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Exception;
+namespace Opencontent\Sensor\Api\Exception;
 
-use OpenContent\Sensor\Api\Permission\PermissionDefinition;
-use OpenContent\Sensor\Api\Values\User;
-use OpenContent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Permission\PermissionDefinition;
+use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Values\Post;
 
 class PermissionException extends BaseException
 {

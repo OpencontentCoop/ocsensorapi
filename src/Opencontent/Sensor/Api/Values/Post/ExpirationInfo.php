@@ -1,9 +1,9 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Values\Post;
+namespace Opencontent\Sensor\Api\Values\Post;
 
 use \DateTime;
-use OpenContent\Sensor\Api\Exportable;
+use Opencontent\Sensor\Api\Exportable;
 
 class ExpirationInfo extends Exportable
 {

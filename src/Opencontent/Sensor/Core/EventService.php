@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Core;
+namespace Opencontent\Sensor\Core;
 
-use OpenContent\Sensor\Api\EventService as EventServiceInterface;
+use Opencontent\Sensor\Api\EventService as EventServiceInterface;
 
 abstract class EventService implements EventServiceInterface
 {

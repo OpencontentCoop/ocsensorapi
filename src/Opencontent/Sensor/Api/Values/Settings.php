@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Values;
+namespace Opencontent\Sensor\Api\Values;
 
 use ArrayAccess;
 

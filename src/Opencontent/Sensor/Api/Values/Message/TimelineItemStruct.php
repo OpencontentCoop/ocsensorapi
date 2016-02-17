@@ -1,10 +1,10 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Values\Message;
+namespace Opencontent\Sensor\Api\Values\Message;
 
-use OpenContent\Sensor\Api\Values\MessageStruct;
-use OpenContent\Sensor\Api\Values\Post\WorkflowStatus;
-use OpenContent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Values\MessageStruct;
+use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
+use Opencontent\Sensor\Api\Values\User;
 
 class TimelineItemStruct extends MessageStruct
 {

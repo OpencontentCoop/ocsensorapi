@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Exception;
+namespace Opencontent\Sensor\Api\Exception;
 
-use OpenContent\Sensor\Api\Action\ActionDefinitionParameter;
+use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
 
 class InvalidParameterException extends BaseException
 {

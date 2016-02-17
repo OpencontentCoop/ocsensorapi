@@ -1,9 +1,9 @@
 <?php
 
-namespace OpenContent\Sensor\Api;
+namespace Opencontent\Sensor\Api;
 
-use OpenContent\Sensor\Api\Values\Message;
-use OpenContent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\Message;
+use Opencontent\Sensor\Api\Values\Post;
 
 interface MessageService
 {

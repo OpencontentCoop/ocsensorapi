@@ -1,10 +1,10 @@
 <?php
 
 
-namespace OpenContent\Sensor\Api\Values;
+namespace Opencontent\Sensor\Api\Values;
 
-use OpenContent\Sensor\Api\Exportable;
-use OpenContent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Exportable;
+use Opencontent\Sensor\Api\Values\User;
 use DateTime;
 
 class Participant extends Exportable implements \IteratorAggregate

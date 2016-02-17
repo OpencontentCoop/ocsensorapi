@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Core;
+namespace Opencontent\Sensor\Core;
 
-use OpenContent\Sensor\Api\UserService as UserServiceInterface;
+use Opencontent\Sensor\Api\UserService as UserServiceInterface;
 
 abstract class UserService implements UserServiceInterface
 {

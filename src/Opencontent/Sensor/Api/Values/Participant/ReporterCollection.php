@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Values\Participant;
+namespace Opencontent\Sensor\Api\Values\Participant;
 
-use OpenContent\Sensor\Api\Values\ParticipantCollection;
+use Opencontent\Sensor\Api\Values\ParticipantCollection;
 
 class ReporterCollection extends ParticipantCollection
 {

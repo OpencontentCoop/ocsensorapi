@@ -1,17 +1,17 @@
 <?php
 
-namespace OpenContent\Sensor\Legacy;
+namespace Opencontent\Sensor\Legacy;
 
-use OpenContent\Sensor\Core\Repository as CoreRepository;
-use OpenContent\Sensor\Api\Action\ActionDefinition;
-use OpenContent\Sensor\Api\Permission\PermissionDefinition;
-use OpenContent\Sensor\Legacy\PostService;
-use OpenContent\Sensor\Legacy\MessageService;
-use OpenContent\Sensor\Legacy\ParticipantService;
-use OpenContent\Sensor\Legacy\EventService;
-use OpenContent\Sensor\Legacy\SearchService;
-use OpenContent\Sensor\Utils\TreeNode;
-use OpenContent\Sensor\Utils\TreeNodeItem;
+use Opencontent\Sensor\Core\Repository as CoreRepository;
+use Opencontent\Sensor\Api\Action\ActionDefinition;
+use Opencontent\Sensor\Api\Permission\PermissionDefinition;
+use Opencontent\Sensor\Legacy\PostService;
+use Opencontent\Sensor\Legacy\MessageService;
+use Opencontent\Sensor\Legacy\ParticipantService;
+use Opencontent\Sensor\Legacy\EventService;
+use Opencontent\Sensor\Legacy\SearchService;
+use Opencontent\Sensor\Utils\TreeNode;
+use Opencontent\Sensor\Utils\TreeNodeItem;
 use eZContentObjectTreeNode;
 use eZContentClass;
 use eZContentObjectState;
@@ -88,7 +88,7 @@ abstract class Repository extends CoreRepository
     }
 
     /**
-     * @return \OpenContent\Sensor\Legacy\CachePostService
+     * @return \Opencontent\Sensor\Legacy\CachePostService
      */
     public function getPostService()
     {
@@ -100,7 +100,7 @@ abstract class Repository extends CoreRepository
     }
 
     /**
-     * @return \OpenContent\Sensor\Legacy\MessageService
+     * @return \Opencontent\Sensor\Legacy\MessageService
      */
     public function getMessageService()
     {
@@ -121,7 +121,7 @@ abstract class Repository extends CoreRepository
     }
 
     /**
-     * @return \OpenContent\Sensor\Legacy\ParticipantService
+     * @return \Opencontent\Sensor\Legacy\ParticipantService
      */
     public function getParticipantService()
     {
@@ -133,7 +133,7 @@ abstract class Repository extends CoreRepository
     }
 
     /**
-     * @return \OpenContent\Sensor\Legacy\CachedUserService
+     * @return \Opencontent\Sensor\Legacy\CachedUserService
      */
     public function getUserService()
     {

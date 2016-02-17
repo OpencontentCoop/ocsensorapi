@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Core;
+namespace Opencontent\Sensor\Core;
 
-use OpenContent\Sensor\Api\PostService as PostServiceInterface;
+use Opencontent\Sensor\Api\PostService as PostServiceInterface;
 
 
 abstract class PostService implements PostServiceInterface

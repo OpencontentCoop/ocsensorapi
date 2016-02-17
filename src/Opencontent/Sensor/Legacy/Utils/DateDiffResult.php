@@ -1,6 +1,6 @@
 <?php
 
-namespace OpenContent\Sensor\Utils;
+namespace Opencontent\Sensor\Utils;
 
 use DateInterval;
 

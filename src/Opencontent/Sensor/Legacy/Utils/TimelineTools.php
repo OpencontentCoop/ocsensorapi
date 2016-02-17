@@ -1,10 +1,10 @@
 <?php
 
-namespace OpenContent\Sensor\Utils;
+namespace Opencontent\Sensor\Utils;
 
-use OpenContent\Sensor\Api\Values\ParticipantCollection;
+use Opencontent\Sensor\Api\Values\ParticipantCollection;
 use ezpI18n;
-use OpenContent\Sensor\Api\Values\Post\WorkflowStatus;
+use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
 
 class TimelineTools
 {

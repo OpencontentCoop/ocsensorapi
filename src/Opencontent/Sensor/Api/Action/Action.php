@@ -1,8 +1,8 @@
 <?php
 
-namespace OpenContent\Sensor\Api\Action;
+namespace Opencontent\Sensor\Api\Action;
 
-use OpenContent\Sensor\Api\Action\ActionParameter;
+use Opencontent\Sensor\Api\Action\ActionParameter;
 
 class Action
 {

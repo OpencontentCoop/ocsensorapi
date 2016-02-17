@@ -5,10 +5,8 @@ namespace Opencontent\Sensor\Legacy;
 use Opencontent\Sensor\Api\Exception\BaseException;
 use DateTime;
 use DateInterval;
-use DateTimeImmutable;
 use ezpI18n;
-use Opencontent\Sensor\Api\Values\User;
-use eZUser;
+use Opencontent\Sensor\Legacy\Utils\DateDiffResult;
 
 class Utils
 {

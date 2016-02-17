@@ -8,7 +8,6 @@ use DateInterval;
 use DateTimeImmutable;
 use ezpI18n;
 use Opencontent\Sensor\Api\Values\User;
-use Opencontent\Sensor\Utils\DateDiffResult;
 use eZUser;
 
 class Utils

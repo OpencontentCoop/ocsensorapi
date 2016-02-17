@@ -1,6 +1,6 @@
 <?php
 
-namespace Opencontent\Sensor\Utils;
+namespace Opencontent\Sensor\Legacy\Utils;
 
 use Opencontent\Sensor\Api\Values\ParticipantCollection;
 use ezpI18n;

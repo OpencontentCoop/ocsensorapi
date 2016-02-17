@@ -16,7 +16,7 @@ use eZCollaborationItemMessageLink;
 use ezpI18n;
 use eZUser;
 use eZTemplate;
-use Opencontent\Sensor\Utils\TimelineTools;
+use Opencontent\Sensor\Legacy\Utils\TimelineTools;
 
 class MessageService extends MessageServiceBase
 {

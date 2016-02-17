@@ -21,7 +21,7 @@ use ezpI18n;
 use Opencontent\Sensor\Api\Values\Message\TimelineItemStruct;
 use eZContentCacheManager;
 use eZSearch;
-use Opencontent\Sensor\Utils\ExpiryTools;
+use Opencontent\Sensor\Legacy\Utils\ExpiryTools;
 
 class PostService extends PostServiceBase
 {

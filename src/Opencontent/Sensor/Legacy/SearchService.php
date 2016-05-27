@@ -121,12 +121,14 @@ class SearchService extends BaseSearchService
         if ( $post->author && $post->reporter )
             $data['sensor_behalf_b'] = ( $post->author->name != $post->reporter->name ) ? 'true' : 'false';
 
-        $data['sensor_open_dt'] = strftime( '%Y-%m-%dT%H:%M:%SZ', $post->published->format( 'U' ) );
-        $data['sensor_open_timestamp_i'] = $post->published->format( 'U' );
-        $data['sensor_open_weekday_si'] = $post->published->format( 'w' );
+        if ($post->published instanceof \DateTime) {
+            $data['sensor_open_dt'] = strftime('%Y-%m-%dT%H:%M:%SZ', $post->published->format('U'));
+            $data['sensor_open_timestamp_i'] = $post->published->format('U');
+            $data['sensor_open_weekday_si'] = $post->published->format('w');
+        }
 
         $read = $post->timelineItems->getByType( 'read' )->first();
-        if ( $read )
+        if ( $read && $read->published instanceof \DateTime)
         {
             $data['sensor_read_timestamp_i'] = $read->published->format( 'U' );
             $data['sensor_read_dt'] = strftime(
@@ -139,7 +141,7 @@ class SearchService extends BaseSearchService
 
         $assignedList = $post->timelineItems->getByType( 'assigned' );
         $assigned = $assignedList->first();
-        if ( $assigned )
+        if ( $assigned && $assigned->published instanceof \DateTime)
         {
             $data['sensor_assigned_timestamp_i'] = $assigned->published->format( 'U' );
             $data['sensor_assigned_dt'] = strftime(
@@ -151,7 +153,7 @@ class SearchService extends BaseSearchService
         }
 
         $fix = $post->timelineItems->getByType( 'fixed' )->last();
-        if ( $fix )
+        if ( $fix && $fix->published instanceof \DateTime)
         {
             $data['sensor_fix_timestamp_i'] = $fix->published->format( 'U' );
             $data['sensor_fix_dt'] = strftime(
@@ -164,7 +166,7 @@ class SearchService extends BaseSearchService
         }
 
         $close = $post->timelineItems->getByType( 'closed' )->last();
-        if ( $close )
+        if ( $close && $close->published instanceof \DateTime )
         {
             $data['sensor_close_timestamp_i'] = $close->published->format( 'U' );
             $data['sensor_close_dt'] = strftime(
@@ -341,7 +343,7 @@ class SearchService extends BaseSearchService
         {
             $fields[] = $this->fieldsMapper[$field];
         }
-        
+
         $filter[] = \eZSolr::getMetaFieldName( 'installation_id' ) . ':' . \eZSolr::installationID();
 
         $params = array(

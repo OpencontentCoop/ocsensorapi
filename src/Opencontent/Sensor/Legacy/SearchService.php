@@ -103,8 +103,10 @@ class SearchService extends BaseSearchService
             $data['sensor_address_t'] = $post->geoLocation->address;
         }
 
-        $data['sensor_expiration_dt'] = strftime( '%Y-%m-%dT%H:%M:%SZ', $post->expirationInfo->expirationDateTime->format( 'U' ) );
-        $data['sensor_expiration_days_i'] = $post->expirationInfo->days;
+        if ( $post->expirationInfo->expirationDateTime instanceof \DateTime ){
+            $data['sensor_expiration_dt'] = strftime( '%Y-%m-%dT%H:%M:%SZ', $post->expirationInfo->expirationDateTime->format( 'U' ) );
+            $data['sensor_expiration_days_i'] = $post->expirationInfo->days;
+        }
 
         if ( $post->author )
         {

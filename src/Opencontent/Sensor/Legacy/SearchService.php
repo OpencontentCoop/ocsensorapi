@@ -129,55 +129,58 @@ class SearchService extends BaseSearchService
             $data['sensor_open_weekday_si'] = $post->published->format('w');
         }
 
-        $read = $post->timelineItems->getByType( 'read' )->first();
-        if ( $read && $read->published instanceof \DateTime)
-        {
-            $data['sensor_read_timestamp_i'] = $read->published->format( 'U' );
-            $data['sensor_read_dt'] = strftime(
-                '%Y-%m-%dT%H:%M:%SZ',
-                $read->published->format( 'U' )
-            );
-            $interval = $post->published->diff( $read->published );
-            $data['sensor_reading_time_i'] = Utils::getDateIntervalSeconds( $interval );
-        }
-
-        $assignedList = $post->timelineItems->getByType( 'assigned' );
-        $assigned = $assignedList->first();
-        if ( $assigned && $assigned->published instanceof \DateTime)
-        {
-            $data['sensor_assigned_timestamp_i'] = $assigned->published->format( 'U' );
-            $data['sensor_assigned_dt'] = strftime(
-                '%Y-%m-%dT%H:%M:%SZ',
-                $assigned->published->format( 'U' )
-            );
-            $interval = $post->published->diff( $assigned->published );
-            $data['sensor_assigning_time_i'] = Utils::getDateIntervalSeconds( $interval );
-        }
-
-        $fix = $post->timelineItems->getByType( 'fixed' )->last();
-        if ( $fix && $fix->published instanceof \DateTime)
-        {
-            $data['sensor_fix_timestamp_i'] = $fix->published->format( 'U' );
-            $data['sensor_fix_dt'] = strftime(
-                '%Y-%m-%dT%H:%M:%SZ',
-                $fix->published->format( 'U' )
-            );
-
-            $interval = $post->published->diff( $fix->published );
-            $data['sensor_fixing_time_i'] = Utils::getDateIntervalSeconds( $interval );
-        }
-
-        $close = $post->timelineItems->getByType( 'closed' )->last();
-        if ( $close && $close->published instanceof \DateTime )
-        {
-            $data['sensor_close_timestamp_i'] = $close->published->format( 'U' );
-            $data['sensor_close_dt'] = strftime(
-                '%Y-%m-%dT%H:%M:%SZ',
-                $close->published->format( 'U' )
-            );
-
-            $interval = $post->published->diff( $close->published );
-            $data['sensor_closing_time_i'] = Utils::getDateIntervalSeconds( $interval );
+        $assignedList = false;
+        if ($post->timelineItems instanceof \Opencontent\Sensor\Api\Values\Message\TimelineItemCollection){
+            $read = $post->timelineItems->getByType( 'read' )->first();
+            if ( $read && $read->published instanceof \DateTime)
+            {
+                $data['sensor_read_timestamp_i'] = $read->published->format( 'U' );
+                $data['sensor_read_dt'] = strftime(
+                    '%Y-%m-%dT%H:%M:%SZ',
+                    $read->published->format( 'U' )
+                );
+                $interval = $post->published->diff( $read->published );
+                $data['sensor_reading_time_i'] = Utils::getDateIntervalSeconds( $interval );
+            }
+    
+            $assignedList = $post->timelineItems->getByType( 'assigned' );
+            $assigned = $assignedList->first();
+            if ( $assigned && $assigned->published instanceof \DateTime)
+            {
+                $data['sensor_assigned_timestamp_i'] = $assigned->published->format( 'U' );
+                $data['sensor_assigned_dt'] = strftime(
+                    '%Y-%m-%dT%H:%M:%SZ',
+                    $assigned->published->format( 'U' )
+                );
+                $interval = $post->published->diff( $assigned->published );
+                $data['sensor_assigning_time_i'] = Utils::getDateIntervalSeconds( $interval );
+            }
+    
+            $fix = $post->timelineItems->getByType( 'fixed' )->last();
+            if ( $fix && $fix->published instanceof \DateTime)
+            {
+                $data['sensor_fix_timestamp_i'] = $fix->published->format( 'U' );
+                $data['sensor_fix_dt'] = strftime(
+                    '%Y-%m-%dT%H:%M:%SZ',
+                    $fix->published->format( 'U' )
+                );
+    
+                $interval = $post->published->diff( $fix->published );
+                $data['sensor_fixing_time_i'] = Utils::getDateIntervalSeconds( $interval );
+            }
+    
+            $close = $post->timelineItems->getByType( 'closed' )->last();
+            if ( $close && $close->published instanceof \DateTime )
+            {
+                $data['sensor_close_timestamp_i'] = $close->published->format( 'U' );
+                $data['sensor_close_dt'] = strftime(
+                    '%Y-%m-%dT%H:%M:%SZ',
+                    $close->published->format( 'U' )
+                );
+    
+                $interval = $post->published->diff( $close->published );
+                $data['sensor_closing_time_i'] = Utils::getDateIntervalSeconds( $interval );
+            }
         }
 
         if ( isset( $data['sensor_reading_time_i'] ) )
@@ -192,43 +195,54 @@ class SearchService extends BaseSearchService
         if ( isset( $data['sensor_fixing_time_i'] ) && isset( $data['sensor_closing_time_i'] ) )
             $data['sensor_fix_close_time_i'] = $data['sensor_closing_time_i'] - $data['sensor_fixing_time_i'];;
 
-        $data['sensor_participant_id_list_lk'] = implode( ',', $post->participants->getParticipantIdList() );
-        $participantNameList = array();
-        foreach( $post->participants->participants as $participant )
-            $participantNameList[] = $participant->name;
-        $data['sensor_participant_name_list_lk'] = implode( ',', $participantNameList );
+        if ($post->participants instanceof \Opencontent\Sensor\Api\Values\ParticipantCollection){
+            $data['sensor_participant_id_list_lk'] = implode( ',', $post->participants->getParticipantIdList() );
+            $participantNameList = array();
+            foreach( $post->participants->participants as $participant )
+                $participantNameList[] = $participant->name;
+            $data['sensor_participant_name_list_lk'] = implode( ',', $participantNameList );
+        }
 
-        $data['sensor_approver_id_list_lk'] = implode( ',', $post->approvers->getParticipantIdList() );
-        $participantNameList = array();
-        foreach( $post->approvers->participants as $participant )
-            $participantNameList[] = $participant->name;
-        $data['sensor_approver_name_list_lk'] = implode( ',', $participantNameList );
+        if ($post->approvers instanceof \Opencontent\Sensor\Api\Values\Participant\ApproverCollection){
+            $data['sensor_approver_id_list_lk'] = implode( ',', $post->approvers->getParticipantIdList() );
+            $participantNameList = array();
+            foreach( $post->approvers->participants as $participant )
+                $participantNameList[] = $participant->name;
+            $data['sensor_approver_name_list_lk'] = implode( ',', $participantNameList );
+        }
 
-        $data['sensor_owner_id_list_lk'] = implode( ',', $post->owners->getParticipantIdList() );
-        $participantNameList = array();
-        foreach( $post->owners->participants as $participant )
-            $participantNameList[] = $participant->name;
-        $data['sensor_owner_name_list_lk'] = implode( ',', $participantNameList );
+        if ($post->owners instanceof \Opencontent\Sensor\Api\Values\Participant\OwnerCollection){
+            $data['sensor_owner_id_list_lk'] = implode( ',', $post->owners->getParticipantIdList() );
+            $participantNameList = array();
+            foreach( $post->owners->participants as $participant )
+                $participantNameList[] = $participant->name;
+            $data['sensor_owner_name_list_lk'] = implode( ',', $participantNameList );
+        }
 
-        $data['sensor_observer_id_list_lk'] = implode( ',', $post->observers->getParticipantIdList() );
-        $participantNameList = array();
-        foreach( $post->observers->participants as $participant )
-            $participantNameList[] = $participant->name;
-        $data['sensor_observer_name_list_lk'] = implode( ',', $participantNameList );
+        if ($post->observers instanceof \Opencontent\Sensor\Api\Values\Participant\ObserverCollection){
+            $data['sensor_observer_id_list_lk'] = implode( ',', $post->observers->getParticipantIdList() );
+            $participantNameList = array();
+            foreach( $post->observers->participants as $participant )
+                $participantNameList[] = $participant->name;
+            $data['sensor_observer_name_list_lk'] = implode( ',', $participantNameList );
+        }
+        
         $ownerHistory = array();
-        foreach( $assignedList->messages as $message )
-        {
-            foreach( $message->extra as $id )
+        if ($assignedList){
+            foreach( $assignedList->messages as $message )
             {
-                $participant = $post->participants->getParticipantById( $id );
-                if ( $participant )
-                    $ownerHistory[$participant->id] = $participant->name;
+                foreach( $message->extra as $id )
+                {
+                    $participant = $post->participants->getParticipantById( $id );
+                    if ( $participant )
+                        $ownerHistory[$participant->id] = $participant->name;
+                }
             }
         }
         $data['sensor_history_owner_name_lk'] = implode( ',', $ownerHistory );
         $data['sensor_history_owner_id_lk'] = implode( ',', array_keys( $ownerHistory ) );
 
-        $areaList = array();
+        $areaList = array();        
         foreach( $post->areas as $area )
             $areaList[$area->id] = $area->name;
         $data['sensor_area_name_list_lk'] = implode( ',', array_values( $areaList ) );
@@ -240,47 +254,49 @@ class SearchService extends BaseSearchService
         $data['sensor_category_name_list_lk'] = implode( ',', array_values( $categoryList ) );
         $data['sensor_category_id_list_lk'] = implode( ',', array_keys( $categoryList ) );
 
-        $currentUser = $this->repository->getCurrentUser();
-        foreach( $post->participants->participants as $participant )
-        {
-            foreach ( $participant->users as $user )
+        if ($post->participants instanceof \Opencontent\Sensor\Api\Values\ParticipantCollection){    
+            $currentUser = $this->repository->getCurrentUser();            
+            foreach( $post->participants->participants as $participant )
             {
-                $data['sensor_user_' . $user->id . '_has_read_b'] = $user->hasRead ? 'true' : 'false';
-
-                $this->repository->setCurrentUser( $user );
-                $this->repository->getPostService()->setUserPostAware( $post );
-
-                $unreadTimeLines = 0;
-                foreach( $post->timelineItems->messages as $message )
-                    if ( $message->modified > $user->lastAccessDateTime )
-                        $unreadTimeLines++;
-
-                $unreadComments = 0;
-                foreach( $post->comments->messages as $message )
-                    if ( $message->modified > $user->lastAccessDateTime )
-                        $unreadComments++;
-
-                $unreadPrivates = 0;
-                foreach( $post->privateMessages->messages as $message )
-                    if ( $message->modified > $user->lastAccessDateTime )
-                        $unreadPrivates++;
-
-                $unreadResponses = 0;
-                foreach( $post->responses->messages as $message )
-                    if ( $message->modified > $user->lastAccessDateTime )
-                        $unreadResponses++;
-
-                $data['sensor_user_' . $user->id . '_unread_timelines_i'] = $unreadTimeLines;
-                $data['sensor_user_' . $user->id . '_timelines_i'] = $post->timelineItems->count();
-                $data['sensor_user_' . $user->id . '_unread_comments_i'] = $unreadComments;
-                $data['sensor_user_' . $user->id . '_comments_i'] = $post->comments->count();
-                $data['sensor_user_' . $user->id . '_unread_private_messages_i'] = $unreadPrivates;
-                $data['sensor_user_' . $user->id . '_private_messages_i'] = $post->privateMessages->count();
-                $data['sensor_user_' . $user->id . '_unread_responses_i'] = $unreadResponses;
-                $data['sensor_user_' . $user->id . '_responses_i'] = $post->responses->count();
+                foreach ( $participant->users as $user )
+                {
+                    $data['sensor_user_' . $user->id . '_has_read_b'] = $user->hasRead ? 'true' : 'false';
+    
+                    $this->repository->setCurrentUser( $user );
+                    $this->repository->getPostService()->setUserPostAware( $post );
+    
+                    $unreadTimeLines = 0;
+                    foreach( $post->timelineItems->messages as $message )
+                        if ( $message->modified > $user->lastAccessDateTime )
+                            $unreadTimeLines++;
+    
+                    $unreadComments = 0;
+                    foreach( $post->comments->messages as $message )
+                        if ( $message->modified > $user->lastAccessDateTime )
+                            $unreadComments++;
+    
+                    $unreadPrivates = 0;
+                    foreach( $post->privateMessages->messages as $message )
+                        if ( $message->modified > $user->lastAccessDateTime )
+                            $unreadPrivates++;
+    
+                    $unreadResponses = 0;
+                    foreach( $post->responses->messages as $message )
+                        if ( $message->modified > $user->lastAccessDateTime )
+                            $unreadResponses++;
+    
+                    $data['sensor_user_' . $user->id . '_unread_timelines_i'] = $unreadTimeLines;
+                    $data['sensor_user_' . $user->id . '_timelines_i'] = $post->timelineItems->count();
+                    $data['sensor_user_' . $user->id . '_unread_comments_i'] = $unreadComments;
+                    $data['sensor_user_' . $user->id . '_comments_i'] = $post->comments->count();
+                    $data['sensor_user_' . $user->id . '_unread_private_messages_i'] = $unreadPrivates;
+                    $data['sensor_user_' . $user->id . '_private_messages_i'] = $post->privateMessages->count();
+                    $data['sensor_user_' . $user->id . '_unread_responses_i'] = $unreadResponses;
+                    $data['sensor_user_' . $user->id . '_responses_i'] = $post->responses->count();
+                }
             }
+            $this->repository->setCurrentUser( $currentUser );
         }
-        $this->repository->setCurrentUser( $currentUser );
         return $data;
     }
 

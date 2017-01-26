@@ -24,7 +24,7 @@ class UserService extends UserServiceBase
             $user = new User();
             $user->id = $id;
             $ezUser = $this->getEzUser( $id );
-            if ( $ezUser instanceof eZUser )
+            if ( $ezUser instanceof eZUser && $ezUser->contentObject() instanceof \eZContentObject)
             {
                 $user->email = $ezUser->Email;
                 $user->name = $ezUser->contentObject()->name( false, $this->repository->getCurrentLanguage() );

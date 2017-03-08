@@ -249,14 +249,18 @@ class PostService extends PostServiceBase
 
     protected function getCommentsIsOpen( Post $post )
     {
-        $now = time();
-        $resolutionInfo = $this->getPostResolutionInfo( $post );
-        if ( $resolutionInfo instanceof Post\ResolutionInfo
-             && $this->repository->getSensorSettings()->has( 'CloseCommentsAfterSeconds' )
-        )
-        {
-            $time = $now - $resolutionInfo->resolutionDateTime->getTimestamp();
-            return $time < $this->repository->getSensorSettings()->get( 'CloseCommentsAfterSeconds' );
+        $allowCommentsInClosedPost = $this->repository->getSensorSettings()->has('AllowCommentsInClosedPost') ?
+            $this->repository->getSensorSettings()->get('AllowCommentsInClosedPost') :
+            true;
+        if ( $this->getPostWorkflowStatus()->is( Post\WorkflowStatus::CLOSED ) && $allowCommentsInClosedPost ) {
+            $now = time();
+            $resolutionInfo = $this->getPostResolutionInfo($post);
+            if ($resolutionInfo instanceof Post\ResolutionInfo
+                && $this->repository->getSensorSettings()->has('CloseCommentsAfterSeconds')
+            ) {
+                $time = $now - $resolutionInfo->resolutionDateTime->getTimestamp();
+                return $time < $this->repository->getSensorSettings()->get('CloseCommentsAfterSeconds');
+            }
         }
 
         return true;

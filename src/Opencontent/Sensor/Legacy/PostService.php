@@ -249,6 +249,9 @@ class PostService extends PostServiceBase
 
     protected function getCommentsIsOpen( Post $post )
     {
+        if ( $this->repository->getSensorSettings()->has( 'CommentsAllowed' ) && !$this->repository->getSensorSettings()->get( 'CommentsAllowed' ) ){
+            return false;
+        }   
         $now = time();
         $resolutionInfo = $this->getPostResolutionInfo( $post );
         if ( $resolutionInfo instanceof Post\ResolutionInfo

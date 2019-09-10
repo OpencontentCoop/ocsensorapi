@@ -5,6 +5,10 @@ namespace Opencontent\Sensor\Api\Values\Post;
 use \DateTime;
 use Opencontent\Sensor\Api\Exportable;
 
+/**
+ * Class ExpirationInfo
+ * @package Opencontent\Sensor\Api\Values\Post
+ */
 class ExpirationInfo extends Exportable
 {
     /**
@@ -32,4 +36,12 @@ class ExpirationInfo extends Exportable
      */
     public $days;
 
+    public function jsonSerialize()
+    {
+        $objectVars = get_object_vars($this);
+
+        unset($objectVars['creationDateTime']);
+
+        return self::toJson($objectVars);
+    }
 }

@@ -5,6 +5,10 @@ namespace Opencontent\Sensor\Api\Values\Message;
 use Opencontent\Sensor\Api\Values\Message;
 use Opencontent\Sensor\Api\Values\User;
 
+/**
+ * Class PrivateMessage
+ * @package Opencontent\Sensor\Api\Values\Message
+ */
 class PrivateMessage extends Message
 {
     /**
@@ -12,8 +16,25 @@ class PrivateMessage extends Message
      */
     public $receivers;
 
-    public function getReceiverById( $id )
+    public function getReceiverById($id)
     {
-        return isset( $this->receivers[$id] ) ? $this->receivers[$id] : false;
+        foreach ($this->receivers as $receiver) {
+            if ($receiver->id == $id) {
+                return $receiver;
+            }
+        }
+
+        return false;
+    }
+
+    public function getReceiverByIdList($idList)
+    {
+        foreach ($this->receivers as $receiver) {
+            if (in_array($receiver->id, $idList)) {
+                return $receiver;
+            }
+        }
+
+        return false;
     }
 }

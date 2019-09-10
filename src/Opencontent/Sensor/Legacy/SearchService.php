@@ -2,9 +2,21 @@
 
 namespace Opencontent\Sensor\Legacy;
 
+use Opencontent\Opendata\GeoJson\Feature;
+use Opencontent\Opendata\GeoJson\FeatureCollection;
+use Opencontent\Opendata\GeoJson\Geometry;
+use Opencontent\Opendata\GeoJson\Properties;
 use Opencontent\Sensor\Core\SearchService as BaseSearchService;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\SearchQuery;
+use Opencontent\Sensor\Api\Exception;
+use Opencontent\Opendata\Api\ContentSearch;
+use Opencontent\Opendata\Api\Values\SearchResults;
+use Opencontent\Opendata\Api\SearchResultDecoratorInterface;
+use Opencontent\Opendata\Api\SearchResultDecoratorQueryBuilderAware;
+use Opencontent\Opendata\Api\QueryLanguage\EzFind\SearchResultInfo;
+use Opencontent\Opendata\Api\QueryLanguage;
+use Opencontent\Sensor\Legacy\SearchService\SolrMapper;
 
 class SearchService extends BaseSearchService
 {
@@ -13,381 +25,258 @@ class SearchService extends BaseSearchService
      */
     protected $repository;
 
-    protected $fieldsMapper = array (
-
-        'id' => 'sensor_id_si',
-        'internalId' => 'sensor_internalid_si',
-        'subject' => 'sensor_subject_t',
-
-        'type' => 'sensor_type_s',
-        'status' => 'sensor_status_lk',
-        'workflow_status' => 'sensor_workflow_status_lk',
-        'privacy' => 'sensor_privacy_lk',
-        'moderation' => 'sensor_moderation_lk',
-
-        'coordinates' => 'sensor_coordinates_gpt',
-        'address' => 'sensor_address_t',
-
-        'expiration' => 'sensor_expiration_dt',
-        'expiration_days' => 'sensor_expiration_days_i',
-
-        'open' => 'sensor_open_dt',
-        'open_timestamp' => 'sensor_open_timestamp_i',
-        'open_weekday' => 'sensor_open_weekday_si',
-        'read_timestamp' => 'sensor_read_timestamp_i',
-        'read' => 'sensor_read_dt',
-        'reading_time' => 'sensor_reading_time_i',
-        'assigned_timestamp' => 'sensor_assigned_timestamp_i',
-        'assigned' => 'sensor_assigned_dt',
-        'assigning_time' => 'sensor_assigning_time_i',
-        'fix_timestamp' => 'sensor_fix_timestamp_i',
-        'fix' => 'sensor_fix_dt',
-        'fixing_time' => 'sensor_fixing_time_i',
-        'close_timestamp' => 'sensor_close_timestamp_i',
-        'close' => 'sensor_close_dt',
-        'closing_time' => 'sensor_closing_time_i',
-
-        'open_read_time' => 'sensor_open_read_time_i',
-        'read_assign_time' => 'sensor_read_assign_time_i',
-        'assign_fix_time' => 'sensor_assign_fix_time_i',
-        'fix_close_time' => 'sensor_fix_close_time_i',
-
-        'author_id' => 'sensor_author_id_i',
-        'author_name' => 'sensor_author_name_t',
-        'reporter_id' => 'sensor_reporter_id_i',
-        'reporter_name' => 'sensor_reporter_name_t',
-        'behalf' => 'sensor_behalf_b',
-        'participant_id_list' => 'sensor_participant_id_list_lk',
-        'participant_name_list' => 'sensor_participant_name_list_lk',
-        'approver_id_list' => 'sensor_approver_id_list_lk',
-        'approver_name_list' => 'sensor_approver_name_list_lk',
-        'owner_id_list' => 'sensor_owner_id_list_lk',
-        'owner_name_list' => 'sensor_owner_name_list_lk',
-        'observer_id_list' => 'sensor_observer_id_list_lk',
-        'observer_name_list' => 'sensor_observer_name_list_lk',
-        'history_owner_name' => 'sensor_history_owner_name_lk',
-        'history_owner_id' => 'sensor_history_owner_id_lk',
-
-        'area_name_list' => 'sensor_area_name_list_lk',
-        'area_id_list' => 'sensor_area_id_list_lk',
-        'category_name_list' => 'sensor_category_name_list_lk',
-        'category_id_list' => 'sensor_category_id_list_lk',
-
-        'user_*_has_read' => 'sensor_user_*_has_read_b',
-        'user_*_unread_timelines' => 'sensor_user_*_unread_timelines_i',
-        'user_*_timelines' => 'sensor_user_*_timelines_i',
-        'user_*_unread_comments' => 'sensor_user_*_unread_comments_i',
-        'user_*_comments' => 'sensor_user_*_comments_i',
-        'user_*_unread_private_messages' => 'sensor_user_*_unread_private_messages_i',
-        'user_*_private_messages' => 'sensor_user_*_private_messages_i',
-        'user_*_unread_responses' => 'sensor_user_*_unread_responses_i',
-        'user_*_responses' => 'sensor_user_*_responses_i'
-    );
-
-    public function getSolrFields( Post $post )
+    /**
+     * @param $postId
+     * @param array $parameters
+     * @return Post
+     * @throws Exception\NotFoundException
+     * @throws Exception\UnexpectedException
+     */
+    public function searchPost($postId, $parameters = array())
     {
-        $data = array();
-
-        $data['sensor_id_si'] = $post->id;
-        $data['sensor_internalid_si'] = $post->internalId;
-        $data['sensor_subject_t'] = $post->subject;
-        $data['sensor_type_s'] = $post->type->identifier;
-        $data['sensor_status_lk'] = $post->status->identifier;
-        $data['sensor_workflow_status_lk'] = $post->workflowStatus->identifier;
-        $data['sensor_privacy_lk'] = $post->privacy->identifier;
-        $data['sensor_moderation_lk'] = $post->moderation->identifier;
-
-        if ( $post->geoLocation->latitude )
-        {
-            $data['sensor_coordinates_gpt'] = $post->geoLocation->latitude . ',' . $post->geoLocation->longitude;
-            $data['sensor_address_t'] = $post->geoLocation->address;
+        //echo '<pre>';print_r($this->repository->getPostService()->loadPost($postId));die();
+        $result = $this->internalSearchPosts('id = ' . $postId . ' limit 1', $parameters);
+        if ($result->totalCount > 0) {
+            return $result->searchHits[0];
         }
 
-        if ( $post->expirationInfo->expirationDateTime instanceof \DateTime ){
-            $data['sensor_expiration_dt'] = strftime( '%Y-%m-%dT%H:%M:%SZ', $post->expirationInfo->expirationDateTime->format( 'U' ) );
-            $data['sensor_expiration_days_i'] = $post->expirationInfo->days;
-        }
-
-        if ( $post->author )
-        {
-            $data['sensor_author_id_i'] = $post->author->id;
-            $data['sensor_author_name_t'] = $post->author->name;
-        }
-
-        if ( $post->reporter )
-        {
-            $data['sensor_reporter_id_i'] = $post->reporter->id;
-            $data['sensor_reporter_name_t'] = $post->reporter->name;
-        }
-
-        if ( $post->author && $post->reporter )
-            $data['sensor_behalf_b'] = ( $post->author->name != $post->reporter->name ) ? 'true' : 'false';
-
-        if ($post->published instanceof \DateTime) {
-            $data['sensor_open_dt'] = strftime('%Y-%m-%dT%H:%M:%SZ', $post->published->format('U'));
-            $data['sensor_open_timestamp_i'] = $post->published->format('U');
-            $data['sensor_open_weekday_si'] = $post->published->format('w');
-        }
-
-        $assignedList = false;
-        if ($post->timelineItems instanceof \Opencontent\Sensor\Api\Values\Message\TimelineItemCollection){
-            $read = $post->timelineItems->getByType( 'read' )->first();
-            if ( $read && $read->published instanceof \DateTime)
-            {
-                $data['sensor_read_timestamp_i'] = $read->published->format( 'U' );
-                $data['sensor_read_dt'] = strftime(
-                    '%Y-%m-%dT%H:%M:%SZ',
-                    $read->published->format( 'U' )
-                );
-                $interval = $post->published->diff( $read->published );
-                $data['sensor_reading_time_i'] = Utils::getDateIntervalSeconds( $interval );
-            }
-    
-            $assignedList = $post->timelineItems->getByType( 'assigned' );
-            $assigned = $assignedList->first();
-            if ( $assigned && $assigned->published instanceof \DateTime)
-            {
-                $data['sensor_assigned_timestamp_i'] = $assigned->published->format( 'U' );
-                $data['sensor_assigned_dt'] = strftime(
-                    '%Y-%m-%dT%H:%M:%SZ',
-                    $assigned->published->format( 'U' )
-                );
-                $interval = $post->published->diff( $assigned->published );
-                $data['sensor_assigning_time_i'] = Utils::getDateIntervalSeconds( $interval );
-            }
-    
-            $fix = $post->timelineItems->getByType( 'fixed' )->last();
-            if ( $fix && $fix->published instanceof \DateTime)
-            {
-                $data['sensor_fix_timestamp_i'] = $fix->published->format( 'U' );
-                $data['sensor_fix_dt'] = strftime(
-                    '%Y-%m-%dT%H:%M:%SZ',
-                    $fix->published->format( 'U' )
-                );
-    
-                $interval = $post->published->diff( $fix->published );
-                $data['sensor_fixing_time_i'] = Utils::getDateIntervalSeconds( $interval );
-            }
-    
-            $close = $post->timelineItems->getByType( 'closed' )->last();
-            if ( $close && $close->published instanceof \DateTime )
-            {
-                $data['sensor_close_timestamp_i'] = $close->published->format( 'U' );
-                $data['sensor_close_dt'] = strftime(
-                    '%Y-%m-%dT%H:%M:%SZ',
-                    $close->published->format( 'U' )
-                );
-    
-                $interval = $post->published->diff( $close->published );
-                $data['sensor_closing_time_i'] = Utils::getDateIntervalSeconds( $interval );
-            }
-        }
-
-        if ( isset( $data['sensor_reading_time_i'] ) )
-            $data['sensor_open_read_time_i'] = $data['sensor_reading_time_i'];
-
-        if ( isset( $data['sensor_reading_time_i'] ) && isset( $data['sensor_assigning_time_i'] ) )
-            $data['sensor_read_assign_time_i'] = $data['sensor_assigning_time_i'] - $data['sensor_reading_time_i'];
-
-        if ( isset( $data['sensor_assigning_time_i'] ) && isset( $data['sensor_fixing_time_i'] ) )
-            $data['sensor_assign_fix_time_i'] = $data['sensor_fixing_time_i'] - $data['sensor_assigning_time_i'];
-
-        if ( isset( $data['sensor_fixing_time_i'] ) && isset( $data['sensor_closing_time_i'] ) )
-            $data['sensor_fix_close_time_i'] = $data['sensor_closing_time_i'] - $data['sensor_fixing_time_i'];;
-
-        if ($post->participants instanceof \Opencontent\Sensor\Api\Values\ParticipantCollection){
-            $data['sensor_participant_id_list_lk'] = implode( ',', $post->participants->getParticipantIdList() );
-            $participantNameList = array();
-            foreach( $post->participants->participants as $participant )
-                $participantNameList[] = $participant->name;
-            $data['sensor_participant_name_list_lk'] = implode( ',', $participantNameList );
-        }
-
-        if ($post->approvers instanceof \Opencontent\Sensor\Api\Values\Participant\ApproverCollection){
-            $data['sensor_approver_id_list_lk'] = implode( ',', $post->approvers->getParticipantIdList() );
-            $participantNameList = array();
-            foreach( $post->approvers->participants as $participant )
-                $participantNameList[] = $participant->name;
-            $data['sensor_approver_name_list_lk'] = implode( ',', $participantNameList );
-        }
-
-        if ($post->owners instanceof \Opencontent\Sensor\Api\Values\Participant\OwnerCollection){
-            $data['sensor_owner_id_list_lk'] = implode( ',', $post->owners->getParticipantIdList() );
-            $participantNameList = array();
-            foreach( $post->owners->participants as $participant )
-                $participantNameList[] = $participant->name;
-            $data['sensor_owner_name_list_lk'] = implode( ',', $participantNameList );
-        }
-
-        if ($post->observers instanceof \Opencontent\Sensor\Api\Values\Participant\ObserverCollection){
-            $data['sensor_observer_id_list_lk'] = implode( ',', $post->observers->getParticipantIdList() );
-            $participantNameList = array();
-            foreach( $post->observers->participants as $participant )
-                $participantNameList[] = $participant->name;
-            $data['sensor_observer_name_list_lk'] = implode( ',', $participantNameList );
-        }
-        
-        $ownerHistory = array();
-        if ($assignedList){
-            foreach( $assignedList->messages as $message )
-            {
-                foreach( $message->extra as $id )
-                {
-                    $participant = $post->participants->getParticipantById( $id );
-                    if ( $participant )
-                        $ownerHistory[$participant->id] = $participant->name;
-                }
-            }
-        }
-        $data['sensor_history_owner_name_lk'] = implode( ',', $ownerHistory );
-        $data['sensor_history_owner_id_lk'] = implode( ',', array_keys( $ownerHistory ) );
-
-        $areaList = array();        
-        foreach( $post->areas as $area )
-            $areaList[$area->id] = $area->name;
-        $data['sensor_area_name_list_lk'] = implode( ',', array_values( $areaList ) );
-        $data['sensor_area_id_list_lk'] = implode( ',', array_keys( $areaList ) );
-
-        $categoryList = array();
-        foreach( $post->categories as $category )
-            $categoryList[$category->id] = $category->name;
-        $data['sensor_category_name_list_lk'] = implode( ',', array_values( $categoryList ) );
-        $data['sensor_category_id_list_lk'] = implode( ',', array_keys( $categoryList ) );
-
-        if ($post->participants instanceof \Opencontent\Sensor\Api\Values\ParticipantCollection){    
-            $currentUser = $this->repository->getCurrentUser();            
-            foreach( $post->participants->participants as $participant )
-            {
-                foreach ( $participant->users as $user )
-                {
-                    $data['sensor_user_' . $user->id . '_has_read_b'] = $user->hasRead ? 'true' : 'false';
-    
-                    $this->repository->setCurrentUser( $user );
-                    $this->repository->getPostService()->setUserPostAware( $post );
-    
-                    $unreadTimeLines = 0;
-                    foreach( $post->timelineItems->messages as $message )
-                        if ( $message->modified > $user->lastAccessDateTime )
-                            $unreadTimeLines++;
-    
-                    $unreadComments = 0;
-                    foreach( $post->comments->messages as $message )
-                        if ( $message->modified > $user->lastAccessDateTime )
-                            $unreadComments++;
-    
-                    $unreadPrivates = 0;
-                    foreach( $post->privateMessages->messages as $message )
-                        if ( $message->modified > $user->lastAccessDateTime )
-                            $unreadPrivates++;
-    
-                    $unreadResponses = 0;
-                    foreach( $post->responses->messages as $message )
-                        if ( $message->modified > $user->lastAccessDateTime )
-                            $unreadResponses++;
-    
-                    $data['sensor_user_' . $user->id . '_unread_timelines_i'] = $unreadTimeLines;
-                    $data['sensor_user_' . $user->id . '_timelines_i'] = $post->timelineItems->count();
-                    $data['sensor_user_' . $user->id . '_unread_comments_i'] = $unreadComments;
-                    $data['sensor_user_' . $user->id . '_comments_i'] = $post->comments->count();
-                    $data['sensor_user_' . $user->id . '_unread_private_messages_i'] = $unreadPrivates;
-                    $data['sensor_user_' . $user->id . '_private_messages_i'] = $post->privateMessages->count();
-                    $data['sensor_user_' . $user->id . '_unread_responses_i'] = $unreadResponses;
-                    $data['sensor_user_' . $user->id . '_responses_i'] = $post->responses->count();
-                }
-            }
-            $this->repository->setCurrentUser( $currentUser );
-        }
-        return $data;
+        throw new Exception\NotFoundException("Post $postId not found");
     }
 
-    public function instanceNewSearchQuery()
+    /**
+     * @param $query
+     * @param array $parameters
+     * @param null $policies
+     * @return mixed|SearchResults|FeatureCollection
+     * @throws Exception\UnexpectedException
+     */
+    public function searchPosts($query, $parameters = array(), $policies = null)
     {
-        return new SearchQuery();
+        return $this->internalSearchPosts($query, $parameters, $policies);
     }
 
-    public function mappedField( $solrField )
+    private function internalSearchPosts($query, $parameters = array(), $policies = null)
     {
-        $values = array_flip( $this->fieldsMapper );
-        return isset( $values[$solrField] ) ? $values[$solrField] : null;
-    }
+        $parameters = array_merge([
+            'executionTimes' => false,
+            'readingStatuses' => false,
+            'currentUserInParticipants' => false,
+            'capabilities' => false,
+            'format' => 'json'
+        ], $parameters);
 
-    public function field( $field )
-    {
-        return isset( $this->fieldsMapper[$field] ) ? $this->fieldsMapper[$field] : null;
-    }
-
-    public function query( SearchQuery $query )
-    {
-        $solr = new \OCSolr();
-
-        $facet = array();
-        foreach( $query->facets as $facetString )
-        {
-            $facet[] = array( 'field' => $this->fieldsMapper[$facetString], 'limit' => $query->facetLimit );
+        // bootst perfomance if geojson
+        if ($parameters['format'] == 'geojson'){
+            $parameters['executionTimes'] = false;
+            $parameters['readingStatuses'] = false;
+            $parameters['capabilities'] = false;
         }
 
-        $sort = array();
-        foreach( $query->sortArray as $sortArray )
-        {
-            foreach( $sortArray as $field => $value )
-                $sort[$this->fieldsMapper[$field]] = $value;
+        $solrStorageTools = new \ezfSolrStorage();
+
+        $queryBuilder = new SearchService\QueryBuilder($this->repository->getPostContentClassIdentifier());
+        $queryObject = $queryBuilder->instanceQuery($query);
+        $ezFindQueryObject = $queryObject->convert();
+
+        if (!$ezFindQueryObject instanceof \ArrayObject) {
+            throw new \RuntimeException("Query builder did not return a valid query");
         }
 
-        $filter = array();
-        foreach( $query->filters as $filterName => $filterValue )
-        {
-            if ( is_array( $filterValue ) )
-            {
-                if ( count( $filterValue ) > 1 )
-                {
-                    $filterValueArray = array( 'or' );
-                    foreach ( $filterValue as $value )
-                    {
-                        $filterValueArray[] = $this->fieldsMapper[$filterName] . ':' . $value;
-                    }
-                    $filter[] = $filterValueArray;
-                }
-                else
-                    $filter[] = $this->fieldsMapper[$filterName] . ':' . $filterValue[0];
-            }
-            else
-            {
-                $filter[] = $this->fieldsMapper[$filterName] . ':' . $filterValue;
-            }
+        if ($ezFindQueryObject->getArrayCopy() === array("_query" => null) && !empty($query)) {
+            throw new \RuntimeException("Inconsistent query");
+        }
+        $ezFindQuery = $ezFindQueryObject->getArrayCopy();
+
+        $fieldsToReturn = [$solrStorageTools->getSolrStorageFieldName(SolrMapper::SOLR_STORAGE_POST)];
+        if ($parameters['executionTimes']) {
+            $fieldsToReturn[] = $solrStorageTools->getSolrStorageFieldName(SolrMapper::SOLR_STORAGE_EXECUTION_TIMES);
+        }
+        if ($parameters['readingStatuses']) {
+            $fieldsToReturn[] = $solrStorageTools->getSolrStorageFieldName(SolrMapper::SOLR_STORAGE_READ_STATUSES);
         }
 
-        $fields = array();
-        foreach( $query->fields as $field )
-        {
-            $fields[] = $this->fieldsMapper[$field];
-        }
-
-        $filter[] = \eZSolr::getMetaFieldName( 'installation_id' ) . ':' . \eZSolr::installationID();
-
-        $params = array(
-            'SearchOffset' => $query->limits[1],
-            'SearchLimit' => $query->limits[0],
-            'Facet' => $facet,
-            'SortBy' => $sort,
-            'Filter' => $filter,
-            'SearchContentClassID' => array( $this->repository->getPostContentClass()->attribute( 'id' ) ),
-            'SearchSectionID' => null,
-            'SearchSubTreeArray' => array( $this->repository->getPostRootNode()->attribute( 'node_id' ) ),
-            'AsObjects' => false,
-            'SpellCheck' => null,
-            'IgnoreVisibility' => null,
-            'Limitation' => array(),
-            'BoostFunctions' => null,
-            'QueryHandler' => 'ezpublish',
-            'EnableElevation' => true,
-            'ForceElevation' => true,
-            'SearchDate' => null,
-            'DistributedSearch' => false,
-            'FieldsToReturn' => $fields,
-            'SearchResultClustering' => null,
-            'ExtendedAttributeFilter' => array()
+        $ezFindQuery = array_merge(
+            array(
+                'SearchOffset' => 0,
+                'SearchLimit' => ($parameters['format'] === 'geojson') ? 200 : 10,
+                'Filter' => [],
+            ),
+            $ezFindQuery,
+            array(
+                'SearchContentClassID' => array($this->repository->getPostContentClass()->attribute('id')),
+                'SearchSubTreeArray' => array($this->repository->getPostRootNode()->attribute('node_id')),
+                'AsObjects' => false,
+                //'IgnoreVisibility' => true,
+                'FieldsToReturn' => $fieldsToReturn,
+                'Limitation' => $policies
+            )
         );
 
-        return $solr->search( $query->query, $params );
+        if ($parameters['currentUserInParticipants']) {
+            $currentUserFilter = "sensor_participant_id_list_lk:" . $this->repository->getCurrentUser()->id;
+            if (empty($ezFindQuery['Filter'])) {
+                $ezFindQuery['Filter'] = [$currentUserFilter];
+            } else {
+                $ezFindQuery['Filter'] = [$ezFindQuery['Filter'], $currentUserFilter];
+            }
+        }
+
+        $ini = \eZINI::instance();
+        $languages = $ini->variable( 'RegionalSettings', 'SiteLanguageList' );
+        $languageFilter = [
+            'or',
+            \eZSolr::getMetaFieldName('language_code') . ':(' . implode( ' OR ' , $languages ) . ')',
+            \eZSolr::getMetaFieldName( 'always_available' ) . ':true'
+        ];
+        if (empty($ezFindQuery['Filter'])) {
+            $ezFindQuery['Filter'] = [$languageFilter];
+        } else {
+            $ezFindQuery['Filter'] = [$ezFindQuery['Filter'], $languageFilter];
+        }
+
+        $solr = new \eZSolr();
+        $rawResults = @$solr->search(
+            $ezFindQuery['query'],
+            $ezFindQuery
+        );
+
+        $searchExtra = null;
+        if ($rawResults['SearchExtras'] instanceof \ezfSearchResultInfo) {
+            if ($rawResults['SearchExtras']->attribute('hasError')) {
+                $error = $rawResults['SearchExtras']->attribute('error');
+                if (is_array($error)) {
+                    $error = (string)$error['msg'];
+                }
+                throw new \RuntimeException($error);
+            }
+
+            $searchExtra = SearchResultInfo::fromEzfSearchResultInfo($rawResults['SearchExtras']);
+        }
+
+        $searchResults = new SearchResults();
+
+        $searchResults->totalCount = (int)$rawResults['SearchCount'];
+        $searchResults->query = (string)$queryObject;
+
+        if (($ezFindQuery['SearchLimit'] + $ezFindQuery['SearchOffset']) < $searchResults->totalCount) {
+            $nextPageQuery = clone $queryObject;
+            $nextPageQuery->setParameter('offset', ($ezFindQuery['SearchLimit'] + $ezFindQuery['SearchOffset']));
+            $searchResults->nextPageQuery = (string)$nextPageQuery;
+        }
+
+        foreach ($rawResults['SearchResult'] as $resultItem) {
+            try {
+                if (isset($resultItem['data_map'][SolrMapper::SOLR_STORAGE_POST])) {
+                    $postSerialized = $resultItem['data_map'][SolrMapper::SOLR_STORAGE_POST];
+                    $post = unserialize($postSerialized);
+                    if ($parameters['executionTimes']) {
+                        $post->executionTimes = $resultItem['data_map'][SolrMapper::SOLR_STORAGE_EXECUTION_TIMES];
+                    }
+                    if ($parameters['readingStatuses']) {
+                        $post->readingStatuses = $this->getReadingStatusesForUser(
+                            $resultItem['data_map'][SolrMapper::SOLR_STORAGE_READ_STATUSES],
+                            $this->repository->getCurrentUser()->id
+                        );
+                    }
+                    // bootst perfomance if geojson
+                    if ($parameters['format'] != 'geojson') {
+                        $this->repository->getPostService()->refreshExpirationInfo($post);
+                        $this->repository->getPostService()->setCommentsIsOpen($post);
+                        $this->repository->getPostService()->setUserPostAware($post);
+                    }
+                    if ($parameters['capabilities']) {
+                        $post->capabilities = $this->repository->getPermissionService()->loadCurrentUserPostPermissionCollection($post)->getArrayCopy();
+                    }
+                    $searchResults->searchHits[] = $post;
+                }
+            } catch (\Exception $e) {
+                \eZDebug::writeError($e->getMessage(), __METHOD__);
+            }
+        }
+
+        if (isset($ezFindQuery['Facet'])
+            && is_array($ezFindQuery['Facet'])
+            && !empty($ezFindQuery['Facet'])
+            && $searchExtra instanceof SearchResultInfo
+        ) {
+            $facets = array();
+            $facetResults = $searchExtra->attribute('facet_fields');
+            foreach ($ezFindQuery['Facet'] as $index => $facetDefinition) {
+                $facetResult = $facetResults[$index];
+                $facets[] = array(
+                    'name' => $facetDefinition['name'],
+                    'data' => $facetResult['countList']
+                );
+            }
+            $searchResults->facets = $facets;
+        }
+
+        $filtersList = (array)\eZINI::instance('ezfind.ini')->variable('ExtendedAttributeFilters', 'FiltersList');
+        foreach (array_keys($filtersList) as $filterId) {
+            $filter = \eZFindExtendedAttributeFilterFactory::getInstance($filterId);
+            if ($filter instanceof SearchResultDecoratorQueryBuilderAware) {
+                $filter->setQueryBuilder($queryBuilder);
+            }
+            if ($filter instanceof SearchResultDecoratorInterface) {
+                $filter->decorate($searchResults, $rawResults);
+            }
+        }
+
+        if ($parameters['format'] === 'json'){
+            return $searchResults;
+
+        }elseif ($parameters['format'] === 'geojson'){
+            $collection = new FeatureCollection();
+
+            /** @var Post $post */
+            foreach ($searchResults->searchHits as $post) {
+                if ($post->geoLocation->latitude) {
+                    $geometry = new Geometry();
+                    $geometry->type = 'Point';
+                    $geometry->coordinates = [
+                        $post->geoLocation->longitude,
+                        $post->geoLocation->latitude,
+                    ];
+                    $properties = [
+                        'id' => $post->id,
+                        'subject' => $post->subject,
+                        'status' => $post->status,
+                        'type' => $post->type,
+                        'published' => $post->published->format(DATE_ISO8601),
+                        'modified' => $post->modified->format(DATE_ISO8601),
+                        'comment_count' => $post->comments->count(),
+                        'response_count' => $post->responses->count(),
+                    ];
+                    $feature = new Feature($post->id, $geometry, new Properties($properties));
+                    $collection->add($feature);
+                }
+            }
+
+            $collection->query = $searchResults->query;
+            $collection->nextPageQuery = $searchResults->nextPageQuery;
+            $collection->totalCount = $searchResults->totalCount;
+            $collection->facets = $searchResults->facets;
+
+            return $collection;
+        }
+
+        throw new Exception\UnexpectedException("Invalid format " . $parameters['format']);
+    }
+
+    private function getReadingStatusesForUser($readingStatuses, $userId)
+    {
+        $data = [];
+        foreach (array_keys(SolrMapper::getReadStatusesMap()) as $key) {
+            $currentUserKey = str_replace('*', $userId, $key);
+            if (isset($readingStatuses[$currentUserKey])) {
+                $currentUserField = str_replace('user_' . $userId . '_', '', $currentUserKey);
+                $data[$currentUserField] = $readingStatuses[$currentUserKey];
+            } else {
+                $emptyField = str_replace('user_*_', '', $currentUserKey);
+                $data[$emptyField] = -1;
+            }
+        }
+
+        return $data;
     }
 }

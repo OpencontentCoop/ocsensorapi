@@ -13,6 +13,7 @@ use Opencontent\Sensor\Api\ActionService;
 use Opencontent\Sensor\Api\UserService;
 use Opencontent\Sensor\Api\EventService;
 use Opencontent\Sensor\Api\Values\Settings;
+use Psr\Log\LoggerInterface;
 
 interface Repository
 {
@@ -24,13 +25,13 @@ interface Repository
      */
     public function getCurrentUser();
 
-    public function setCurrentUser( User $user );
+    public function setCurrentUser(User $user);
 
     public function getCurrentLanguage();
 
-    public function setCurrentLanguage( $language );
+    public function setCurrentLanguage($language);
 
-    public function isUserParticipant( Post $post );
+    public function isUserParticipant(Post $post);
 
     /**
      * @return Settings
@@ -76,4 +77,39 @@ interface Repository
      * @return EventService
      */
     public function getEventService();
+
+    /**
+     * @return AreaService
+     */
+    public function getAreaService();
+
+    /**
+     * @return CategoryService
+     */
+    public function getCategoryService();
+
+    /**
+     * @return OperatorService
+     */
+    public function getOperatorService();
+
+    /**
+     * @return GroupService
+     */
+    public function getGroupService();
+
+    /**
+     * @return LoggerInterface
+     */
+    public function getLogger();
+
+    /**
+     * @return NotificationService
+     */
+    public function getNotificationService();
+
+    /**
+     * @return StatisticsService
+     */
+    public function getStatisticsService();
 }

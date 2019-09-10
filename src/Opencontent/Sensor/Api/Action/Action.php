@@ -13,12 +13,10 @@ class Action
      */
     public $parameters = array();
 
-    public function hasParameter( $name )
+    public function hasParameter($name)
     {
-        foreach( $this->parameters as $parameter )
-        {
-            if ( $parameter->identifier == $name && $parameter->value !== null )
-            {
+        foreach ($this->parameters as $parameter) {
+            if ($parameter->identifier == $name && $parameter->value !== null) {
                 return true;
             }
         }
@@ -30,19 +28,17 @@ class Action
      *
      * @return mixed|null
      */
-    public function getParameterValue( $name )
+    public function getParameterValue($name)
     {
-        foreach( $this->parameters as $parameter )
-        {
-            if ( $parameter->identifier == $name && $parameter->value !== null )
-            {
+        foreach ($this->parameters as $parameter) {
+            if ($parameter->identifier == $name && $parameter->value !== null) {
                 return $parameter->value;
             }
         }
         return null;
     }
 
-    public function setParameter( $identifier, $value )
+    public function setParameter($identifier, $value)
     {
         $newParameter = new ActionParameter();
         $newParameter->identifier = $identifier;

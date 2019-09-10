@@ -4,6 +4,11 @@ namespace Opencontent\Sensor\Api\Values;
 
 use Opencontent\Sensor\Api\Exportable;
 
+/**
+ * Class Post
+ * @package Opencontent\Sensor\Api\Values
+ *
+ */
 class Post extends Exportable
 {
     /**
@@ -77,12 +82,12 @@ class Post extends Exportable
     public $participants;
 
     /**
-     * @var Participant
+     * @var User
      */
     public $author;
 
     /**
-     * @var Participant
+     * @var User
      */
     public $reporter;
 
@@ -151,17 +156,11 @@ class Post extends Exportable
      */
     public $areas;
 
-    /**
-     * @var mixed
-     */
-    public $internalStatus;
-
-    public static function __set_state( $array )
+    public function jsonSerialize()
     {
-        /** @var Post $object */
-        $object = parent::__set_state( $array );
-        $object->internalStatus = 'hit';
-        return $object;
+        $objectVars = get_object_vars($this);
+
+        return self::toJson($objectVars);
     }
 
 }

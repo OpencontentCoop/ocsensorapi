@@ -11,10 +11,10 @@ class CanClose extends UserIs
 {
     public $identifier = 'can_close';
 
-    public function userHasPermission( User $user, Post $post )
+    public function userHasPermission(User $user, Post $post)
     {
-        return $this->userIs( ParticipantRole::ROLE_APPROVER, $user, $post )
-               && !$post->workflowStatus->is( Post\WorkflowStatus::CLOSED )
-               && !$post->workflowStatus->is( Post\WorkflowStatus::ASSIGNED );
+        return $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post)
+            && !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
+            && !$post->workflowStatus->is(Post\WorkflowStatus::ASSIGNED);
     }
 }

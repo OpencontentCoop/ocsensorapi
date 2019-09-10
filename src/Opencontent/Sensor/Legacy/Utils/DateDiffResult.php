@@ -18,6 +18,6 @@ class DateDiffResult
 
     public function getText()
     {
-        return $this->interval->format( $this->format );
+        return $this->interval->format($this->format);
     }
 }

@@ -57,35 +57,34 @@ class MessageService extends MessageServiceBase
      */
     protected $responsesByPost = array();
 
-    public function loadCommentCollectionByPost( Post $post )
+    public function loadCommentCollectionByPost(Post $post)
     {
-        $this->internalLoadMessagesByPost( $post );
+        $this->internalLoadMessagesByPost($post);
         return $this->commentsByPost[$post->internalId];
     }
 
-    public function loadPrivateMessageCollectionByPost( Post $post )
+    public function loadPrivateMessageCollectionByPost(Post $post)
     {
-        $this->internalLoadMessagesByPost( $post );
+        $this->internalLoadMessagesByPost($post);
         return $this->privateMessagesByPost[$post->internalId];
     }
 
-    public function loadTimelineItemCollectionByPost( Post $post )
+    public function loadTimelineItemCollectionByPost(Post $post)
     {
-        $this->internalLoadMessagesByPost( $post );
+        $this->internalLoadMessagesByPost($post);
         return $this->timelineItemsByPost[$post->internalId];
     }
 
-    public function loadResponseCollectionByPost( Post $post )
+    public function loadResponseCollectionByPost(Post $post)
     {
-        $this->internalLoadMessagesByPost( $post );
+        $this->internalLoadMessagesByPost($post);
         return $this->responsesByPost[$post->internalId];
     }
 
-    protected function internalLoadMessagesByPost( Post $post )
+    protected function internalLoadMessagesByPost(Post $post)
     {
         $postInternalId = $post->internalId;
-        if ( !isset( $this->countMessagesByPost[$postInternalId] ) )
-        {
+        if (!isset($this->countMessagesByPost[$postInternalId])) {
             $this->countMessagesByPost[$postInternalId] = 0;
             $this->commentsByPost[$postInternalId] = new Message\CommentCollection();
             $this->privateMessagesByPost[$postInternalId] = new Message\PrivateMessageCollection();
@@ -97,122 +96,111 @@ class MessageService extends MessageServiceBase
             $messageLinks = eZPersistentObject::fetchObjectList(
                 eZCollaborationItemMessageLink::definition(),
                 null,
-                array( 'collaboration_id' => $postInternalId ),
-                array( 'created' => 'asc' ),
+                array('collaboration_id' => $postInternalId),
+                array('created' => 'asc'),
                 null,
                 true
             );
 
             $simpleMessageIdList = array();
-            foreach ( $messageLinks as $messageLink )
-            {
-                $simpleMessageIdList[] = $messageLink->attribute( 'message_id' );
+            foreach ($messageLinks as $messageLink) {
+                $simpleMessageIdList[] = $messageLink->attribute('message_id');
             }
 
             $simpleMessages = array();
-            if ( !empty( $simpleMessageIdList ) )
-            {
+            if (!empty($simpleMessageIdList)) {
                 /** @var eZCollaborationSimpleMessage[] $simpleMessages */
                 $simpleMessages = eZPersistentObject::fetchObjectList(
                     eZCollaborationSimpleMessage::definition(),
                     null,
-                    array( 'id' => array( $simpleMessageIdList ) ),
-                    array( 'created' => 'asc' ),
+                    array('id' => array($simpleMessageIdList)),
+                    array('created' => 'asc'),
                     null,
                     true
                 );
             }
 
             $messageData = array();
-            foreach( $simpleMessages as $simpleMessage )
-            {
+            foreach ($simpleMessages as $simpleMessage) {
                 $messageItem = array(
                     'message' => $simpleMessage,
                     'links' => array()
                 );
-                foreach( $messageLinks as $messageLink )
-                {
-                    if ( $messageLink->attribute( 'message_id' ) == $simpleMessage->attribute( 'id' ) )
-                    {
+                foreach ($messageLinks as $messageLink) {
+                    if ($messageLink->attribute('message_id') == $simpleMessage->attribute('id')) {
                         $messageItem['links'][] = $messageLink;
                     }
                 }
                 $messageData[] = $messageItem;
             }
 
-            foreach( $messageData as $messageItem )
-            {
-                if ( count( $messageItem['links'] ) > 0 )
-                {
+            foreach ($messageData as $messageItem) {
+                if (count($messageItem['links']) > 0) {
                     /** @var eZCollaborationSimpleMessage $simpleMessage */
                     $simpleMessage = $messageItem['message'];
 
                     /** @var eZCollaborationItemMessageLink $firstLink */
                     $firstLink = $messageItem['links'][0];
 
-                    if ( $firstLink->attribute( 'message_type' ) == self::COMMENT )
-                    {
+                    if ($firstLink->attribute('message_type') == self::COMMENT) {
                         $message = new Message\Comment();
                         $type = 'comment';
-                        $message->text = $simpleMessage->attribute( 'data_text1' );
-                    }
-                    elseif ( $firstLink->attribute( 'message_type' ) == self::RESPONSE )
-                    {
+                        $message->text = $simpleMessage->attribute('data_text1');
+
+                    } elseif ($firstLink->attribute('message_type') == self::RESPONSE) {
                         $message = new Message\Response();
                         $type = 'response';
-                        $message->text = $simpleMessage->attribute( 'data_text1' );
-                    }
-                    elseif ( $firstLink->attribute( 'message_type' ) == self::TIMELINE_ITEM )
-                    {
+                        $message->text = $simpleMessage->attribute('data_text1');
+
+                    } elseif ($firstLink->attribute('message_type') == self::TIMELINE_ITEM) {
                         $message = new Message\TimelineItem();
                         $type = 'timeline';
-                        $message->type = TimelineTools::getType( $simpleMessage->attribute( 'data_text1' ));
-                        $message->extra = TimelineTools::getExtra( $simpleMessage->attribute( 'data_text1' ));
+                        $message->type = TimelineTools::getType($simpleMessage->attribute('data_text1'));
+                        $message->extra = TimelineTools::getExtra($simpleMessage->attribute('data_text1'));
                         $message->text = TimelineTools::getText(
-                            $simpleMessage->attribute( 'data_text1' ),
-                            $this->repository->getParticipantService()->loadPostParticipants( $post )
+                            $simpleMessage->attribute('data_text1'),
+                            $this->repository->getParticipantService()->loadPostParticipants($post)
                         );
-                    }
-                    else
-                    {
+                    } else {
                         $message = new Message\PrivateMessage();
                         $type = 'private';
-                        $message->text = $simpleMessage->attribute( 'data_text1' );
+                        $message->text = $simpleMessage->attribute('data_text1');
                         /** @var eZCollaborationItemMessageLink $link */
-                        foreach( $messageItem['links'] as $link )
-                        {
-                            $message->receivers[$link->attribute( 'message_type' )] = $this->repository->getParticipantService()
-                                                                     ->loadPostParticipants( $post )
-                                                                     ->getUserById( $link->attribute( 'message_type' ) );
+                        foreach ($messageItem['links'] as $link) {
+                            $message->receivers[] = $this->repository->getParticipantService()
+                                ->loadPostParticipants($post)
+                                ->getParticipantById($link->attribute('message_type'));
                         }
                     }
-                    $message->id = $simpleMessage->attribute( 'id' );
+                    $message->id = $simpleMessage->attribute('id');
                     $creator = new User();
-                    $creator->id = $simpleMessage->attribute( 'id' );
+                    $creator->id = $simpleMessage->attribute('id');
                     $creator = $this->repository->getParticipantService()
-                                                           ->loadPostParticipants( $post )
-                                                           ->getUserById( $simpleMessage->attribute( 'creator_id' ) );
-                    if ( $creator instanceof User )
+                        ->loadPostParticipants($post)
+                        ->getUserById($simpleMessage->attribute('creator_id'));
+                    if ($creator instanceof User)
                         $message->creator = $creator;
                     else
                         $message->creator = $this->repository->getUserService()->loadUser(
-                            $simpleMessage->attribute( 'creator_id' )
+                            $simpleMessage->attribute('creator_id')
                         );
 
-                    $message->published = Utils::getDateTimeFromTimestamp( $simpleMessage->attribute( 'created' ) );
-                    $message->modified = Utils::getDateTimeFromTimestamp( $simpleMessage->attribute( 'modified' ) );
+                    $message->published = Utils::getDateTimeFromTimestamp($simpleMessage->attribute('created'));
+                    $message->modified = Utils::getDateTimeFromTimestamp($simpleMessage->attribute('modified'));
 
-                    if ( $type == 'response' )
-                        $this->responsesByPost[$postInternalId]->addMessage( $message );
+                    $message->richText = $this->formatText($message->text);
 
-                    elseif ( $type == 'comment' )
-                        $this->commentsByPost[$postInternalId]->addMessage( $message );
+                    if ($type == 'response')
+                        $this->responsesByPost[$postInternalId]->addMessage($message);
 
-                    elseif ( $type == 'timeline' )
-                        $this->timelineItemsByPost[$postInternalId]->addMessage( $message );
+                    elseif ($type == 'comment')
+                        $this->commentsByPost[$postInternalId]->addMessage($message);
 
-                    elseif ( $type == 'private' )
-                        $this->privateMessagesByPost[$postInternalId]->addMessage( $message );
+                    elseif ($type == 'timeline')
+                        $this->timelineItemsByPost[$postInternalId]->addMessage($message);
+
+                    elseif ($type == 'private')
+                        $this->privateMessagesByPost[$postInternalId]->addMessage($message);
 
                     $this->countMessagesByPost[$postInternalId]++;
                 }
@@ -220,75 +208,90 @@ class MessageService extends MessageServiceBase
         }
     }
 
-    public function addTimelineItemByWorkflowStatus( Post $post, $status, $parameters = null )
+    private function formatText($string)
+    {
+        $ini = \eZINI::instance("template.ini");
+        $max = $ini->variable('AutoLinkOperator', 'MaxCharacters');
+        $methods = $ini->variable('AutoLinkOperator', 'Methods');
+        $methodText = implode('|', $methods);
+
+        // Replace mail
+        $string = preg_replace("#(([a-zA-Z0-9_-]+\\.)*[a-zA-Z0-9_-]+@([a-zA-Z0-9_-]+\\.)*[a-zA-Z0-9_-]+)#", "<a href='mailto:\\1'>\\1</a>", $string);
+        $autoLinkOperator = new \eZAutoLinkOperator();
+        $string = $autoLinkOperator->addURILinks($string, $max, $methodText);
+
+        $string = nl2br($string);
+
+        return $string;
+    }
+
+    public function addTimelineItemByWorkflowStatus(Post $post, $status, $parameters = null)
     {
         $struct = new Message\TimelineItemStruct();
         $struct->post = $post;
         $struct->creator = $this->repository->getCurrentUser();
         $struct->status = $status;
         $struct->createdDateTime = new \DateTime();
-        if ( $parameters === null )
+        if ($parameters === null)
             $parameters = $struct->creator->id;
-        $struct->text = TimelineTools::setText( $status, $parameters );
-        $this->createTimelineItem( $struct );
+        $struct->text = TimelineTools::setText($status, $parameters);
+        $this->createTimelineItem($struct);
     }
 
 
-    public function createTimelineItem( Message\TimelineItemStruct $struct )
+    public function createTimelineItem(Message\TimelineItemStruct $struct)
     {
-        $message = $this->createMessage( $struct );
-        $this->linkMessage( $message, $struct, self::TIMELINE_ITEM );
+        $message = $this->createMessage($struct);
+        $this->linkMessage($message, $struct, self::TIMELINE_ITEM);
     }
 
-    public function createPrivateMessage( Message\PrivateMessageStruct $struct )
+    public function createPrivateMessage(Message\PrivateMessageStruct $struct)
     {
-        $message = $this->createMessage( $struct );
-        $message->setAttribute( 'data_text2', implode( ',', $struct->receiverIdList ) );
+        $message = $this->createMessage($struct);
+        $message->setAttribute('data_text2', implode(',', $struct->receiverIdList));
         $message->store();
-        foreach( $struct->receiverIdList as $id )
-            $this->linkMessage( $message, $struct, $id );
+        foreach ($struct->receiverIdList as $id)
+            $this->linkMessage($message, $struct, $id);
     }
 
-    public function updatePrivateMessage( Message\PrivateMessageStruct $struct )
+    public function updatePrivateMessage(Message\PrivateMessageStruct $struct)
     {
-        return $this->updateMessage( $struct );
+        return $this->updateMessage($struct);
     }
 
-    public function createComment( Message\CommentStruct $struct )
+    public function createComment(Message\CommentStruct $struct)
     {
-        $message = $this->createMessage( $struct );
-        $this->linkMessage( $message, $struct, self::COMMENT );
+        $message = $this->createMessage($struct);
+        $this->linkMessage($message, $struct, self::COMMENT);
     }
 
-    public function updateComment( Message\CommentStruct $struct )
+    public function updateComment(Message\CommentStruct $struct)
     {
-        return $this->updateMessage( $struct );
+        return $this->updateMessage($struct);
     }
 
-    public function createResponse( Message\ResponseStruct $struct )
+    public function createResponse(Message\ResponseStruct $struct)
     {
-        $message = $this->createMessage( $struct );
-        $this->linkMessage( $message, $struct, self::RESPONSE );
+        $message = $this->createMessage($struct);
+        $this->linkMessage($message, $struct, self::RESPONSE);
     }
 
-    public function updateResponse( Message\ResponseStruct $struct )
+    public function updateResponse(Message\ResponseStruct $struct)
     {
-        return $this->updateMessage( $struct );
+        return $this->updateMessage($struct);
     }
 
-    protected function updateMessage( MessageStruct $struct )
+    protected function updateMessage(MessageStruct $struct)
     {
-        if ( $struct->id !== null )
-        {
-            $simpleMessage = eZCollaborationSimpleMessage::fetch( $struct->id );
-            if ( $simpleMessage instanceof eZCollaborationSimpleMessage
-                 && $simpleMessage->attribute( 'creator_id' ) == $struct->creator->id
-                 && $struct->text != ''
-                 && $struct->text != $simpleMessage->attribute( 'data_text1' ) )
-            {
-                $simpleMessage->setAttribute( 'data_text1', $struct->text );
+        if ($struct->id !== null) {
+            $simpleMessage = eZCollaborationSimpleMessage::fetch($struct->id);
+            if ($simpleMessage instanceof eZCollaborationSimpleMessage
+                && $simpleMessage->attribute('creator_id') == $struct->creator->id
+                && $struct->text != ''
+                && $struct->text != $simpleMessage->attribute('data_text1')) {
+                $simpleMessage->setAttribute('data_text1', $struct->text);
                 $now = time();
-                $simpleMessage->setAttribute( 'modified', $now );
+                $simpleMessage->setAttribute('modified', $now);
                 $simpleMessage->store();
                 return $simpleMessage;
             }
@@ -296,7 +299,7 @@ class MessageService extends MessageServiceBase
         return false;
     }
 
-    protected function createMessage( MessageStruct $struct )
+    protected function createMessage(MessageStruct $struct)
     {
         $simpleMessage = eZCollaborationSimpleMessage::create(
             $this->repository->getSensorCollaborationHandlerTypeString() . '_comment',
@@ -308,15 +311,15 @@ class MessageService extends MessageServiceBase
         return $simpleMessage;
     }
 
-    protected function linkMessage( eZCollaborationSimpleMessage $message, MessageStruct $struct,  $type )
+    protected function linkMessage(eZCollaborationSimpleMessage $message, MessageStruct $struct, $type)
     {
         $db = \eZDB::instance();
         $db->begin();
-        $messageLink = eZCollaborationItemMessageLink::create( $struct->post->internalId, $message->ID, $type, $struct->creator->id );
+        $messageLink = eZCollaborationItemMessageLink::create($struct->post->internalId, $message->ID, $type, $struct->creator->id);
         $messageLink->store();
         $db->commit();
 
-        $this->repository->getUserService()->setLastAccessDateTime( $struct->creator, $struct->post );
+        $this->repository->getUserService()->setLastAccessDateTime($struct->creator, $struct->post);
     }
 
 }

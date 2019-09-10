@@ -1,0 +1,2432 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "OpenSegnalazioni Api Server",
+        "description": "OpenSegnalazioni Api Server",
+        "termsOfService": "_site_url_/terms/",
+        "contact": {
+            "email": "_email_support_"
+        },
+        "license": {
+            "name": "GNU General Public License, version 2",
+            "url": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "_endpoint_url_",
+            "description": "Production server"
+        }
+    ],
+    "paths": {
+        "/users/current/capabilities/{postId}": {
+            "get": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get current user capabilities for selected post",
+                "description": "Returns current user capabilities",
+                "operationId": "loadCurrentUserPostPermissionCollection",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "ID of post",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Capability"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    }
+                }
+            }
+        },
+        "/users/{userId}/capabilities/{postId}": {
+            "get": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get capabilities of selected user for selected post",
+                "description": "Returns user capabilities",
+                "operationId": "loadUserPostPermissionCollection",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "ID of user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "ID of post",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Capability"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "404": {
+                        "description": "Post or User not found"
+                    }
+                }
+            }
+        },
+        "/posts/{postId}": {
+            "get": {
+                "tags": [
+                    "posts"
+                ],
+                "summary": "Get post by ID",
+                "description": "Returns a single post",
+                "operationId": "loadPostById",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "ID of post to return",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Post"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "posts"
+                ],
+                "summary": "Update a posts",
+                "operationId": "updatePost",
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/PostUpdateStruct"
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Post"
+                                }
+                            }
+                        }
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "posts"
+                ],
+                "summary": "Delete post by ID",
+                "description": "Delete a post",
+                "operationId": "deletePost",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "ID of post to return",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Post"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    }
+                }
+            }
+        },
+        "/posts": {
+            "get": {
+                "tags": [
+                    "posts"
+                ],
+                "summary": "List all posts sorted by publication date",
+                "description": "Returns a list of post sorted by publication date",
+                "operationId": "loadPosts",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "The number of items to return",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 50,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "The number of items to skip before starting to collect the result set",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "minimum": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "headers": {
+                            "x-next": {
+                                "description": "A link to the next page of responses",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Post"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid limit supplier"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "posts"
+                ],
+                "summary": "Add a new posts",
+                "operationId": "createPost",
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/PostCreateStruct"
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Post"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/users/current": {
+            "get": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get current user",
+                "description": "Returns the currentuser",
+                "operationId": "loadCurrentUser",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/settings": {
+            "get": {
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Read current settings",
+                "description": "Returns a single post",
+                "operationId": "getSensorSettings",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "key": {
+                                            "description": "Settings key",
+                                            "type": "string"
+                                        },
+                                        "value": {
+                                            "description": "Setting value",
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                }
+            }
+        },
+        "/operators": {
+            "get": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "List operators users",
+                "description": "Returns a list of operators users sorted by name",
+                "operationId": "loadOperators",
+                "parameters": [
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "description": "Filter by name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "The number of items to return",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 50,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "The number of items to skip before starting to collect the result set",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "minimum": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "headers": {
+                            "x-next": {
+                                "description": "A link to the next page of responses",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/User"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid limit supplier"
+                    }
+                }
+            }
+        },
+        "/users/{userId}": {
+            "get": {
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get user by ID",
+                "description": "Returns a single user",
+                "operationId": "loadUser",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "ID of user to return",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "404": {
+                        "description": "User not found"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/add_area": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Assign area to post",
+                "operationId": "AddAreaAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "request": "area_id",
+                    "description": "Area id from Area repository",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "area_id"
+                                ],
+                                "properties": {
+                                    "area_id": {
+                                        "type": "integer",
+                                        "format": "int64"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/add_attachment": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Add attachment to post",
+                "operationId": "AddAttachmentAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "filename": {
+                                        "description": "Filename",
+                                        "type": "string"
+                                    },
+                                    "file": {
+                                        "description": "Base64 file contents",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/add_category": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Assign category to post",
+                "operationId": "AddCategoryAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "request": "category_id",
+                    "description": "Category id from Category repository",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "category_id"
+                                ],
+                                "properties": {
+                                    "category_id": {
+                                        "type": "integer",
+                                        "format": "int64"
+                                    },
+                                    "assign_to_operator": {
+                                        "type": "integer",
+                                        "format": "int64"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/add_comment": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Add comment to post",
+                "operationId": "AddCommentAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "request": "text",
+                    "description": "Comment text",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "text"
+                                ],
+                                "properties": {
+                                    "text": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/add_observer": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Assign observer to post",
+                "operationId": "AddObserverAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "request": "participant_ids",
+                    "description": "User id",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "participant_ids"
+                                ],
+                                "properties": {
+                                    "participant_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/add_response": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Add response to post",
+                "operationId": "AddResponseAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "request": "text",
+                    "description": "Response text",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "text"
+                                ],
+                                "properties": {
+                                    "text": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/assign": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Assign operator to post",
+                "operationId": "AssignAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "request": "participant_ids",
+                    "description": "User id",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "participant_ids"
+                                ],
+                                "properties": {
+                                    "participant_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/close": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Close post",
+                "operationId": "CloseAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/edit_comment": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Edit comment",
+                "operationId": "EditCommentAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "description": "Comment id",
+                                        "type": "integer"
+                                    },
+                                    "text": {
+                                        "description": "New comment text",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/edit_message": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Edit private message",
+                "operationId": "EditPrivateMessageAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "description": "Message id",
+                                        "type": "integer"
+                                    },
+                                    "text": {
+                                        "description": "New message text",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/edit_response": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Edit response",
+                "operationId": "EditResponseAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "description": "Response id",
+                                        "type": "integer"
+                                    },
+                                    "text": {
+                                        "description": "New response text",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/fix": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Fix post assigned",
+                "operationId": "FixAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/force_fix": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Force fix post assigned to other owner",
+                "operationId": "ForceFixAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/make_private": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Make a public post private",
+                "operationId": "MakePrivateAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/make_public": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Make a private post public",
+                "operationId": "MakePublicAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/moderate": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Moderate a waiting to moderation post",
+                "operationId": "ModerateAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "request": "status",
+                    "description": "Moderation status identifier",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "default": "accepted",
+                                        "enum": [
+                                            "waiting",
+                                            "accepted",
+                                            "refused"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/read": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Make post read",
+                "operationId": "ReadAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/remove_attachment": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Remove attachment from post",
+                "operationId": "RemoveAttachmentAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "files": {
+                                        "description": "List of file name",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/reopen": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Reopen a closed post",
+                "operationId": "ReopenAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/send_private_message": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Add private message to post",
+                "operationId": "SendPrivateMessageAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "text": {
+                                        "description": "Message text",
+                                        "type": "string"
+                                    },
+                                    "participant_ids": {
+                                        "description": "Partcipant id list",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/actions/{postId}/set_expiry": {
+            "post": {
+                "tags": [
+                    "actions"
+                ],
+                "summary": "Set the expiry days to to post",
+                "operationId": "SetExpiryAction",
+                "parameters": [
+                    {
+                        "name": "postId",
+                        "in": "path",
+                        "description": "Post on which to perform the action",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "request": "expiry_days",
+                    "description": "User id",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "expiry_days"
+                                ],
+                                "properties": {
+                                    "expiry_days": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid ID supplier"
+                    },
+                    "403": {
+                        "description": "Forbidden action"
+                    },
+                    "404": {
+                        "description": "Post not found"
+                    },
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Comment": {
+                "title": "Comment model",
+                "description": "Comment model",
+                "properties": {
+                    "id": {
+                        "title": "ID",
+                        "description": "Unique identifier",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "published": {
+                        "title": "Published",
+                        "description": "Publication date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "modified": {
+                        "title": "Modified",
+                        "description": "Modification date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "creator": {
+                        "title": "Author",
+                        "description": "User creator",
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "text": {
+                        "title": "Text",
+                        "description": "Message body",
+                        "type": "string"
+                    }
+                }
+            },
+            "PrivateMessage": {
+                "title": "Private Message model",
+                "description": "Private Message model",
+                "properties": {
+                    "id": {
+                        "title": "ID",
+                        "description": "Unique identifier",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "published": {
+                        "title": "Published",
+                        "description": "Publication date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "modified": {
+                        "title": "Modified",
+                        "description": "Modification date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "creator": {
+                        "title": "Author",
+                        "description": "User creator",
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "text": {
+                        "title": "Text",
+                        "description": "Message body",
+                        "type": "string"
+                    }
+                }
+            },
+            "Response": {
+                "title": "Response model",
+                "description": "Response model",
+                "properties": {
+                    "id": {
+                        "title": "ID",
+                        "description": "Unique identifier",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "published": {
+                        "title": "Published",
+                        "description": "Publication date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "modified": {
+                        "title": "Modified",
+                        "description": "Modification date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "creator": {
+                        "title": "Author",
+                        "description": "User creator",
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "text": {
+                        "title": "Text",
+                        "description": "Message body",
+                        "type": "string"
+                    }
+                }
+            },
+            "TimelineItem": {
+                "title": "Timeline item model",
+                "description": "Timeline item model",
+                "properties": {
+                    "type": {
+                        "title": "Timeline type",
+                        "description": "Timeline type",
+                        "type": "string"
+                    },
+                    "id": {
+                        "title": "ID",
+                        "description": "Unique identifier",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "published": {
+                        "title": "Published",
+                        "description": "Publication date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "modified": {
+                        "title": "Modified",
+                        "description": "Modification date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "creator": {
+                        "title": "Author",
+                        "description": "User creator",
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "text": {
+                        "title": "Text",
+                        "description": "Message body",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "Participant": {
+                "title": "Participant model",
+                "description": "Participant model",
+                "properties": {
+                    "id": {
+                        "title": "ID",
+                        "description": "Unique identifier",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "roleIdentifier": {
+                        "title": "Role identifier",
+                        "description": "Role identifier",
+                        "type": "string"
+                    },
+                    "roleName": {
+                        "title": "Role name",
+                        "description": "Role name",
+                        "type": "string"
+                    },
+                    "name": {
+                        "title": "Participant name",
+                        "description": "Participant name",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "Participant description",
+                        "description": "Participant description",
+                        "type": "string"
+                    },
+                    "lastAccessDateTime": {
+                        "title": "Last access date",
+                        "description": "Last access date",
+                        "type": "string",
+                        "format": "datetime"
+                    }
+                },
+                "type": "object"
+            },
+            "Capability": {
+                "title": "Capability model",
+                "description": "Capability model",
+                "properties": {
+                    "identifier": {
+                        "title": "Identifier",
+                        "description": "Identifier",
+                        "type": "string"
+                    },
+                    "grant": {
+                        "title": "Capability is granted",
+                        "description": "Capability is granted",
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "Post": {
+                "title": "Post model",
+                "description": "Post model",
+                "properties": {
+                    "id": {
+                        "title": "ID",
+                        "description": "Unique identifier",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "published": {
+                        "title": "Published",
+                        "description": "Publication date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "modified": {
+                        "title": "Modified",
+                        "description": "Modification date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "expirationInfo": {
+                        "title": "Expiration Information",
+                        "description": "Expiration  relation",
+                        "$ref": "#/components/schemas/ExpirationInfo"
+                    },
+                    "resolutionInfo": {
+                        "title": "Resolution Information",
+                        "description": "Resolution  relation",
+                        "$ref": "#/components/schemas/ResolutionInfo"
+                    },
+                    "subject": {
+                        "title": "Subject",
+                        "description": "Post subject",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "Description",
+                        "description": "Post description",
+                        "type": "string"
+                    },
+                    "type": {
+                        "title": "Type",
+                        "description": "Post type",
+                        "$ref": "#/components/schemas/Type"
+                    },
+                    "privacy": {
+                        "title": "Privacy status",
+                        "description": "Post privacy status",
+                        "$ref": "#/components/schemas/Privacy"
+                    },
+                    "moderation": {
+                        "title": "Moderation status",
+                        "description": "Post moderation status",
+                        "$ref": "#/components/schemas/Moderation"
+                    },
+                    "status": {
+                        "title": "Status",
+                        "description": "Post status",
+                        "$ref": "#/components/schemas/Status"
+                    },
+                    "workflowStatus": {
+                        "title": "Workflow status",
+                        "description": "Post workflow status",
+                        "$ref": "#/components/schemas/WorkflowStatus"
+                    },
+                    "participants": {
+                        "title": "Post users",
+                        "description": "All users involved in the post",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Participant"
+                        }
+                    },
+                    "author": {
+                        "title": "Author",
+                        "description": "The post author",
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "reporter": {
+                        "title": "Reporter",
+                        "description": "The post reporter",
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "approvers": {
+                        "title": "Post approvers",
+                        "description": "The post approvers",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Participant"
+                        }
+                    },
+                    "owners": {
+                        "title": "Post owners",
+                        "description": "The post owners",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Participant"
+                        }
+                    },
+                    "observers": {
+                        "title": "Post observers",
+                        "description": "The post observers",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Participant"
+                        }
+                    },
+                    "timelineItems": {
+                        "title": "Post timeline",
+                        "description": "The post timeline",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TimelineItem"
+                        }
+                    },
+                    "privateMessages": {
+                        "title": "Post private message",
+                        "description": "The post private message",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PrivateMessage"
+                        }
+                    },
+                    "comments": {
+                        "title": "Post comments",
+                        "description": "The post comments",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Comment"
+                        }
+                    },
+                    "responses": {
+                        "title": "Post responses",
+                        "description": "The post responses",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Response"
+                        }
+                    },
+                    "images": {
+                        "title": "Post images",
+                        "description": "The post images",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Image"
+                        },
+                        "maxItems": 1
+                    },
+                    "categories": {
+                        "title": "Post categories",
+                        "description": "The post categories",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Category"
+                        }
+                    },
+                    "geoLocation": {
+                        "title": "GeoLocation",
+                        "description": "The post geolocation",
+                        "$ref": "#/components/schemas/GeoLocation"
+                    },
+                    "areas": {
+                        "title": "Post areas",
+                        "description": "The post areas",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Area"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ExpirationInfo": {
+                "title": "ExpirationInfo model",
+                "description": "Expiration information model",
+                "properties": {
+                    "expirationDateTime": {
+                        "title": "Expiration",
+                        "description": "Expiration date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "label": {
+                        "title": "Label",
+                        "description": "Label",
+                        "type": "string"
+                    },
+                    "text": {
+                        "title": "Text",
+                        "description": "Text",
+                        "type": "string"
+                    },
+                    "days": {
+                        "title": "Expiration days",
+                        "description": "Expiration days",
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "type": "object"
+            },
+            "Area": {
+                "title": "Area model",
+                "description": "Area model",
+                "properties": {
+                    "id": {
+                        "title": "ID",
+                        "description": "Unique identifier",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "title": "Area name",
+                        "description": "Area name",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "Category": {
+                "title": "Category model",
+                "description": "Category model",
+                "properties": {
+                    "id": {
+                        "title": "ID",
+                        "description": "Unique identifier",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "title": "Category name",
+                        "description": "Category name",
+                        "type": "string"
+                    },
+                    "operators": {
+                        "title": "Category referents",
+                        "description": "The category referent id list",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "GeoLocation": {
+                "title": "GeoLocation model",
+                "description": "GeoLocation model",
+                "properties": {
+                    "latitude": {
+                        "title": "Latitude",
+                        "description": "Address latitude",
+                        "type": "number"
+                    },
+                    "longitude": {
+                        "title": "Longitude",
+                        "description": "Address longitude",
+                        "type": "number"
+                    },
+                    "address": {
+                        "title": "Address",
+                        "description": "Address string",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "Image": {
+                "title": "Image model",
+                "description": "Image model",
+                "properties": {
+                    "original": {
+                        "title": "Image original url",
+                        "description": "Image original url",
+                        "type": "string"
+                    },
+                    "thumbnail": {
+                        "title": "Image thumbnail url",
+                        "description": "Image thumbnail url",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ResolutionInfo": {
+                "title": "Resolution model",
+                "description": "Resolution information model",
+                "properties": {
+                    "resolutionDateTime": {
+                        "title": "Resolution",
+                        "description": "Resolution date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "label": {
+                        "title": "Label",
+                        "description": "Label",
+                        "type": "string"
+                    },
+                    "text": {
+                        "title": "Text",
+                        "description": "Text",
+                        "type": "string"
+                    },
+                    "days": {
+                        "title": "Expiration days",
+                        "description": "Expiration days",
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "type": "object"
+            },
+            "Status": {
+                "title": "Post status model",
+                "description": "Post status model",
+                "properties": {
+                    "identifier": {
+                        "title": "Identifier",
+                        "description": "Type identifier",
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "open",
+                            "close"
+                        ]
+                    },
+                    "name": {
+                        "title": "Name",
+                        "description": "Name",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "Moderation": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Status"
+                    },
+                    {
+                        "title": "Moderation status model",
+                        "description": "Moderation status model",
+                        "properties": {
+                            "identifier": {
+                                "title": "Identifier",
+                                "description": "Identifier",
+                                "type": "string",
+                                "enum": [
+                                    "skipped",
+                                    "waiting",
+                                    "accepted",
+                                    "refused"
+                                ]
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "Privacy": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Status"
+                    },
+                    {
+                        "title": "Privacy status model",
+                        "description": "Privacy status model",
+                        "properties": {
+                            "identifier": {
+                                "title": "Identifier",
+                                "description": "Identifier",
+                                "type": "string",
+                                "enum": [
+                                    "public",
+                                    "private"
+                                ]
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "Type": {
+                "title": "Type model",
+                "description": "Type information model",
+                "properties": {
+                    "identifier": {
+                        "title": "Identifier",
+                        "description": "Type identifier",
+                        "type": "string"
+                    },
+                    "name": {
+                        "title": "Name",
+                        "description": "Type name",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "WorkflowStatus": {
+                "title": "Workflow status model",
+                "description": "Workflow status model",
+                "properties": {
+                    "code": {
+                        "title": "Workflow status code",
+                        "description": "Workflow status code",
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "identifier": {
+                        "title": "Workflow status identifier",
+                        "description": "Workflow status identifier",
+                        "type": "string",
+                        "enum": [
+                            "waiting",
+                            "read",
+                            "assigned",
+                            "closed",
+                            "fixed",
+                            "reopened"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "PostCreateStruct": {
+                "title": "PostCreateStruct model",
+                "description": "PostCreateStruct information model",
+                "required": [
+                    "subject",
+                    "description",
+                    "type",
+                    "privacy"
+                ],
+                "properties": {
+                    "subject": {
+                        "title": "Subject",
+                        "description": "Post subject",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "Description",
+                        "description": "Post description",
+                        "type": "string"
+                    },
+                    "type": {
+                        "title": "Type",
+                        "description": "Post type",
+                        "type": "string"
+                    },
+                    "privacy": {
+                        "title": "Privacy status",
+                        "description": "Post privacy status",
+                        "type": "string"
+                    },
+                    "author": {
+                        "title": "Author",
+                        "description": "The post author",
+                        "type": "integer"
+                    },
+                    "image": {
+                        "title": "Post images",
+                        "description": "The post images",
+                        "type": "string",
+                        "format": "binary"
+                    },
+                    "categories": {
+                        "title": "Post categories",
+                        "description": "The post categories",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "geoLocation": {
+                        "title": "GeoLocation",
+                        "description": "The post geolocation",
+                        "$ref": "#/components/schemas/GeoLocation"
+                    },
+                    "areas": {
+                        "title": "Post areas",
+                        "description": "The post areas",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "PostUpdateStruct": {
+                "title": "PostUpdateStruct model",
+                "description": "PostUpdateStruct information model",
+                "properties": {
+                    "subject": {
+                        "title": "Subject",
+                        "description": "Post subject",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "Description",
+                        "description": "Post description",
+                        "type": "string"
+                    },
+                    "type": {
+                        "title": "Type",
+                        "description": "Post type",
+                        "type": "string"
+                    },
+                    "privacy": {
+                        "title": "Privacy status",
+                        "description": "Post privacy status",
+                        "type": "string"
+                    },
+                    "image": {
+                        "title": "Post images",
+                        "description": "The post images",
+                        "type": "string",
+                        "format": "binary"
+                    },
+                    "categories": {
+                        "title": "Post categories",
+                        "description": "The post categories",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "geoLocation": {
+                        "title": "GeoLocation",
+                        "description": "The post geolocation",
+                        "$ref": "#/components/schemas/GeoLocation"
+                    },
+                    "areas": {
+                        "title": "Post areas",
+                        "description": "The post areas",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "title": "User model",
+                "description": "User model",
+                "properties": {
+                    "id": {
+                        "title": "ID",
+                        "description": "Unique identifier",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "title": "User name",
+                        "description": "User name",
+                        "type": "string"
+                    },
+                    "description": {
+                        "title": "User description",
+                        "description": "User description",
+                        "type": "string"
+                    },
+                    "email": {
+                        "title": "User email",
+                        "description": "User email",
+                        "type": "string"
+                    },
+                    "lastAccessDateTime": {
+                        "title": "Last access date",
+                        "description": "Last access date",
+                        "type": "string",
+                        "format": "datetime"
+                    },
+                    "moderationMode": {
+                        "title": "Moderation enabled",
+                        "description": "The user is in moderation mode",
+                        "type": "boolean"
+                    },
+                    "commentMode": {
+                        "title": "Comments enabled",
+                        "description": "The user can comment",
+                        "type": "boolean"
+                    },
+                    "behalfOfMode": {
+                        "title": "Behalf Mode enabled",
+                        "description": "The user can post on behalf of others",
+                        "type": "boolean"
+                    },
+                    "isEnabled": {
+                        "title": "User enabled",
+                        "description": "User is enabled",
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "title": "User type",
+                        "description": "The user type",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "requestBodies": {
+            "PostCreateStruct": {
+                "description": "Post object that needs to be added",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/PostCreateStruct"
+                        }
+                    }
+                }
+            },
+            "PostUpdateStruct": {
+                "description": "Post object that needs to be added",
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/PostUpdateStruct"
+                        }
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "basic": {
+                "type": "http",
+                "scheme": "basic"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "settings",
+            "description": "Sensor configuration"
+        },
+        {
+            "name": "posts",
+            "description": "Create, read, update and delete post"
+        },
+        {
+            "name": "actions",
+            "description": "Actions on the post"
+        },
+        {
+            "name": "users",
+            "description": "Informations about user"
+        }
+    ],
+    "externalDocs": {
+        "description": "Find out more about Swagger",
+        "url": "_docs_url_"
+    }
+}

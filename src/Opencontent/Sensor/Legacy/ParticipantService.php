@@ -3,13 +3,10 @@
 namespace Opencontent\Sensor\Legacy;
 
 use Opencontent\Sensor\Api\Exception\BaseException;
+use Opencontent\Sensor\Api\Values\Group;
 use Opencontent\Sensor\Api\Values\Participant;
-use Opencontent\Sensor\Api\Values\Participant\ApproverCollection;
-use Opencontent\Sensor\Api\Values\Participant\ObserverCollection;
-use Opencontent\Sensor\Api\Values\Participant\OwnerCollection;
 use Opencontent\Sensor\Api\Values\ParticipantCollection;
 use Opencontent\Sensor\Api\Values\Post;
-use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Core\ParticipantService as ParticipantServiceBase;
 use eZContentObject;
 use eZCollaborationItemParticipantLink;
@@ -19,9 +16,7 @@ use Opencontent\Sensor\Api\Values\ParticipantRole;
 use eZCollaborationGroup;
 use eZCollaborationItemGroupLink;
 use eZPersistentObject;
-use eZUser;
 use eZCollaborationItemStatus;
-use ezpEvent;
 
 
 class ParticipantService extends ParticipantServiceBase
@@ -45,49 +40,51 @@ class ParticipantService extends ParticipantServiceBase
      */
     protected $participantRoles;
 
+    /**
+     * @return ParticipantRoleCollection
+     */
     public function loadParticipantRoleCollection()
     {
-        if ( $this->participantRoles === null )
-        {
+        if ($this->participantRoles === null) {
             $this->participantRoles = new ParticipantRoleCollection();
 
             $role = new ParticipantRole();
             $role->id = eZCollaborationItemParticipantLink::ROLE_STANDARD;
             $role->identifier = ParticipantRole::ROLE_STANDARD;
-            $role->name = ezpI18n::tr( 'sensor/role_name', 'Standard' );
-            $this->participantRoles->addParticipantRole( $role );
+            $role->name = ezpI18n::tr('sensor/role_name', 'Standard');
+            $this->participantRoles->addParticipantRole($role);
 
             $role = new ParticipantRole();
             $role->id = eZCollaborationItemParticipantLink::ROLE_OBSERVER;
             $role->identifier = ParticipantRole::ROLE_OBSERVER;
-            $role->name = ezpI18n::tr( 'sensor/role_name', 'Osservatore' );
-            $this->participantRoles->addParticipantRole( $role );
+            $role->name = ezpI18n::tr('sensor/role_name', 'Osservatore');
+            $this->participantRoles->addParticipantRole($role);
 
             $role = new ParticipantRole();
             $role->id = eZCollaborationItemParticipantLink::ROLE_OWNER;
             $role->identifier = ParticipantRole::ROLE_OWNER;
-            $role->name = ezpI18n::tr( 'sensor/role_name', 'In carico a' );
-            $this->participantRoles->addParticipantRole( $role );
+            $role->name = ezpI18n::tr('sensor/role_name', 'In carico a');
+            $this->participantRoles->addParticipantRole($role);
 
             $role = new ParticipantRole();
             $role->id = eZCollaborationItemParticipantLink::ROLE_APPROVER;
             $role->identifier = ParticipantRole::ROLE_APPROVER;
-            $role->name = ezpI18n::tr( 'sensor/role_name', 'Riferimento per il cittadino' );
-            $this->participantRoles->addParticipantRole( $role );
+            $role->name = ezpI18n::tr('sensor/role_name', 'Riferimento per il cittadino');
+            $this->participantRoles->addParticipantRole($role);
 
             $role = new ParticipantRole();
             $role->id = eZCollaborationItemParticipantLink::ROLE_AUTHOR;
             $role->identifier = ParticipantRole::ROLE_AUTHOR;
-            $role->name = ezpI18n::tr( 'sensor/role_name', 'Autore' );
-            $this->participantRoles->addParticipantRole( $role );
+            $role->name = ezpI18n::tr('sensor/role_name', 'Autore');
+            $this->participantRoles->addParticipantRole($role);
         }
 
         return $this->participantRoles;
     }
 
-    public function loadPostParticipantById( Post $post, $id )
+    public function loadPostParticipantById(Post $post, $id)
     {
-        return $this->internalLoadPostParticipants( $post )->getParticipantById( $id );
+        return $this->internalLoadPostParticipants($post)->getParticipantById($id);
     }
 
     /**
@@ -96,9 +93,9 @@ class ParticipantService extends ParticipantServiceBase
      *
      * @return ParticipantCollection
      */
-    public function loadPostParticipantsByRole( Post $post, $role )
+    public function loadPostParticipantsByRole(Post $post, $role)
     {
-        return $this->internalLoadPostParticipants( $post )->getParticipantsByRole( $role );
+        return $this->internalLoadPostParticipants($post)->getParticipantsByRole($role);
     }
 
     /**
@@ -106,17 +103,16 @@ class ParticipantService extends ParticipantServiceBase
      *
      * @return ParticipantCollection
      */
-    public function loadPostParticipants( Post $post )
+    public function loadPostParticipants(Post $post)
     {
-        return $this->internalLoadPostParticipants( $post );
+        return $this->internalLoadPostParticipants($post);
     }
 
-    public function addPostParticipant( Post $post, $id, ParticipantRole $role )
+    public function addPostParticipant(Post $post, $id, ParticipantRole $role)
     {
-        $contentObject = eZContentObject::fetch( $id );
-        if ( !$contentObject instanceof eZContentObject )
-        {
-            throw new BaseException( "User $id not found" );
+        $contentObject = eZContentObject::fetch($id);
+        if (!$contentObject instanceof eZContentObject) {
+            throw new BaseException("Participant $id not found");
         }
 
         $link = eZCollaborationItemParticipantLink::fetch(
@@ -124,9 +120,8 @@ class ParticipantService extends ParticipantServiceBase
             $id
         );
 
-        if ( !$link instanceof eZCollaborationItemParticipantLink )
-        {
-            if ( in_array( $contentObject->attribute( 'contentclass_id' ), \eZUser::contentClassIDs() ) )
+        if (!$link instanceof eZCollaborationItemParticipantLink) {
+            if (in_array($contentObject->attribute('contentclass_id'), \eZUser::contentClassIDs()))
                 $type = eZCollaborationItemParticipantLink::TYPE_USER;
             else
                 $type = eZCollaborationItemParticipantLink::TYPE_USERGROUP;
@@ -139,54 +134,85 @@ class ParticipantService extends ParticipantServiceBase
             );
             $link->store();
             eZCollaborationItemGroupLink::addItem(
-                $this->getMainCollaborationGroup( $id )->attribute( 'id' ),
+                $this->getMainCollaborationGroup($id)->attribute('id'),
                 $post->internalId,
                 $id
             );
-            $this->setPostParticipantActive( $post, $id, true );
-        }
-        else
-        {
-            $link->setAttribute( 'participant_role', $role->id );
+            $this->setPostParticipantActive($post, $id, true);
+        } else {
+            $link->setAttribute('participant_role', $role->id);
             $link->sync();
         }
         $GLOBALS['eZCollaborationItemParticipantLinkListCache'] = array();
-        ezpEvent::getInstance()->notify( 'sensor/add_participant', array( $id, $role->id, $post ) );
-        unset( $this->participantsByPost[$post->internalId] );
+        unset($this->participantsByPost[$post->internalId]);
+        $this->internalLoadPostParticipants($post);
     }
 
-    public function trashPostParticipant( Post $post, $id )
+    public function trashPostParticipant(Post $post, $id)
     {
-        // TODO: Implement trashPostParticipant() method.
+        /** @var eZCollaborationItemGroupLink $group */
+        $groupLink = eZPersistentObject::fetchObject(
+            eZCollaborationItemGroupLink::definition(),
+            null,
+            ['collaboration_id' => $post->internalId, 'user_id' => $id]
+        );
+        if ($groupLink instanceof eZCollaborationItemGroupLink) {
+            $db = \eZDB::instance();
+            $db->begin();
+            $groupLink->remove();
+            $trashGroupLink = eZCollaborationItemGroupLink::create(
+                $post->internalId,
+                $this->getTrashCollaborationGroup($id)->attribute('id'),
+                $id
+            );
+            $trashGroupLink->store();
+            $db->commit();
+        }
     }
 
-    public function restorePostParticipant( Post $post, $id )
+    public function restorePostParticipant(Post $post, $id)
     {
-        // TODO: Implement restorePostParticipant() method.
+        /** @var eZCollaborationItemGroupLink $group */
+        $groupLink = eZPersistentObject::fetchObject(
+            eZCollaborationItemGroupLink::definition(),
+            null,
+            ['collaboration_id' => $post->internalId, 'user_id' => $id]
+        );
+        if ($groupLink instanceof eZCollaborationItemGroupLink) {
+            $db = \eZDB::instance();
+            $db->begin();
+            $groupLink->remove();
+            $sensorGroupLink = eZCollaborationItemGroupLink::create(
+                $post->internalId,
+                $this->getMainCollaborationGroup($id)->attribute('id'),
+                $id
+            );
+            $sensorGroupLink->store();
+            $db->commit();
+        }
     }
 
-    public function activatePostParticipants( Post $post )
+    public function activatePostParticipants(Post $post)
     {
-        foreach( $this->loadPostParticipants( $post ) as $participant )
-            $this->setPostParticipantActive( $post, $participant->id, true );
+        foreach ($this->loadPostParticipants($post) as $participant)
+            $this->setPostParticipantActive($post, $participant->id, true);
     }
 
-    public function deactivatePostParticipants( Post $post )
+    public function deactivatePostParticipants(Post $post)
     {
-        foreach( $this->loadPostParticipants( $post ) as $participant )
-            $this->setPostParticipantActive( $post, $participant->id, false );
+        foreach ($this->loadPostParticipants($post) as $participant)
+            $this->setPostParticipantActive($post, $participant->id, false);
     }
 
-    protected function setPostParticipantActive( Post $post, $id, $active )
+    protected function setPostParticipantActive(Post $post, $id, $active)
     {
-        eZCollaborationItemStatus::updateFields( $post->internalId, $id, array( 'is_active' => intval($active) ) );
+        eZCollaborationItemStatus::updateFields($post->internalId, $id, array('is_active' => intval($active)));
     }
 
-    protected function internalLoadPostParticipants( Post $post )
+    protected function internalLoadPostParticipants(Post $post)
     {
         $postInternalId = $post->internalId;
-        if ( !isset( $this->participantsByPost[$postInternalId] ) )
-        {
+        if ($postInternalId && !isset($this->participantsByPost[$postInternalId])) {
             $this->participantsByPost[$postInternalId] = new ParticipantCollection();
 
             /** @var eZCollaborationItemParticipantLink[] $participantLinks */
@@ -197,23 +223,23 @@ class ParticipantService extends ParticipantServiceBase
                 )
             );
             $participantIdList = array();
-            foreach ( $participantLinks as $participantLink )
-            {
-                $participantIdList[] = $participantLink->attribute( 'participant_id' );
+            foreach ($participantLinks as $participantLink) {
+                $participantIdList[] = $participantLink->attribute('participant_id');
             }
-            /** @var eZContentObject[] $objects */
-            $objects = eZContentObject::fetchIDArray( $participantIdList );
+            if (count($participantIdList)) {
+                /** @var eZContentObject[] $objects */
+                $objects = eZContentObject::fetchIDArray($participantIdList);
 
-            foreach ( $participantLinks as $participantLink )
-            {
-                $id = $participantLink->attribute( 'participant_id' );
-                $object = isset( $objects[$id] ) ? $objects[$id] : null;
-                $participant = $this->internalLoadParticipant(
-                    $participantLink,
-                    $object
-                );
+                foreach ($participantLinks as $participantLink) {
+                    $id = $participantLink->attribute('participant_id');
+                    $object = isset($objects[$id]) ? $objects[$id] : null;
+                    $participant = $this->internalLoadParticipant(
+                        $participantLink,
+                        $object
+                    );
 
-                $this->participantsByPost[$postInternalId]->addParticipant( $participant );
+                    $this->participantsByPost[$postInternalId]->addParticipant($participant);
+                }
             }
         }
 
@@ -225,54 +251,64 @@ class ParticipantService extends ParticipantServiceBase
         eZContentObject $contentObject = null
     )
     {
-        $role = $this->loadParticipantRoleCollection()->getParticipantRoleById( $participantLink->attribute( 'participant_role' ) );
+        $role = $this->loadParticipantRoleCollection()->getParticipantRoleById($participantLink->attribute('participant_role'));
         $participant = new Participant();
-        $participant->id = $participantLink->attribute( 'participant_id' );
+        $participant->id = $participantLink->attribute('participant_id');
         $participant->roleIdentifier = $role->identifier;
         $participant->roleName = $role->name;
         $participant->lastAccessDateTime = Utils::getDateTimeFromTimestamp(
-            $participantLink->attribute( 'last_read' )
+            $participantLink->attribute('last_read')
         );
 
-        if ( $contentObject instanceof eZContentObject )
-        {
+        if ($contentObject instanceof eZContentObject) {
             $participant->name = $contentObject->name(
                 false,
                 $this->repository->getCurrentLanguage()
             );
-            if ( $participantLink->attribute( 'participant_type' ) == eZCollaborationItemParticipantLink::TYPE_USER )
-            {
-                $participant->addUser(
-                    $this->repository->getUserService()->loadUser(
-                        $contentObject->attribute( 'id' )
-                    )
-                );
-            }
-            elseif ( $participantLink->attribute( 'participant_type' ) == eZCollaborationItemParticipantLink::TYPE_USERGROUP )
-            {
-                /** @var \eZContentObjectTreeNode $child */
-                foreach ( $contentObject->mainNode()->children() as $child )
-                {
-                    $participant->addUser(
-                        $this->repository->getUserService()->loadUser(
-                            $child->attribute( 'contentobject_id' )
-                        )
-                    );
+            if ($participantLink->attribute('participant_type') == eZCollaborationItemParticipantLink::TYPE_USER) {
+                $user = $this->repository->getUserService()->loadUser($contentObject->attribute('id'));
+                $participant->addUser($user);
+                $participant->description = $user->description;
+                $participant->type = 'user';
+
+            } elseif ($participantLink->attribute('participant_type') == eZCollaborationItemParticipantLink::TYPE_USERGROUP) {
+
+                try {
+                    $group = $this->repository->getGroupService()->loadGroup($contentObject->attribute('id'));
+                    $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*');
+                    $operators = $operatorResult['items'];
+                    $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
+                    foreach ($operators as $operator) {
+                        $participant->addUser($operator);
+                    }
+
+                } catch (\Exception $e) {
+                    /** @var \eZContentObjectTreeNode $child */
+                    foreach ($contentObject->mainNode()->children() as $child) {
+                        $participant->addUser(
+                            $this->repository->getUserService()->loadUser(
+                                $child->attribute('contentobject_id')
+                            )
+                        );
+                    }
                 }
+
+                $participant->type = 'group';
             }
         }
 
         return $participant;
     }
 
-    /**
-     * @param int $userId
-     *
-     * @return eZCollaborationGroup|null
-     */
-    protected function getMainCollaborationGroup( $userId )
+    private function recursiveLoadOperatorsByGroup(Group $group, $operatorResult, &$operators)
     {
-        return $this->getCollaborationGroup( self::MAIN_COLLABORATION_GROUP_NAME, $userId );
+        if ($operatorResult['next']) {
+            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next']);
+            $operators = array_merge($operatorResult['items'], $operators);
+            $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
+        }
+
+        return $operators;
     }
 
     /**
@@ -280,9 +316,19 @@ class ParticipantService extends ParticipantServiceBase
      *
      * @return eZCollaborationGroup|null
      */
-    protected function getTrashCollaborationGroup( $userId )
+    protected function getMainCollaborationGroup($userId)
     {
-        return $this->getCollaborationGroup( self::TRASH_COLLABORATION_GROUP_NAME, $userId );
+        return $this->getCollaborationGroup(self::MAIN_COLLABORATION_GROUP_NAME, $userId);
+    }
+
+    /**
+     * @param int $userId
+     *
+     * @return eZCollaborationGroup|null
+     */
+    protected function getTrashCollaborationGroup($userId)
+    {
+        return $this->getCollaborationGroup(self::TRASH_COLLABORATION_GROUP_NAME, $userId);
     }
 
     /**
@@ -291,7 +337,7 @@ class ParticipantService extends ParticipantServiceBase
      *
      * @return eZCollaborationGroup|null
      */
-    protected function getCollaborationGroup( $groupName, $userId )
+    protected function getCollaborationGroup($groupName, $userId)
     {
         $group = eZPersistentObject::fetchObject(
             eZCollaborationGroup::definition(),
@@ -301,8 +347,7 @@ class ParticipantService extends ParticipantServiceBase
                 'title' => $groupName
             )
         );
-        if ( !$group instanceof eZCollaborationGroup && $groupName != '' )
-        {
+        if (!$group instanceof eZCollaborationGroup && $groupName != '') {
             $group = eZCollaborationGroup::instantiate(
                 $userId,
                 $groupName

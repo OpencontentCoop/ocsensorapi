@@ -4,55 +4,59 @@ namespace Opencontent\Sensor\Api\Values;
 
 use ArrayAccess;
 
-class Settings implements ArrayAccess
+class Settings implements ArrayAccess, \JsonSerializable
 {
 
     private $container = array();
 
-    public function __construct( array $data )
+    public function __construct(array $data)
     {
         $this->container = $data;
     }
 
-    public function offsetExists( $offset )
+    public function offsetExists($offset)
     {
-        return isset( $this->container[$offset] );
+        return isset($this->container[$offset]);
     }
 
-    public function offsetGet( $offset )
+    public function offsetGet($offset)
     {
-        return isset( $this->container[$offset] ) ? $this->container[$offset] : null;
+        return isset($this->container[$offset]) ? $this->container[$offset] : null;
     }
 
-    public function offsetSet( $offset, $value )
+    public function offsetSet($offset, $value)
     {
-        if ( is_null( $offset ) )
-        {
+        if (is_null($offset)) {
             $this->container[] = $value;
-        }
-        else
-        {
+        } else {
             $this->container[$offset] = $value;
         }
     }
 
-    public function offsetUnset( $offset )
+    public function offsetUnset($offset)
     {
-        unset( $this->container[$offset] );
+        unset($this->container[$offset]);
     }
 
-    public function has( $offset )
+    public function has($offset)
     {
-        return $this->offsetExists( $offset );
+        return $this->offsetExists($offset);
     }
 
-    public function get( $offset )
+    public function get($offset)
     {
-        return $this->offsetGet( $offset );
+        return $this->offsetGet($offset);
     }
 
-    public function set( $offset, $value )
+    public function set($offset, $value)
     {
-        $this->offsetSet( $offset, $value );
+        $this->offsetSet($offset, $value);
     }
+
+    public function jsonSerialize()
+    {
+        return $this->container;
+    }
+
+
 }

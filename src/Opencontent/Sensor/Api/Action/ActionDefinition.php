@@ -2,7 +2,7 @@
 
 namespace Opencontent\Sensor\Api\Action;
 
-use Opencontent\Sensor\Api\Exception\InvalidParameterException;
+use Opencontent\Sensor\Api\Exception\RequiredParameterException;
 use Opencontent\Sensor\Api\Exception\PermissionException;
 use Opencontent\Sensor\Api\Repository;
 use Opencontent\Sensor\Api\Values\Post;
@@ -33,13 +33,13 @@ abstract class ActionDefinition
      *
      * @return Action
      *
-     * @throws InvalidParameterException
+     * @throws RequiredParameterException
      * @throws PermissionException
      */
-    public function dryRun( Repository $repository, Action $action, Post $post, User $user )
+    public function dryRun(Repository $repository, Action $action, Post $post, User $user)
     {
-        $this->checkPermission( $post, $user );
-        return $this->checkParameters( $action );
+        $this->checkPermission($post, $user);
+        return $this->checkParameters($action);
     }
 
     /**
@@ -50,40 +50,37 @@ abstract class ActionDefinition
      *
      * @return mixed
      */
-    abstract public function run( Repository $repository, Action $action, Post $post, User $user );
+    abstract public function run(Repository $repository, Action $action, Post $post, User $user);
 
-    protected function checkPermission( Post $post, User $user )
+    protected function checkPermission(Post $post, User $user)
     {
-        foreach( $this->permissionDefinitionIdentifiers as $permissionDefinitionIdentifier )
-        {
-            if ( !$user->permissions->hasPermission( $permissionDefinitionIdentifier ) )
-                throw new PermissionException( $permissionDefinitionIdentifier, $user, $post );
+        foreach ($this->permissionDefinitionIdentifiers as $permissionDefinitionIdentifier) {
+            if (!$user->permissions->hasPermission($permissionDefinitionIdentifier))
+                throw new PermissionException($permissionDefinitionIdentifier, $user, $post);
         }
     }
 
-    protected function checkParameters( Action $action )
+    protected function checkParameters(Action $action)
     {
-        foreach( $this->parameterDefinitions as $parameterDefinition )
-        {
-            if ( !$action->hasParameter( $parameterDefinition->identifier ) )
-            {
-                if ( $parameterDefinition->isRequired )
-                    throw new InvalidParameterException( $parameterDefinition );
+        foreach ($this->parameterDefinitions as $parameterDefinition) {
+            if (!$action->hasParameter($parameterDefinition->identifier)) {
+                if ($parameterDefinition->isRequired)
+                    throw new RequiredParameterException($parameterDefinition);
                 else
-                    $action->setParameter( $parameterDefinition->identifier, $parameterDefinition->defaultValue );
+                    $action->setParameter($parameterDefinition->identifier, $parameterDefinition->defaultValue);
             }
 
         }
         return $action;
     }
 
-    protected function fireEvent( Repository $repository, Post $post, User $user, $eventParameters = array() )
+    protected function fireEvent(Repository $repository, Post $post, User $user, $eventParameters = array())
     {
         $event = new Event();
         $event->identifier = 'on_' . $this->identifier;
         $event->post = $post;
         $event->user = $user;
         $event->parameters = $eventParameters;
-        $repository->getEventService()->fire( $event );
+        $repository->getEventService()->fire($event);
     }
 }

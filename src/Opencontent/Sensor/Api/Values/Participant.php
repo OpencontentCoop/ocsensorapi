@@ -7,15 +7,36 @@ use Opencontent\Sensor\Api\Exportable;
 use Opencontent\Sensor\Api\Values\User;
 use DateTime;
 
+/**
+ * Class Participant
+ * @package Opencontent\Sensor\Api\Values
+ */
 class Participant extends Exportable implements \IteratorAggregate
 {
+    /**
+     * @var integer
+     */
     public $id;
 
+    /**
+     * @var string
+     */
     public $roleIdentifier;
 
+    /**
+     * @var string
+     */
     public $roleName;
 
+    /**
+     * @var string
+     */
     public $name;
+
+    /**
+     * @var string
+     */
+    public $description;
 
     /**
      * @var DateTime
@@ -25,21 +46,35 @@ class Participant extends Exportable implements \IteratorAggregate
     /**
      * @var User[]
      */
-    public $users;
+    public $users = array();
 
-    public function getUserById( $id )
+    /**
+     * @var string
+     */
+    public $type;
+
+    public function getUserById($id)
     {
-        return isset( $this->users[$id] ) ? $this->users[$id] : false;
+        return isset($this->users[$id]) ? $this->users[$id] : false;
     }
 
-    public function addUser( User $user )
+    public function addUser(User $user)
     {
         $this->users[$user->id] = $user;
     }
 
     public function getIterator()
     {
-        return new \ArrayIterator( (array)$this->users );
+        return new \ArrayIterator((array)$this->users);
+    }
+
+    public function jsonSerialize()
+    {
+        $objectVars = get_object_vars($this);
+
+        unset($objectVars['users']);
+
+        return self::toJson($objectVars);
     }
 
 }

@@ -26,7 +26,7 @@ interface ParticipantService
      *
      * @return Participant
      */
-    public function loadPostParticipantById( Post $post, $id );
+    public function loadPostParticipantById(Post $post, $id);
 
     /**
      * @param Post $post
@@ -34,37 +34,37 @@ interface ParticipantService
      *
      * @return ParticipantCollection
      */
-    public function loadPostParticipantsByRole( Post $post, $role );
+    public function loadPostParticipantsByRole(Post $post, $role);
 
     /**
      * @param Post $post
      *
      * @return ParticipantCollection
      */
-    public function loadPostParticipants( Post $post );
+    public function loadPostParticipants(Post $post);
 
     /**
      * @param Post $post
      * @param int $id
      *
      */
-    public function addPostParticipant( Post $post, $id, ParticipantRole $role );
+    public function addPostParticipant(Post $post, $id, ParticipantRole $role);
 
     /**
      * @param Post $post
      * @param int $id
      *
      */
-    public function trashPostParticipant( Post $post, $id );
+    public function trashPostParticipant(Post $post, $id);
 
     /**
      * @param Post $post
      * @param int $id
      *
      */
-    public function restorePostParticipant( Post $post, $id );
+    public function restorePostParticipant(Post $post, $id);
 
-    public function activatePostParticipants( Post $post );
+    public function activatePostParticipants(Post $post);
 
-    public function deactivatePostParticipants( Post $post );
+    public function deactivatePostParticipants(Post $post);
 }

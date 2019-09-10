@@ -11,9 +11,9 @@ class CanAddObserver extends UserIs
 {
     public $identifier = 'can_add_observer';
 
-    public function userHasPermission( User $user, Post $post )
+    public function userHasPermission(User $user, Post $post)
     {
-        return !$post->workflowStatus->is( Post\WorkflowStatus::CLOSED )
-               && ( $this->userIs( ParticipantRole::ROLE_APPROVER, $user, $post ) || $this->userIs( ParticipantRole::ROLE_OWNER, $user, $post ) );
+        return !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
+            && ($this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post) || $this->userIs(ParticipantRole::ROLE_OWNER, $user, $post));
     }
 }

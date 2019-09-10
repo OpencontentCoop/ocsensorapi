@@ -1,15 +1,28 @@
 {
-    "name": "opencontent/ocsensorapi",
-    "description": "Opencontent Sensor",    
-    "authors": [        
-        {
-            "name": "OpenContent",
-            "homepage": "http://www.opencontent.it"
-        }
-    ],
-    "license": "GPL-2.0",    
-    "minimum-stability": "dev",
-    "autoload": {
-        "psr-0": {"Opencontent\\Sensor\\": "src/"}
+  "name": "opencontent/ocsensorapi",
+  "description": "Opencontent Sensor",
+  "authors": [
+    {
+      "name": "OpenContent",
+      "homepage": "http://www.opencontent.it"
     }
+  ],
+  "require": {
+    "psr/log": "*",
+    "erasys/openapi-php": "*",
+    "league/event": "*"
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/lrealdi/openapi-php.git"
+    }
+  ],
+  "license": "GPL-2.0",
+  "minimum-stability": "dev",
+  "autoload": {
+    "psr-0": {
+      "Opencontent\\Sensor\\": "src/"
+    }
+  }
 }

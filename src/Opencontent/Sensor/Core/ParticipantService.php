@@ -14,7 +14,7 @@ abstract class ParticipantService implements ParticipantServiceInterface
     /**
      * @param Repository $repository
      */
-    public function __construct( Repository $repository )
+    public function __construct(Repository $repository)
     {
         $this->repository = $repository;
     }

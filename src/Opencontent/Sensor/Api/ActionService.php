@@ -7,7 +7,7 @@ use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Api\Exception\PermissionException;
-use Opencontent\Sensor\Api\Exception\InvalidParameterException;
+use Opencontent\Sensor\Api\Exception\RequiredParameterException;
 
 interface ActionService
 {
@@ -16,14 +16,14 @@ interface ActionService
      *
      * @return ActionService
      */
-    public function setUser( User $user );
+    public function setUser(User $user);
 
     /**
      * @param $identifier
      *
      * @return ActionDefinition
      */
-    public function loadActionDefinitionByIdentifier( $identifier );
+    public function loadActionDefinitionByIdentifier($identifier);
 
     /**
      * @param Action $action
@@ -32,17 +32,17 @@ interface ActionService
      * @param Post $post
      *
      * @throws PermissionException
-     * @throws InvalidParameterException
+     * @throws RequiredParameterException
      */
-    public function dryRunAction( Action $action, Post $post );
+    public function dryRunAction(Action $action, Post $post);
 
     /**
      * @param Action $action
      * @param Post $post
      *
      * @throws PermissionException
-     * @throws InvalidParameterException
+     * @throws RequiredParameterException
      */
-    public function runAction( Action $action, Post $post );
+    public function runAction(Action $action, Post $post);
 
 }

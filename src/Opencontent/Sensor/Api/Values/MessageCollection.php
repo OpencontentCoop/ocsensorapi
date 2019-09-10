@@ -23,13 +23,11 @@ class MessageCollection extends Collection
      */
     public $messages = array();
 
-    public function unreadMessages( DateTime $lastAccessDateTime )
+    public function unreadMessages(DateTime $lastAccessDateTime)
     {
         $unreadMessages = array();
-        foreach ( $this->messages as $message )
-        {
-            if ( $message->modified > $lastAccessDateTime )
-            {
+        foreach ($this->messages as $message) {
+            if ($message->modified > $lastAccessDateTime) {
                 $unreadMessages[] = $message;
             }
         }
@@ -37,7 +35,7 @@ class MessageCollection extends Collection
         return $unreadMessages;
     }
 
-    public function addMessage( Message $message )
+    public function addMessage(Message $message)
     {
         $this->messages[] = $message;
         $this->lastMessage = $message;
@@ -46,11 +44,16 @@ class MessageCollection extends Collection
 
     protected function toArray()
     {
-        return (array) $this->messages;
+        return (array)$this->messages;
     }
 
-    protected function fromArray( array $data )
+    protected function fromArray(array $data)
     {
         $this->messages = $data;
+    }
+
+    public function jsonSerialize()
+    {
+        return self::toJson(array_values($this->messages));
     }
 }

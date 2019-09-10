@@ -10,9 +10,9 @@ class CanEdit extends PermissionDefinition
 {
     public $identifier = 'can_edit';
 
-    public function userHasPermission( User $user, Post $post )
+    public function userHasPermission(User $user, Post $post)
     {
-        //@todo
-        return true;
+        $object = \eZContentObject::fetch($post->id);
+        return $object instanceof \eZContentObject && $object->canEdit();
     }
 }

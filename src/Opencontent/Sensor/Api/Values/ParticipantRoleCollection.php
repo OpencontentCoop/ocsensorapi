@@ -18,22 +18,22 @@ class ParticipantRoleCollection extends Collection
      *
      * @return ParticipantRole|false
      */
-    public function getParticipantRoleById( $id )
+    public function getParticipantRoleById($id)
     {
-        return isset( $this->roles[$id] ) ? $this->roles[$id] : false;
+        return isset($this->roles[$id]) ? $this->roles[$id] : false;
     }
 
-    public function addParticipantRole( ParticipantRole $role )
+    public function addParticipantRole(ParticipantRole $role)
     {
         $this->roles[$role->id] = $role;
     }
 
     protected function toArray()
     {
-        return (array) $this->roles;
+        return (array)$this->roles;
     }
 
-    protected function fromArray( array $data )
+    protected function fromArray(array $data)
     {
         $this->roles = $data;
     }

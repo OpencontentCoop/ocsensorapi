@@ -11,10 +11,10 @@ class CanSendPrivateMessage extends UserIs
 {
     public $identifier = 'can_send_private_message';
 
-    public function userHasPermission( User $user, Post $post )
+    public function userHasPermission(User $user, Post $post)
     {
-        return $this->userIs( ParticipantRole::ROLE_OWNER, $user, $post )
-               || $this->userIs( ParticipantRole::ROLE_OBSERVER, $user, $post )
-               || $this->userIs( ParticipantRole::ROLE_APPROVER, $user, $post );
+        return $this->userIs(ParticipantRole::ROLE_OWNER, $user, $post)
+            || $this->userIs(ParticipantRole::ROLE_OBSERVER, $user, $post)
+            || $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post);
     }
 }

@@ -12,6 +12,4 @@ class ActionDefinitionParameter
     public $defaultValue;
 
     public $type;
-
-    public $inputName;
 }

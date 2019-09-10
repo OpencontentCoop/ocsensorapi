@@ -12,19 +12,20 @@ class ReadAction extends ActionDefinition
 {
     public $identifier = 'read';
 
-    public $permissionDefinitionIdentifiers = array( 'can_read' );
+    public $permissionDefinitionIdentifiers = array('can_read');
 
-    public function run( Repository $repository, Action $action, Post $post, User $user )
+    public function run(Repository $repository, Action $action, Post $post, User $user)
     {
-        $repository->getUserService()->setLastAccessDateTime( $user, $post );
-        if ( $post->approvers->getUserById( $user->id ) instanceof User
-             && ( $post->workflowStatus->is( Post\WorkflowStatus::WAITING )
-                  || $post->workflowStatus->is( Post\WorkflowStatus::REOPENED ) ) )
-        {
-            $repository->getPostService()->setPostWorkflowStatus( $post, Post\WorkflowStatus::READ );
-            $repository->getMessageService()->addTimelineItemByWorkflowStatus( $post, Post\WorkflowStatus::READ );
-            $this->fireEvent( $repository, $post, $user );
+        $repository->getUserService()->setLastAccessDateTime($user, $post);
+        if ($post->approvers->getUserById($user->id) instanceof User
+            && ($post->workflowStatus->is(Post\WorkflowStatus::WAITING)
+                || $post->workflowStatus->is(Post\WorkflowStatus::REOPENED))) {
+            $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::READ);
+            $repository->getMessageService()->addTimelineItemByWorkflowStatus($post, Post\WorkflowStatus::READ);
+            $post = $repository->getPostService()->refreshPost($post);
         }
+
+        $this->fireEvent($repository, $post, $user);
     }
 }
 

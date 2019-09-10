@@ -2,6 +2,7 @@
 
 namespace Opencontent\Sensor\Core;
 
+use Opencontent\Sensor\Api\OperatorService;
 use Opencontent\Sensor\Api\Repository as RepositoryInterface;
 use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Permission\PermissionDefinition;
@@ -12,8 +13,6 @@ use Opencontent\Sensor\Api\Values\Settings;
 
 abstract class Repository implements RepositoryInterface
 {
-    protected function __construct(){}
-
     /**
      * @var User
      */
@@ -62,6 +61,31 @@ abstract class Repository implements RepositoryInterface
     protected $eventService;
 
     /**
+     * @var \Opencontent\Sensor\Api\AreaService
+     */
+    protected $areaService;
+
+    /**
+     * @var \Opencontent\Sensor\Api\CategoryService
+     */
+    protected $categoryService;
+
+    /**
+     * @var \Opencontent\Sensor\Api\OperatorService
+     */
+    protected $operatorService;
+
+    /**
+     * @var \Opencontent\Sensor\Api\GroupService
+     */
+    protected $groupService;
+
+    /**
+     * @var \Opencontent\Sensor\Api\StatisticsService
+     */
+    protected $statisticsService;
+
+    /**
      * @var PermissionDefinition[]
      */
     protected $permissionDefinitions = array();
@@ -71,12 +95,17 @@ abstract class Repository implements RepositoryInterface
      */
     protected $actionDefinitions = array();
 
+    /**
+     * @var \Opencontent\Sensor\Api\NotificationService
+     */
+    protected $notificationService;
+
     public function getCurrentUser()
     {
         return $this->user;
     }
 
-    public function setCurrentUser( User $user )
+    public function setCurrentUser(User $user)
     {
         $this->user = $user;
     }
@@ -86,30 +115,28 @@ abstract class Repository implements RepositoryInterface
         return $this->language;
     }
 
-    public function setCurrentLanguage( $language )
+    public function setCurrentLanguage($language)
     {
         $this->language = $language;
     }
 
-    public function isUserParticipant( Post $post )
+    public function isUserParticipant(Post $post)
     {
-        return $post->participants->getUserById( $this->user->id );
+        return $post->participants->getUserById($this->user->id);
     }
 
     public function getPermissionService()
     {
-        if ( $this->permissionService === null )
-        {
-            $this->permissionService = new PermissionService( $this, $this->permissionDefinitions );
+        if ($this->permissionService === null) {
+            $this->permissionService = new PermissionService($this, $this->permissionDefinitions);
         }
         return $this->permissionService;
     }
 
     public function getActionService()
     {
-        if ( $this->actionService === null )
-        {
-            $this->actionService = new ActionService( $this, $this->actionDefinitions );
+        if ($this->actionService === null) {
+            $this->actionService = new ActionService($this, $this->actionDefinitions);
         }
         return $this->actionService;
     }
@@ -119,7 +146,7 @@ abstract class Repository implements RepositoryInterface
      *
      * @return void
      */
-    public function setActionDefinitions( $actionDefinitions )
+    public function setActionDefinitions($actionDefinitions)
     {
         $this->actionDefinitions = $actionDefinitions;
         $this->actionService = null;
@@ -130,7 +157,7 @@ abstract class Repository implements RepositoryInterface
      *
      * @return void
      */
-    public function setPermissionDefinitions( $permissionDefinitions )
+    public function setPermissionDefinitions($permissionDefinitions)
     {
         $this->permissionDefinitions = $permissionDefinitions;
         $this->participantService = null;

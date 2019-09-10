@@ -11,7 +11,7 @@ class CanComment extends PermissionDefinition
 {
     public $identifier = 'can_comment';
 
-    public function userHasPermission( User $user, Post $post )
+    public function userHasPermission(User $user, Post $post)
     {
         return $user->commentMode && !$user->moderationMode && $post->commentsIsOpen;
     }

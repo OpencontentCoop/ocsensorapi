@@ -5,7 +5,9 @@ namespace Opencontent\Sensor\Core\ActionDefinitions;
 use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
+use Opencontent\Sensor\Api\Exception\UnauthorizedException;
 use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\Message;
 use Opencontent\Sensor\Api\Values\Message\CommentStruct;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
@@ -15,32 +17,39 @@ class EditCommentAction extends ActionDefinition
     public function __construct()
     {
         $this->identifier = 'edit_comment';
-        $this->permissionDefinitionIdentifiers = array( 'can_read', 'can_comment' );
+        $this->permissionDefinitionIdentifiers = array('can_read', 'can_comment');
         $this->inputName = 'EditComment';
 
         $parameter = new ActionDefinitionParameter();
-        $parameter->identifier = 'id_text';
+        $parameter->identifier = 'id';
         $parameter->isRequired = true;
-        $parameter->type = 'array';
-        $parameter->inputName = 'SensorEditComment';
+        $parameter->type = 'integer';
+        $this->parameterDefinitions[] = $parameter;
+
+        $parameter = new ActionDefinitionParameter();
+        $parameter->identifier = 'text';
+        $parameter->isRequired = true;
+        $parameter->type = 'string';
         $this->parameterDefinitions[] = $parameter;
     }
 
-    public function run( Repository $repository, Action $action, Post $post, User $user )
+    public function run(Repository $repository, Action $action, Post $post, User $user)
     {
-        $idTextArray = $action->getParameterValue( 'id_text' );
-        foreach( $idTextArray as $id => $text )
-        {
-            $commentStruct = new CommentStruct();
-            $commentStruct->id = $id;
-            $commentStruct->text = $text;
-            $commentStruct->creator = $user;
-            if ( $message = $repository->getMessageService()->updateComment( $commentStruct ) )
-            {
-                $this->fireEvent( $repository, $post, $user, array( 'message' => $message ) );
+        $commentStruct = new CommentStruct();
+        $commentStruct->id = $action->getParameterValue('id');
+        $commentStruct->text = $action->getParameterValue('text');
+        $commentStruct->creator = $user;
+
+        /** @var Message $comment */
+        foreach ($post->comments as $comment) {
+            if ($comment->id == $commentStruct->id && $comment->creator->id == $user->id) {
+                $repository->getMessageService()->updateComment($commentStruct);
+                $post = $repository->getPostService()->refreshPost($post);
+                $this->fireEvent($repository, $post, $user, array('message' => $commentStruct->text));
+                return;
             }
         }
 
-        $repository->getPostService()->refreshPost( $post );
+        throw new UnauthorizedException("Current user can not edit this comment");
     }
 }

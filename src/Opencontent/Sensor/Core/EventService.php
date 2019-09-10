@@ -14,7 +14,7 @@ abstract class EventService implements EventServiceInterface
     /**
      * @param Repository $repository
      */
-    public function __construct( Repository $repository )
+    public function __construct(Repository $repository)
     {
         $this->repository = $repository;
     }

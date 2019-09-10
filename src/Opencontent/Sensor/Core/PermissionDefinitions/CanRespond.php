@@ -2,21 +2,20 @@
 
 namespace Opencontent\Sensor\Core\PermissionDefinitions;
 
-use Opencontent\Sensor\Api\Permission\PermissionDefinition;
-use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Values\ParticipantRole;
 
-class CanRespond extends PermissionDefinition
+class CanRespond extends UserIs
 {
     public $identifier = 'can_respond';
 
-    public function userHasPermission( User $user, Post $post )
+    public function userHasPermission(User $user, Post $post)
     {
         return (
-            !$post->workflowStatus->is( Post\WorkflowStatus::CLOSED )
-            && !$post->workflowStatus->is( Post\WorkflowStatus::ASSIGNED )
-            && $post->approvers->getParticipantById($user->id) instanceof Participant
+            !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
+            && !$post->workflowStatus->is(Post\WorkflowStatus::ASSIGNED)
+            && $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post)
         );
     }
 }

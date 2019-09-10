@@ -11,8 +11,8 @@ class CanChangePrivacy extends UserIs
 {
     public $identifier = 'can_change_privacy';
 
-    public function userHasPermission( User $user, Post $post )
+    public function userHasPermission(User $user, Post $post)
     {
-        return $this->userIs( ParticipantRole::ROLE_APPROVER, $user, $post );
+        return $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post);
     }
 }

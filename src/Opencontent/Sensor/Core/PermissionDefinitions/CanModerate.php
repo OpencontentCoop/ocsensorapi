@@ -12,8 +12,8 @@ class CanModerate extends UserIs
 {
     public $identifier = 'can_moderate';
 
-    public function userHasPermission( User $user, Post $post )
+    public function userHasPermission(User $user, Post $post)
     {
-        return $this->userIs( ParticipantRole::ROLE_APPROVER, $user, $post );
+        return $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post);
     }
 }

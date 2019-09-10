@@ -36,21 +36,20 @@ class ActionService implements ActionServiceInterface
      * @param Repository $repository
      * @param ActionDefinition[] $actionDefinitions
      */
-    public function __construct( Repository $repository, $actionDefinitions )
+    public function __construct(Repository $repository, $actionDefinitions)
     {
         $this->repository = $repository;
-        foreach( $actionDefinitions as $actionDefinition )
-        {
+        foreach ($actionDefinitions as $actionDefinition) {
             $this->actionDefinitions[$actionDefinition->identifier] = $actionDefinition;
         }
-        $this->setUser( $this->repository->getCurrentUser() );
+        $this->setUser($this->repository->getCurrentUser());
     }
 
-    public function loadActionDefinitionByIdentifier( $identifier )
+    public function loadActionDefinitionByIdentifier($identifier)
     {
         if (isset($this->actionDefinitions[$identifier]))
             return $this->actionDefinitions[$identifier];
-        throw new BaseException( "Action $identifier not defined" );
+        throw new BaseException("Action $identifier not defined");
     }
 
     /**
@@ -60,9 +59,9 @@ class ActionService implements ActionServiceInterface
      * @return Action
      * @throws BaseException
      */
-    public function dryRunAction( Action $action, Post $post )
+    public function dryRunAction(Action $action, Post $post)
     {
-        return $this->loadActionDefinitionByIdentifier( $action->identifier )->dryRun(
+        return $this->loadActionDefinitionByIdentifier($action->identifier)->dryRun(
             $this->repository,
             $action,
             $post,
@@ -76,17 +75,17 @@ class ActionService implements ActionServiceInterface
      *
      * @throws BaseException
      */
-    public function runAction( Action $action, Post $post )
+    public function runAction(Action $action, Post $post)
     {
-        $this->loadActionDefinitionByIdentifier( $action->identifier )->run(
+        $this->loadActionDefinitionByIdentifier($action->identifier)->run(
             $this->repository,
-            $this->dryRunAction( $action, $post ),
+            $this->dryRunAction($action, $post),
             $post,
             $this->user
         );
     }
 
-    public function setUser( User $user )
+    public function setUser(User $user)
     {
         $this->user = $user;
         return $this;

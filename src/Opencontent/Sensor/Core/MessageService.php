@@ -15,7 +15,7 @@ abstract class MessageService implements MessageServiceInterface
     /**
      * @param Repository $repository
      */
-    public function __construct( Repository $repository )
+    public function __construct(Repository $repository)
     {
         $this->repository = $repository;
     }

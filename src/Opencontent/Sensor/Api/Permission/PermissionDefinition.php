@@ -15,5 +15,5 @@ abstract class PermissionDefinition
      *
      * @return bool
      */
-    abstract public function userHasPermission( User $user, Post $post );
+    abstract public function userHasPermission(User $user, Post $post);
 }

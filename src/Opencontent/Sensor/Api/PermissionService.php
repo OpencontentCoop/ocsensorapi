@@ -14,7 +14,14 @@ interface PermissionService
      *
      * @return PermissionDefinition
      */
-    public function loadPermissionDefinitionByIdentifier( $identifier );
+    public function loadPermissionDefinitionByIdentifier($identifier);
+
+    /**
+     * @param Post $post
+     *
+     * @return PermissionCollection
+     */
+    public function loadCurrentUserPostPermissionCollection(Post $post);
 
     /**
      * @param User $user
@@ -22,5 +29,5 @@ interface PermissionService
      *
      * @return PermissionCollection
      */
-    public function loadUserPostPermissionCollection( User $user, Post $post );
+    public function loadUserPostPermissionCollection(User $user, Post $post);
 }

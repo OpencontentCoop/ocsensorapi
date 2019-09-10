@@ -18,9 +18,9 @@ class ParticipantCollection extends Collection
      *
      * @return Participant
      */
-    public function getParticipantById( $id )
+    public function getParticipantById($id)
     {
-        return isset( $this->participants[$id] ) ? $this->participants[$id] : false;
+        return isset($this->participants[$id]) ? $this->participants[$id] : false;
     }
 
     /**
@@ -28,12 +28,12 @@ class ParticipantCollection extends Collection
      *
      * @return ParticipantCollection
      */
-    public function getParticipantsByRole( $role )
+    public function getParticipantsByRole($role)
     {
         $collection = new ParticipantCollection();
-        foreach( $this->participants as $participant ){
-            if ($participant->roleIdentifier == $role || $participant->roleName == $role){
-                $collection->addParticipant( $participant );
+        foreach ($this->participants as $participant) {
+            if ($participant->roleIdentifier == $role || $participant->roleName == $role) {
+                $collection->addParticipant($participant);
             }
         }
         return $collection;
@@ -41,26 +41,50 @@ class ParticipantCollection extends Collection
 
     public function getParticipantIdList()
     {
-        return array_keys( $this->participants );
+        return array_keys($this->participants);
+    }
+
+    public function getUserIdList()
+    {
+        $list = [];
+        foreach ($this->participants as $participant) {
+            $list = array_merge($list, array_keys($participant->users));
+        }
+
+        return array_unique($list);
     }
 
     /**
      * @param $id
      *
-     * @return User
+     * @return User|false
      */
-    public function getUserById( $id )
+    public function getUserById($id)
     {
-        foreach( $this->participants as $participant )
-        {
-            $user = $participant->getUserById( $id );
-            if ( $user )
+        foreach ($this->participants as $participant) {
+            $user = $participant->getUserById($id);
+            if ($user)
                 return $user;
         }
         return false;
     }
 
-    public function addParticipant( Participant $participant )
+    /**
+     * @param $userId
+     *
+     * @return Participant|false
+     */
+    public function getParticipantByUserId($userId)
+    {
+        foreach ($this->participants as $participant) {
+            $user = $participant->getUserById($userId);
+            if ($user)
+                return $participant;
+        }
+        return false;
+    }
+
+    public function addParticipant(Participant $participant)
     {
         $this->participants[$participant->id] = $participant;
     }
@@ -68,18 +92,24 @@ class ParticipantCollection extends Collection
     /**
      * @param Participant[] $participants
      */
-    public function addParticipants( $participants ){
-        foreach( $participants as $participant )
-            $this->addParticipant( $participant );
+    public function addParticipants($participants)
+    {
+        foreach ($participants as $participant)
+            $this->addParticipant($participant);
     }
 
     protected function toArray()
     {
-        return (array) $this->participants;
+        return (array)$this->participants;
     }
 
-    protected function fromArray( array $data )
+    protected function fromArray(array $data)
     {
         $this->participants = $data;
+    }
+
+    public function jsonSerialize()
+    {
+        return self::toJson(array_values($this->participants));
     }
 }

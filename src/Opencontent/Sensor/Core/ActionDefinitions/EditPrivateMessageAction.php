@@ -6,41 +6,51 @@ use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
 use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\Message\PrivateMessage;
 use Opencontent\Sensor\Api\Values\Message\PrivateMessageStruct;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Api\Exception\UnauthorizedException;
 
 class EditPrivateMessageAction extends ActionDefinition
 {
     public function __construct()
     {
         $this->identifier = 'edit_message';
-        $this->permissionDefinitionIdentifiers = array( 'can_read', 'can_send_private_message' );
+        $this->permissionDefinitionIdentifiers = array('can_read', 'can_send_private_message');
         $this->inputName = 'EditMessage';
 
         $parameter = new ActionDefinitionParameter();
-        $parameter->identifier = 'id_text';
+        $parameter->identifier = 'id';
         $parameter->isRequired = true;
-        $parameter->type = 'array';
-        $parameter->inputName = 'SensorEditMessage';
+        $parameter->type = 'integer';
+        $this->parameterDefinitions[] = $parameter;
+
+        $parameter = new ActionDefinitionParameter();
+        $parameter->identifier = 'text';
+        $parameter->isRequired = true;
+        $parameter->type = 'string';
         $this->parameterDefinitions[] = $parameter;
     }
 
-    public function run( Repository $repository, Action $action, Post $post, User $user )
+    public function run(Repository $repository, Action $action, Post $post, User $user)
     {
-        $idTextArray = $action->getParameterValue( 'id_text' );
-        foreach( $idTextArray as $id => $text )
-        {
-            $messageStruct = new PrivateMessageStruct();
-            $messageStruct->id = $id;
-            $messageStruct->text = $text;
-            $messageStruct->creator = $user;
-            if ( $message = $repository->getMessageService()->updatePrivateMessage( $messageStruct ) )
-            {
-                $this->fireEvent( $repository, $post, $user, array( 'message' => $message ) );
+        $messageStruct = new PrivateMessageStruct();
+        $messageStruct->id = $action->getParameterValue('id');
+        $messageStruct->text = $action->getParameterValue('text');
+        $messageStruct->creator = $user;
+
+        /** @var PrivateMessage[] $comment */
+        foreach ($post->privateMessages as $privateMessage) {
+            if ($privateMessage->id == $messageStruct->id && $privateMessage->creator->id == $user->id) {
+                $repository->getMessageService()->updatePrivateMessage($messageStruct);
+                $post = $repository->getPostService()->refreshPost($post);
+                $this->fireEvent($repository, $post, $user, array('message' => $messageStruct->text));
+                return;
             }
         }
-        $repository->getPostService()->refreshPost( $post );
+
+        throw new UnauthorizedException("Current user can not edit this comment");
     }
 }
 

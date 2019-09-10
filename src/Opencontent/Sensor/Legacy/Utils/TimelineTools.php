@@ -8,112 +8,92 @@ use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
 
 class TimelineTools
 {
-    public static function setText( $status, $name )
+    public static function setText($status, $name)
     {
-        if ( is_array( $name ) )
-        {
-            $name = implode( '::', $name );
+        if (is_array($name)) {
+            $name = implode('::', $name);
         }
         $result = '';
-        if ( $status == WorkflowStatus::FIXED )
-        {
-            if ( $name )
-                $result = '_fixed by ' .  $name;
+        if ($status == WorkflowStatus::FIXED) {
+            if ($name)
+                $result = '_fixed by ' . $name;
             else
                 $result = '_fixed';
 
-        }
-        elseif( $status == WorkflowStatus::READ )
-        {
-            if ( $name )
-                $result = '_read by ' .  $name;
+        } elseif ($status == WorkflowStatus::READ) {
+            if ($name)
+                $result = '_read by ' . $name;
             else
                 $result = '_read';
-        }
-        elseif( $status == WorkflowStatus::CLOSED )
-        {
-            if ( $name )
-                $result = '_closed by ' .  $name;
+        } elseif ($status == WorkflowStatus::CLOSED) {
+            if ($name)
+                $result = '_closed by ' . $name;
             else
                 $result = '_closed';
-        }
-        elseif( $status == WorkflowStatus::ASSIGNED )
-        {
-            if ( $name )
-                $result = '_assigned to ' .  $name;
+        } elseif ($status == WorkflowStatus::ASSIGNED) {
+            if ($name)
+                $result = '_assigned to ' . $name;
             else
                 $result = '_assigned';
-        }
-        elseif( $status == WorkflowStatus::REOPENED )
-        {
-            if ( $name )
-                $result = '_reopened by ' .  $name;
+        } elseif ($status == WorkflowStatus::REOPENED) {
+            if ($name)
+                $result = '_reopened by ' . $name;
             else
                 $result = '_reopened';
         }
         return $result;
     }
 
-    public static function getType( $text )
+    public static function getType($text)
     {
-        $parts = explode( ' by ', $text );
-        if ( !isset( $parts[1] ) )
-        {
-            $parts = explode( ' to ', $text );
+        $parts = explode(' by ', $text);
+        if (!isset($parts[1])) {
+            $parts = explode(' to ', $text);
         }
-        $type = ltrim( $parts[0], '_' );
+        $type = ltrim($parts[0], '_');
         return $type;
     }
 
-    public static function getExtra( $text )
+    public static function getExtra($text)
     {
         $extras = array();
-        $parts = explode( ' by ', $text );
-        if ( !isset( $parts[1] ) )
-        {
-            $parts = explode( ' to ', $text );
+        $parts = explode(' by ', $text);
+        if (!isset($parts[1])) {
+            $parts = explode(' to ', $text);
         }
-        if ( isset( $parts[1] ) )
-        {
-            $extras = explode( '::', $parts[1] );
+        if (isset($parts[1])) {
+            $extras = explode('::', $parts[1]);
         }
         return $extras;
     }
 
-    public static function getText( $text, ParticipantCollection $participants )
+    public static function getText($text, ParticipantCollection $participants)
     {
         $result = '';
-        $parts = explode( ' by ', $text );
-        if ( !isset( $parts[1] ) )
-        {
-            $parts = explode( ' to ', $text );
+        $parts = explode(' by ', $text);
+        if (!isset($parts[1])) {
+            $parts = explode(' to ', $text);
         }
-        if ( isset( $parts[1] ) )
-        {
-            $nameParts = explode( '::', $parts[1] );
+        if (isset($parts[1])) {
+            $nameParts = explode('::', $parts[1]);
             $nameString = array();
-            foreach ( $nameParts as $namePart )
-            {
-                if ( is_numeric( $namePart ) )
-                {
-                    $participant = $participants->getUserById( intval( $namePart ) );
+            foreach ($nameParts as $namePart) {
+                if (is_numeric($namePart)) {
+                    $participant = $participants->getParticipantById(intval($namePart));
                     $nameString[] = $participant->name;
-                }
-                else
-                {
+                } else {
                     $nameString[] = $namePart;
                 }
             }
-            $name = implode( ', ', $nameString );
+            $name = implode(', ', $nameString);
 
-            switch ( $parts[0] )
-            {
+            switch ($parts[0]) {
                 case '_fixed':
                     $result = ezpI18n::tr(
                         'sensor/robot message',
                         'Completata da %name',
                         false,
-                        array( '%name' => $name )
+                        array('%name' => $name)
                     );
                     break;
 
@@ -122,7 +102,7 @@ class TimelineTools
                         'sensor/robot message',
                         'Letta da %name',
                         false,
-                        array( '%name' => $name )
+                        array('%name' => $name)
                     );
                     break;
 
@@ -131,7 +111,7 @@ class TimelineTools
                         'sensor/robot message',
                         'Chiusa da %name',
                         false,
-                        array( '%name' => $name )
+                        array('%name' => $name)
                     );
                     break;
 
@@ -140,7 +120,7 @@ class TimelineTools
                         'sensor/robot message',
                         'Assegnata a %name',
                         false,
-                        array( '%name' => $name )
+                        array('%name' => $name)
                     );
                     break;
 
@@ -149,33 +129,30 @@ class TimelineTools
                         'sensor/robot message',
                         'Riaperta da %name',
                         false,
-                        array( '%name' => $name )
+                        array('%name' => $name)
                     );
                     break;
             }
-        }
-        else
-        {
-            switch ( $parts[0] )
-            {
+        } else {
+            switch ($parts[0]) {
                 case '_fixed':
-                    $result = ezpI18n::tr( 'sensor/robot message', 'Completata' );
+                    $result = ezpI18n::tr('sensor/robot message', 'Completata');
                     break;
 
                 case '_read':
-                    $result = ezpI18n::tr( 'sensor/robot message', 'Letta' );
+                    $result = ezpI18n::tr('sensor/robot message', 'Letta');
                     break;
 
                 case '_closed':
-                    $result = ezpI18n::tr( 'sensor/robot message', 'Chiusa' );
+                    $result = ezpI18n::tr('sensor/robot message', 'Chiusa');
                     break;
 
                 case '_assigned':
-                    $result = ezpI18n::tr( 'sensor/robot message', 'Assegnata' );
+                    $result = ezpI18n::tr('sensor/robot message', 'Assegnata');
                     break;
 
                 case '_reopened':
-                    $result = ezpI18n::tr( 'sensor/robot message', 'Riaperta' );
+                    $result = ezpI18n::tr('sensor/robot message', 'Riaperta');
                     break;
             }
         }

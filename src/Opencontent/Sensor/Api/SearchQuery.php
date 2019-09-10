@@ -81,7 +81,7 @@ class SearchQuery
 
     public $filters = array();
 
-    public $limits = array( 10, 0 );
+    public $limits = array(10, 0);
 
     public $query;
 
@@ -93,25 +93,18 @@ class SearchQuery
     {
     }
 
-    public function filter( $field, $value )
+    public function filter($field, $value)
     {
-        if ( in_array( $field, $this->availableFields ) )
-        {
-            if ( !isset( $this->filters[$field] ) )
-            {
+        if (in_array($field, $this->availableFields)) {
+            if (!isset($this->filters[$field])) {
                 $this->filters[$field] = $value;
-            }
-            else
-            {
-                if ( is_array( $value ) )
-                {
+            } else {
+                if (is_array($value)) {
                     $this->filters[$field] = array_merge(
                         $this->filters[$field],
                         $value
                     );
-                }
-                else
-                {
+                } else {
                     $this->filters[$field][] = $value;
                 }
             }
@@ -120,26 +113,24 @@ class SearchQuery
         return $this;
     }
 
-    public function filters( $filters )
+    public function filters($filters)
     {
-        $this->filters = array_merge_recursive( $this->filters, $filters );
+        $this->filters = array_merge_recursive($this->filters, $filters);
         return $this;
     }
 
-    public function fields( array $fields )
+    public function fields(array $fields)
     {
-        foreach ( $fields as $field )
-        {
-            $this->field( $field );
+        foreach ($fields as $field) {
+            $this->field($field);
         }
 
         return $this;
     }
 
-    public function field( $field )
+    public function field($field)
     {
-        if ( in_array( $field, $this->availableFields ) )
-        {
+        if (in_array($field, $this->availableFields)) {
             $this->fields[] = $field;
         }
 
@@ -147,34 +138,32 @@ class SearchQuery
     }
 
 
-    public function facets( array $facets )
+    public function facets(array $facets)
     {
-        foreach ( $facets as $facet )
-        {
-            $this->facet( $facet );
+        foreach ($facets as $facet) {
+            $this->facet($facet);
         }
 
         return $this;
     }
 
-    public function facet( $facet )
+    public function facet($facet)
     {
-        if ( in_array( $facet, $this->availableFields ) )
-        {
+        if (in_array($facet, $this->availableFields)) {
             $this->facets[] = $facet;
         }
 
         return $this;
     }
 
-    public function limits( $limit, $offset = 0 )
+    public function limits($limit, $offset = 0)
     {
-        $this->limits = array( $limit, $offset );
+        $this->limits = array($limit, $offset);
 
         return $this;
     }
 
-    public function sort( $sortArray )
+    public function sort($sortArray)
     {
         $this->sortArray[] = $sortArray;
 

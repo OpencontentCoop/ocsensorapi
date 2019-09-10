@@ -9,19 +9,19 @@ use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 
-
 class CloseAction extends ActionDefinition
 {
     public $identifier = 'close';
 
-    public $permissionDefinitionIdentifiers = array( 'can_read', 'can_close' );
+    public $permissionDefinitionIdentifiers = array('can_read', 'can_close');
 
     public $inputName = 'Close';
 
-    public function run( Repository $repository, Action $action, Post $post, User $user )
+    public function run(Repository $repository, Action $action, Post $post, User $user)
     {
-        $repository->getPostService()->setPostWorkflowStatus( $post, Post\WorkflowStatus::CLOSED );
-        $repository->getMessageService()->addTimelineItemByWorkflowStatus( $post, Post\WorkflowStatus::CLOSED );
-        $this->fireEvent( $repository, $post, $user );
+        $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::CLOSED);
+        $repository->getMessageService()->addTimelineItemByWorkflowStatus($post, Post\WorkflowStatus::CLOSED);
+        $post = $repository->getPostService()->refreshPost($post);
+        $this->fireEvent($repository, $post, $user);
     }
 }

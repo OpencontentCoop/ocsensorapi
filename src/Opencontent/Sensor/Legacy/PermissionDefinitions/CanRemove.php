@@ -10,9 +10,9 @@ class CanRemove extends PermissionDefinition
 {
     public $identifier = 'can_remove';
 
-    public function userHasPermission( User $user, Post $post )
+    public function userHasPermission(User $user, Post $post)
     {
-        //@todo
-        return true;
+        $object = \eZContentObject::fetch($post->id);
+        return $object instanceof \eZContentObject && $object->canRemove();
     }
 }

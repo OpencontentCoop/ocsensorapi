@@ -2,26 +2,26 @@
 
 namespace Opencontent\Sensor\Legacy;
 
+use Opencontent\Sensor\Api\Exception\InvalidInputException;
+use Opencontent\Sensor\Api\Exception\PermissionException;
 use Opencontent\Sensor\Api\Values\Message\PrivateMessageCollection;
-use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Core\PostService as PostServiceBase;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\PostCreateStruct;
 use Opencontent\Sensor\Api\Values\PostUpdateStruct;
-use Opencontent\Sensor\Api\Values\ParticipantRole;
-use Opencontent\Sensor\Api\Exception\BaseException;
+use Opencontent\Sensor\Api\Exception\NotFoundException;
+use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use eZPersistentObject;
 use eZCollaborationItem;
 use eZContentObject;
-use eZContentObjectAttribute;
 use eZContentObjectState;
-use eZImageAliasHandler;
-use DateInterval;
-use ezpI18n;
-use Opencontent\Sensor\Api\Values\Message\TimelineItemStruct;
 use eZContentCacheManager;
 use eZSearch;
+use Opencontent\Sensor\Legacy\PostService\PostBuilder;
 use Opencontent\Sensor\Legacy\Utils\ExpiryTools;
+use Opencontent\Sensor\Legacy\Validators\PostCreateStructValidator;
+use Opencontent\Sensor\Legacy\Validators\PostUpdateStructValidator;
+use Opencontent\Sensor\Api\Exception\UnexpectedException;
 
 class PostService extends PostServiceBase
 {
@@ -37,198 +37,101 @@ class PostService extends PostServiceBase
 
     const SITE_DATA_FIELD_PREFIX = 'sensorpost_';
 
-
     /**
      * @var Repository
      */
     protected $repository;
 
-    /**
-     * @var eZContentObject
-     */
-    protected $contentObject;
-
-    /**
-     * @var eZContentObjectAttribute[]
-     */
-    protected $contentObjectDataMap;
-
-    /**
-     * @var eZCollaborationItem
-     */
-    protected $collaborationItem;
-
-    public function loadPost( $postId )
+    public function loadPosts($query, $limit, $offset)
     {
+        if ($limit > \Opencontent\Sensor\Api\SearchService::MAX_LIMIT) {
+            throw new InvalidInputException('Max limit allowed is ' . \Opencontent\Sensor\Api\SearchService::MAX_LIMIT);
+        }
+        $searchQuery = $query ? 'q = "' . $query . '"' : '';
+        $result = $this->repository->getSearchService()->searchPosts("$searchQuery limit $limit cursor [$offset] sort [published=>desc]");
+
+        return ['items' => $result->searchHits, 'next' => $result->nextCursor, 'current' => $result->currentCursor];
+    }
+
+
+    public function loadPost($postId)
+    {
+        if (!is_numeric($postId) || (int)$postId == 0) {
+            throw new InvalidArgumentException("Invalid ID");
+        }
         $type = $this->repository->getSensorCollaborationHandlerTypeString();
-        $this->collaborationItem = eZPersistentObject::fetchObject(
+        $collaborationItem = eZPersistentObject::fetchObject(
             eZCollaborationItem::definition(),
             null,
             array(
                 'type_identifier' => $type,
-                'data_int1' => intval( $postId )
+                self::COLLABORATION_FIELD_OBJECT_ID => intval($postId)
             )
         );
-        $this->getContentObject( $postId );
-        if ( $this->collaborationItem instanceof eZCollaborationItem && $this->contentObject instanceof eZContentObject )
-        {
-            $this->getContentObjectDataMap( $postId );
-            return $this->internalLoadPost();
+        $contentObject = eZContentObject::fetch(intval($postId));
+        if ($collaborationItem instanceof eZCollaborationItem && $contentObject instanceof eZContentObject) {
+            $builder = new PostBuilder($this->repository, $contentObject, $collaborationItem);
+            $post = $builder->build();
+            $this->refreshExpirationInfo($post);
+            $this->setCommentsIsOpen($post);
+            $this->setUserPostAware($post);
+
+            return $post;
         }
-        throw new BaseException( "eZCollaborationItem $type not found for object $postId" );
+        throw new NotFoundException("eZCollaborationItem $type not found for object $postId");
     }
 
-    public function loadPostByInternalId( $postInternalId )
+    /**
+     * @param $postInternalId
+     * @return Post
+     * @throws NotFoundException
+     */
+    public function loadPostByInternalId($postInternalId)
     {
-        $this->getCollaborationItem( $postInternalId );
-        if ( $this->collaborationItem instanceof eZCollaborationItem )
-        {
-            $postId = $this->collaborationItem->attribute( 'data_int1' );
-            $this->getContentObject( $postId );
-            if ( $this->contentObject instanceof eZContentObject )
-            {
-                $this->getContentObjectDataMap( $postId );
-                return $this->internalLoadPost();
+        $collaborationItem = eZPersistentObject::fetchObject(
+            eZCollaborationItem::definition(),
+            null,
+            array(
+                'type_identifier' => $this->repository->getSensorCollaborationHandlerTypeString(),
+                'id' => intval($postInternalId)
+            )
+        );
+        if ($collaborationItem instanceof eZCollaborationItem) {
+            $postId = $collaborationItem->attribute(self::COLLABORATION_FIELD_OBJECT_ID);
+            $contentObject = eZContentObject::fetch(intval($postId));
+            if ($contentObject instanceof eZContentObject) {
+                $builder = new PostBuilder($this->repository, $contentObject, $collaborationItem);
+                $post = $builder->build();
+                $this->refreshExpirationInfo($post);
+                $this->setCommentsIsOpen($post);
+                $this->setUserPostAware($post);
+
+                return $post;
             }
         }
-        throw new BaseException( "eZCollaborationItem not found for id $postInternalId" );
+        throw new NotFoundException("eZCollaborationItem not found for id $postInternalId");
     }
 
-    protected function getContentObject( $postId )
+    public function refreshExpirationInfo(Post $post)
     {
-        if ( $this->contentObject === null )
-        {
-            $this->contentObject = eZContentObject::fetch( intval( $postId ) );
-        }
-        return $this->contentObject;
-    }
-
-    protected function getContentObjectDataMap( $postId )
-    {
-        if ( $this->contentObjectDataMap === null )
-        {
-            $this->getContentObject( $postId );
-            if ( !$this->contentObject instanceof eZContentObject )
-            {
-                throw new BaseException( "eZContentObject not found for id {$postId}" );
+        if ($post->expirationInfo->expirationDateTime instanceof \DateTime) {
+            $diffResult = Utils::getDateDiff($post->expirationInfo->expirationDateTime);
+            if ($diffResult->interval->invert) {
+                $expirationText = \ezpI18n::tr('sensor/expiring', 'Scaduto da');
+                $post->expirationInfo->label = 'danger';
+            } else {
+                $expirationText = \ezpI18n::tr('sensor/expiring', 'Scade fra');
+                $post->expirationInfo->label = 'default';
             }
-            $this->contentObjectDataMap = $this->contentObject->fetchDataMap(
-                false,
-                $this->repository->getCurrentLanguage()
-            );
+            $post->expirationInfo->text = $expirationText . ' ' . $diffResult->getText();
         }
-        return $this->contentObjectDataMap;
     }
 
-    protected function getCollaborationItem( $postInternalId )
+    public function setUserPostAware(Post $post)
     {
-        if ( $this->collaborationItem === null )
-        {
-            $type = $this->repository->getSensorCollaborationHandlerTypeString();
-            $this->collaborationItem = eZPersistentObject::fetchObject(
-                eZCollaborationItem::definition(),
-                null,
-                array(
-                    'type_identifier' => $type,
-                    'id' => intval( $postInternalId )
-                )
-            );
-        }
-
-        return $this->collaborationItem;
-    }
-
-    protected function internalLoadPost()
-    {
-        $post = new Post();
-        $post->id = $this->contentObject->attribute( 'id' );
-        $post->internalId = $this->collaborationItem->attribute( 'id' );
-
-        $post->published = Utils::getDateTimeFromTimestamp(
-            $this->contentObject->attribute( 'published' )
-        );
-        $post->modified = Utils::getDateTimeFromTimestamp(
-            $this->contentObject->attribute( 'modified' )
-        );;
-
-        $post->expirationInfo = $this->getPostExpirationInfo();
-        $post->resolutionInfo = $this->getPostResolutionInfo( $post );
-
-        $post->privacy = $this->getPostPrivacyCurrentStatus();
-        $post->status = $this->getPostCurrentStatus();
-        $post->moderation = $this->getPostModerationCurrentStatus();
-        $post->workflowStatus = $this->getPostWorkflowStatus();
-
-        $post->subject = $this->contentObject->name(
-            false,
-            $this->repository->getCurrentLanguage()
-        );
-        $post->description = $this->getPostDescription();
-        $post->type = $this->getPostType();
-        $post->images = $this->getPostImages();
-        $post->attachments = $this->getPostAttachments();
-        $post->categories = $this->getPostCategories();
-        $post->areas = $this->getPostAreas();
-        $post->geoLocation = $this->getPostGeoLocation();
-
-        $post->participants = $this->repository->getParticipantService()->loadPostParticipants(
-            $post
-        );
-        $authors = $this->repository->getParticipantService()->loadPostParticipantsByRole(
-            $post,
-            ParticipantRole::ROLE_AUTHOR
-        );
-        $post->reporter = $authors->first();
-        $post->approvers = Participant\ApproverCollection::fromCollection(
-            $this->repository->getParticipantService()->loadPostParticipantsByRole(
-                $post,
-                ParticipantRole::ROLE_APPROVER
-            )
-        );
-        $post->owners = Participant\OwnerCollection::fromCollection(
-            $this->repository->getParticipantService()->loadPostParticipantsByRole(
-                $post,
-                ParticipantRole::ROLE_OWNER
-            )
-        );
-        $post->observers = Participant\ObserverCollection::fromCollection(
-            $this->repository->getParticipantService()->loadPostParticipantsByRole(
-                $post,
-                ParticipantRole::ROLE_OBSERVER
-            )
-        );
-
-        if ( $post->reporter )
-        {
-            $post->author = clone $post->reporter;
-            $authorName = $this->getPostAuthorName();
-            if ( $authorName )
-            {
-                $post->author->name = $authorName;
-            }
-        }
-
-        $post->comments = $this->repository->getMessageService()->loadCommentCollectionByPost( $post );
-        $post->privateMessages = $this->repository->getMessageService()->loadPrivateMessageCollectionByPost( $post );
-        $post->timelineItems = $this->repository->getMessageService()->loadTimelineItemCollectionByPost( $post );
-        $post->responses = $this->repository->getMessageService()->loadResponseCollectionByPost( $post );
-
-        $post->commentsIsOpen = $this->getCommentsIsOpen( $post );
-
-        $this->setUserPostAware( $post );
-
-        $post->internalStatus = 'miss';
-
-        return $post;
-    }
-
-    public function setUserPostAware( Post $post )
-    {
-        foreach ( $post->participants as $participant )
-        {
-            foreach ( $participant as $user )
-            {
-                $this->repository->getUserService()->setUserPostAware( $user, $post );
+        foreach ($post->participants as $participant) {
+            foreach ($participant as $user) {
+                $this->repository->getUserService()->setUserPostAware($user, $post);
             }
         }
         $this->repository->getUserService()->setUserPostAware(
@@ -236,478 +139,298 @@ class PostService extends PostServiceBase
             $post
         );
 
-        $post->privateMessages = new PrivateMessageCollection();
-        foreach( $this->repository->getMessageService()->loadPrivateMessageCollectionByPost( $post )->messages as $message )
-        {
-            if ( $message->getReceiverById( $this->repository->getCurrentUser()->id )
-                 || $message->creator->id == $this->repository->getCurrentUser()->id )
-            {
-                $post->privateMessages->addMessage( $message );
+        $privateMessages = new PrivateMessageCollection();
+
+        foreach ($post->privateMessages->messages as $message) {
+            if ($message->getReceiverById($this->repository->getCurrentUser()->id)
+                || $message->getReceiverByIdList($this->repository->getCurrentUser()->groups)
+                || $message->creator->id == $this->repository->getCurrentUser()->id) {
+                $privateMessages->addMessage($message);
+            }
+        }
+        $post->privateMessages = $privateMessages;
+    }
+
+    public function setCommentsIsOpen(Post $post)
+    {
+        if ($this->repository->getSensorSettings()->has('CommentsAllowed') && !$this->repository->getSensorSettings()->get('CommentsAllowed')) {
+            $post->commentsIsOpen = false;
+        } else {
+            $now = time();
+            if ($post->resolutionInfo instanceof Post\ResolutionInfo && $this->repository->getSensorSettings()->has('CloseCommentsAfterSeconds')) {
+                $time = $now - $post->resolutionInfo->resolutionDateTime->getTimestamp();
+                $post->commentsIsOpen = $time < $this->repository->getSensorSettings()->get('CloseCommentsAfterSeconds');
+            } else {
+                $post->commentsIsOpen = true;
             }
         }
     }
 
-    protected function getCommentsIsOpen( Post $post )
+    public function createPost(PostCreateStruct $post)
     {
-        if ( $this->repository->getSensorSettings()->has( 'CommentsAllowed' ) && !$this->repository->getSensorSettings()->get( 'CommentsAllowed' ) ){
-            return false;
-        }   
-        $now = time();
-        $resolutionInfo = $this->getPostResolutionInfo( $post );
-        if ( $resolutionInfo instanceof Post\ResolutionInfo
-             && $this->repository->getSensorSettings()->has( 'CloseCommentsAfterSeconds' )
-        )
-        {
-            $time = $now - $resolutionInfo->resolutionDateTime->getTimestamp();
-            return $time < $this->repository->getSensorSettings()->get( 'CloseCommentsAfterSeconds' );
+        $validator = new PostCreateStructValidator($this->repository);
+        $validator->validate($post);
+
+        $author = $post->author ? (int)$post->author : (int)$this->repository->getCurrentUser()->id;
+        $params = [
+            'creator_id' => $author,
+            'class_identifier' => $this->repository->getPostContentClass()->attribute('identifier'),
+            'parent_node_id' => (int)$this->repository->getPostRootNode()->attribute('node_id'),
+            'attributes' => [
+                'subject' => (string)$post->subject,
+                'description' => (string)$post->description,
+                'type' => (string)$post->type,
+                'geo' => (string)$post->geoLocation,
+                'image' => $post->imagePath,
+                'privacy' => (string)$post->privacy == 'public',
+                'area' => implode('-', $post->areas),
+                'category' => implode('-', $post->categories),
+
+            ]
+        ];
+
+        $object = \eZContentFunctions::createAndPublishObject($params);
+
+        return $this->loadPost($object->attribute('id'));
+    }
+
+    public function updatePost(PostUpdateStruct $post)
+    {
+        $contentObject = \eZContentObject::fetch((int)$post->getPost()->id);
+        $validator = new PostUpdateStructValidator($this->repository, $contentObject);
+        $validator->validate($post);
+
+        $attributes = array();
+        foreach (['subject', 'description', 'type', 'geo'] as $identifier) {
+            if (!empty((string)$post->{$identifier})) {
+                $attributes[$identifier] = (string)$post->{$identifier};
+            }
+        }
+        if (!empty((string)$post->areas)) {
+            $attributes['area'] = implode('-', $post->areas);
+        }
+        if (!empty((string)$post->categories)) {
+            $attributes['category'] = implode('-', $post->categories);
+        }
+        if ((string)$post->privacy != '') {
+            $attributes['privacy'] = (string)$post->privacy == 'public';
+        }
+
+        if (\eZContentFunctions::updateAndPublishObject($contentObject, ['attributes' => $attributes])) {
+            return $this->loadPost($contentObject->attribute('id'));
+        }
+
+        throw new UnexpectedException("Update failed");
+    }
+
+    public function deletePost(Post $post)
+    {
+        if (!$this->repository->getCurrentUser()->permissions->hasPermission('can_remove')) {
+            throw new PermissionException('can_remove', $this->repository->getCurrentUser(), $post);
+        }
+
+        $moveToTrash = false;
+        $deleteIDArray = array();
+        foreach ($this->getContentObject($post)->assignedNodes() as $node) {
+            $deleteIDArray[] = $node->attribute('node_id');
+        }
+        if (!empty($deleteIDArray)) {
+            if (\eZOperationHandler::operationIsAvailable('content_delete')) {
+                \eZOperationHandler::execute('content',
+                    'delete',
+                    array(
+                        'node_id_list' => $deleteIDArray,
+                        'move_to_trash' => $moveToTrash
+                    ),
+                    null, true);
+            } else {
+                \eZContentOperationCollection::deleteObject($deleteIDArray, $moveToTrash);
+            }
         }
 
         return true;
     }
 
-    protected function getPostAuthorName()
+    public function trashPost(Post $post)
     {
-        $authorName = false;
-        if ( isset( $this->contentObjectDataMap['on_behalf_of'] )
-             && $this->contentObjectDataMap['on_behalf_of']->hasContent()
-        )
+        $participants = $post->participants->getParticipantIdList();
+        foreach( $participants as $participantId )
         {
-            $authorName = $this->contentObjectDataMap['on_behalf_of']->toString();
-            if ( isset( $this->contentObjectDataMap['on_behalf_of_detail'] )
-                 && $this->contentObjectDataMap['on_behalf_of_detail']->hasContent()
+            $this->repository->getParticipantService()->trashPostParticipant($post, $participantId);
+        }
+    }
+
+    public function restorePost(Post $post)
+    {
+        $participants = $post->participants->getParticipantIdList();
+        foreach( $participants as $participantId )
+        {
+            $this->repository->getParticipantService()->restorePostParticipant($post, $participantId);
+        }
+    }
+
+    public function getContentObject(Post $post)
+    {
+        $contentObject = eZContentObject::fetch(intval($post->id));
+        if (!$contentObject instanceof eZContentObject) {
+            throw new NotFoundException("eZContentObject not found for id {$post->id}");
+        }
+
+        return $contentObject;
+    }
+
+    public function getCollaborationItem(Post $post)
+    {
+        $collaborationItem = eZPersistentObject::fetchObject(
+            eZCollaborationItem::definition(),
+            null,
+            array(
+                'type_identifier' => $this->repository->getSensorCollaborationHandlerTypeString(),
+                'id' => intval($post->internalId)
             )
-            {
-                $authorName .= ', ' . $this->contentObjectDataMap['on_behalf_of_detail']->toString();
-            }
-        }
-
-        return $authorName;
-    }
-
-    protected function getPostWorkflowStatus()
-    {
-        return Post\WorkflowStatus::instanceByCode(
-            $this->collaborationItem->attribute( self::COLLABORATION_FIELD_STATUS )
         );
-    }
-
-    protected function getPostExpirationInfo()
-    {
-        $publishedDateTime = Utils::getDateTimeFromTimestamp(
-            $this->contentObject->attribute( 'published' )
-        );
-        $expirationDateTime = Utils::getDateTimeFromTimestamp(
-            intval( $this->collaborationItem->attribute( self::COLLABORATION_FIELD_EXPIRY ) )
-        );
-
-        $diffResult = Utils::getDateDiff( $expirationDateTime );
-        if ( $diffResult->interval->invert )
-        {
-            $expirationText = ezpI18n::tr( 'sensor/expiring', 'Scaduto da' );
-            $expirationLabel = 'danger';
-        }
-        else
-        {
-            $expirationText = ezpI18n::tr( 'sensor/expiring', 'Scade fra' );
-            $expirationLabel = 'default';
-        }
-        $expirationText = $expirationText . ' ' . $diffResult->getText();
-
-        $expirationInfo = new Post\ExpirationInfo();
-        $expirationInfo->creationDateTime = $publishedDateTime;
-        $expirationInfo->expirationDateTime = $expirationDateTime;
-        $expirationInfo->label = $expirationLabel;
-        $expirationInfo->text = $expirationText;
-        $diff = $expirationDateTime->diff( $publishedDateTime );
-        if ( $diff instanceof DateInterval )
-        {
-            $expirationInfo->days = $diff->days;
+        if (!$collaborationItem instanceof eZCollaborationItem) {
+            throw new NotFoundException("eZCollaborationItem not found for id {$post->internalId}");
         }
 
-        return $expirationInfo;
+        return $collaborationItem;
     }
 
-    protected function getPostResolutionInfo( Post $post )
+    public function refreshPost(Post $post)
     {
-        $resolutionInfo = null;
-        if ( $this->getPostWorkflowStatus()->is( Post\WorkflowStatus::CLOSED ) )
-        {
-            $closedItem = $this->repository->getMessageService()->loadTimelineItemCollectionByPost( $post )->getByType( 'closed' )->last();
-            if ( $closedItem )
-            {
-                $diffResult = Utils::getDateDiff( $post->published, $closedItem->published );
-                $resolutionInfo = new Post\ResolutionInfo();
-                $resolutionInfo->resolutionDateTime = $closedItem->published;
-                $resolutionInfo->creationDateTime = $post->published;
-                $resolutionInfo->text = $diffResult->getText();
-            }
-        }
-
-        return $resolutionInfo;
-    }
-
-    protected function getPostType()
-    {
-        $type = null;
-        if ( isset( $this->contentObjectDataMap['type'] ) )
-        {
-            $typeIdentifier = $this->contentObjectDataMap['type']->toString();
-            $type = new Post\Type();
-            $type->identifier = $typeIdentifier;
-            switch ( $typeIdentifier )
-            {
-                case 'suggerimento':
-                    $type->name = ezpI18n::tr( 'openpa_sensor/type', 'Suggerimento' );
-                    $type->label = 'warning';
-                    break;
-
-                case 'reclamo':
-                    $type->name = ezpI18n::tr( 'openpa_sensor/type', 'Reclamo' );
-                    $type->label = 'danger';
-                    break;
-
-                case 'segnalazione':
-                    $type->name = ezpI18n::tr( 'openpa_sensor/type', 'Segnalazione' );
-                    $type->label = 'info';
-                    break;
-
-                default:
-                    $type->name = ucfirst( $typeIdentifier );
-                    $type->label = 'info';
-            }
-        }
-
-        return $type;
-    }
-
-    protected function getPostCurrentStatusByGroupIdentifier( $identifier )
-    {
-        foreach ( $this->repository->getSensorPostStates( $identifier ) as $state )
-        {
-            if ( in_array(
-                $state->attribute( 'id' ),
-                $this->contentObject->attribute( 'state_id_array' )
-            ) )
-            {
-                return $state;
-            }
-        }
-
-        return null;
-    }
-
-    protected function getPostCurrentStatus()
-    {
-        $status = new Post\Status();
-        $state = $this->getPostCurrentStatusByGroupIdentifier( 'sensor' );
-        if ( $state instanceof eZContentObjectState )
-        {
-            $status->identifier = $state->attribute( 'identifier' );
-            $status->name = $state->currentTranslation()->attribute( 'name' );
-            $status->label = 'info';
-            if ( $state->attribute( 'identifier' ) == 'pending' )
-            {
-                $status->label = 'danger';
-            }
-            elseif ( $state->attribute( 'identifier' ) == 'open' )
-            {
-                $status->label = 'warning';
-            }
-            elseif ( $state->attribute( 'identifier' ) == 'close' )
-            {
-                $status->label = 'success';
-            }
-
-        }
-
-        return $status;
-    }
-
-    protected function getPostPrivacyCurrentStatus()
-    {
-        $status = new Post\Status\Privacy();
-        $state = $this->getPostCurrentStatusByGroupIdentifier( 'privacy' );
-        if ( $state instanceof eZContentObjectState )
-        {
-            $state->setCurrentLanguage( $this->repository->getCurrentLanguage() );
-            $status->identifier = $state->attribute( 'identifier' );
-            $status->name = $state->currentTranslation()->attribute( 'name' );
-            $status->label = 'info';
-            if ( $state->attribute( 'identifier' ) == 'private' )
-            {
-                $status->label = 'default';
-            }
-        }
-
-        return $status;
-    }
-
-    protected function getPostModerationCurrentStatus()
-    {
-        $status = new Post\Status\Moderation();
-        $state = $this->getPostCurrentStatusByGroupIdentifier( 'moderation' );
-        if ( $state instanceof eZContentObjectState )
-        {
-            $status->identifier = $state->attribute( 'identifier' );
-            $status->name = $state->currentTranslation()->attribute( 'name' );
-            $status->label = 'danger';
-        }
-
-        return $status;
-    }
-
-    protected function getPostImages()
-    {
-        $data = array();
-        if ( isset( $this->contentObjectDataMap['image'] )
-             && $this->contentObjectDataMap['image']->hasContent()
-        )
-        {
-            /** @var eZImageAliasHandler $content */
-            $content = $this->contentObjectDataMap['image']->content();
-            $image = new Post\Field\Image();
-            $image->fileName = $content->attribute( 'original_filename' );
-            $structure = array(
-                'width' => null,
-                'height' => null,
-                'mime_typ' => null,
-                'filename' => null,
-                'suffix' => null,
-                'url' => null,
-                'filesize' => null
-            );
-            $original = array_intersect_key( $content->attribute( 'original' ), $structure );
-            $small = array_intersect_key( $content->attribute( 'small' ), $structure );
-            $image->original = $original;
-            $image->thumbnail = $small;
-            $data[] = $image;
-        }
-
-        return $data;
-    }
-
-    protected function getPostAttachments()
-    {
-        $data = array();
-        if ( isset( $this->contentObjectDataMap['attachment'] )
-             && $this->contentObjectDataMap['attachment']->hasContent()
-        )
-        {
-            $attachment = new Post\Field\Attachment();
-            $data[] = $attachment;
-        }
-
-        return $data;
-    }
-
-    protected function getPostCategories()
-    {
-        $data = array();
-        if ( isset( $this->contentObjectDataMap['category'] )
-             && $this->contentObjectDataMap['category']->hasContent()
-        )
-        {
-            $relationIds = explode( '-', $this->contentObjectDataMap['category']->toString() );
-            /** @var eZContentObject[] $objects */
-            $objects = eZContentObject::fetchIDArray( $relationIds );
-            foreach ( $objects as $object )
-            {
-                $category = new Post\Field\Category();
-                $category->id = $object->attribute( 'id' );
-                $category->name = $object->name( false, $this->repository->getCurrentLanguage() );
-                /** @var eZContentObjectAttribute[] $categoryDataMap */
-                $categoryDataMap = $object->fetchDataMap( false, $this->repository->getCurrentLanguage() );
-                if ( isset( $categoryDataMap['approver'] ) )
-                {
-                    $category->userIdList =  explode( '-', $categoryDataMap['approver']->toString() );
-                }
-                $data[] = $category;
-            }
-        }
-
-        return $data;
-    }
-
-    protected function getPostAreas()
-    {
-        $data = array();
-        if ( isset( $this->contentObjectDataMap['area'] )
-             && $this->contentObjectDataMap['area']->hasContent()
-        )
-        {
-            $relationIds = explode( '-', $this->contentObjectDataMap['area']->toString() );
-            /** @var eZContentObject[] $objects */
-            $objects = eZContentObject::fetchIDArray( $relationIds );
-            foreach ( $objects as $object )
-            {
-                $area = new Post\Field\Area();
-                $area->id = $object->attribute( 'id' );
-                $area->name = $object->name( false, $this->repository->getCurrentLanguage() );
-                $data[] = $area;
-            }
-        }
-
-        return $data;
-    }
-
-    protected function getPostGeoLocation()
-    {
-        $geo = new Post\Field\GeoLocation();
-        if ( isset( $this->contentObjectDataMap['geo'] )
-             && $this->contentObjectDataMap['geo']->hasContent()
-        )
-        {
-            /** @var \eZGmapLocation $content */
-            $content = $this->contentObjectDataMap['geo']->content();
-            $geo->latitude = $content->attribute( 'latitude' );
-            $geo->longitude = $content->attribute( 'longitude' );
-            $geo->address = $content->attribute( 'address' );
-        }
-
-        return $geo;
-    }
-
-    protected function getPostDescription()
-    {
-        if ( isset( $this->contentObjectDataMap['description'] ) )
-        {
-            return $this->contentObjectDataMap['description']->toString();
-        }
-
-        return false;
-    }
-
-    public function createPost( PostCreateStruct $post )
-    {
-        // TODO: Implement createPost() method.
-    }
-
-    public function updatePost( PostUpdateStruct $post )
-    {
-        // TODO: Implement updatePost() method.
-    }
-
-    public function deletePost( Post $post )
-    {
-        // TODO: Implement deletePost() method.
-    }
-
-    public function trashPost( Post $post )
-    {
-        // TODO: Implement trashPost() method.
-    }
-
-    public function restorePost( Post $post )
-    {
-        // TODO: Implement restorePost() method.
-    }
-
-    public function refreshPost( Post $post )
-    {
+        eZContentObject::clearCache($post->id);
         $timestamp = time();
-        $this->getContentObject( $post->id );
-        if ( !$this->contentObject instanceof eZContentObject )
-        {
-            throw new BaseException( "eZContentObject not found for id {$post->id}" );
-        }
-
-        $this->contentObject->setAttribute( 'modified', $timestamp );
-        $this->contentObject->store();
-        eZContentCacheManager::clearContentCacheIfNeeded( $this->contentObject->attribute( 'id' ) );
-        eZSearch::addObject( $this->contentObject, true );
+        $contentObject = $this->getContentObject($post);
+        $contentObject->setAttribute('modified', $timestamp);
+        $contentObject->store();
+        eZContentCacheManager::clearContentCacheIfNeeded($contentObject->attribute('id'));
+        eZSearch::addObject($contentObject, true);
+        return $this->loadPost($post->id);
     }
 
-    public function setPostStatus( Post $post, $status )
+    public function setPostStatus(Post $post, $status)
     {
-        $this->getContentObject( $post->id );
-        if ( !$this->contentObject instanceof eZContentObject )
-        {
-            throw new BaseException( "eZContentObject not found for id {$post->id}" );
-        }
-
-        if ( !$status instanceof eZContentObjectState )
-        {
-            list( $group, $identifier ) = explode( '.', $status );
-            $states = $this->repository->getSensorPostStates( $group );
+        $contentObject = $this->getContentObject($post);
+        if (!$status instanceof eZContentObjectState) {
+            list($group, $identifier) = explode('.', $status);
+            $states = $this->repository->getSensorPostStates($group);
             $status = $states["{$group}.{$identifier}"];
         }
 
-        if ( $status instanceof eZContentObjectState )
-            $this->contentObject->assignState( $status );
+        if ($status instanceof eZContentObjectState) {
+            $contentObject->assignState($status);
+        }
     }
 
-    public function setPostWorkflowStatus( Post $post, $status )
+    public function setPostWorkflowStatus(Post $post, $status)
     {
-        $states = $this->repository->getSensorPostStates( 'sensor' );
-        $this->getCollaborationItem( $post->internalId );
-        if ( !$this->collaborationItem instanceof eZCollaborationItem )
-        {
-            throw new BaseException( "eZCollaborationItem not found for id {$post->internalId}" );
-        }
+        $states = $this->repository->getSensorPostStates('sensor');
+        $collaborationItem = $this->getCollaborationItem($post);
 
         $timestamp = time();
 
-        $this->collaborationItem->setAttribute( self::COLLABORATION_FIELD_STATUS, $status );
-        $this->collaborationItem->setAttribute( 'modified', $timestamp );
-        $this->collaborationItem->setAttribute( self::COLLABORATION_FIELD_LAST_CHANGE, $timestamp );
+        $collaborationItem->setAttribute(self::COLLABORATION_FIELD_STATUS, $status);
+        $collaborationItem->setAttribute('modified', $timestamp);
+        $collaborationItem->setAttribute(self::COLLABORATION_FIELD_LAST_CHANGE, $timestamp);
 
-        if ( $status == Post\WorkflowStatus::READ )
-        {
-            $this->setPostStatus( $post, $states['sensor.open'] );
+        if ($status == Post\WorkflowStatus::READ || $status == Post\WorkflowStatus::ASSIGNED) {
+            $this->setPostStatus($post, $states['sensor.open']);
+        } elseif ($status == Post\WorkflowStatus::CLOSED) {
+            $collaborationItem->setAttribute('status', eZCollaborationItem::STATUS_INACTIVE);
+            $this->repository->getParticipantService()->deactivatePostParticipants($post);
+            $this->setPostStatus($post, $states['sensor.close']);
+        } elseif ($status == Post\WorkflowStatus::WAITING) {
+            $collaborationItem->setAttribute('status', eZCollaborationItem::STATUS_ACTIVE);
+            $this->repository->getParticipantService()->activatePostParticipants($post);
+        } elseif ($status == Post\WorkflowStatus::REOPENED) {
+            $collaborationItem->setAttribute('status', eZCollaborationItem::STATUS_ACTIVE);
+            $this->repository->getParticipantService()->activatePostParticipants($post);
+            $this->setPostStatus($post, $states['sensor.pending']);
         }
-        elseif ( $status == Post\WorkflowStatus::CLOSED )
-        {
-            $this->collaborationItem->setAttribute( 'status', eZCollaborationItem::STATUS_INACTIVE );
-            $this->repository->getParticipantService()->deactivatePostParticipants( $post );
-            $this->setPostStatus( $post, $states['sensor.close'] );
-        }
-        elseif ( $status == Post\WorkflowStatus::WAITING )
-        {
-            $this->collaborationItem->setAttribute( 'status', eZCollaborationItem::STATUS_ACTIVE );
-            $this->repository->getParticipantService()->activatePostParticipants( $post );
-        }
-        elseif ( $status == Post\WorkflowStatus::REOPENED )
-        {
-            $this->collaborationItem->setAttribute( 'status', eZCollaborationItem::STATUS_ACTIVE );
-            $this->repository->getParticipantService()->activatePostParticipants( $post );
-            $this->setPostStatus( $post, $states['sensor.pending'] );
-        }
-        $this->collaborationItem->sync();
-
-        $this->refreshPost( $post );
+        $collaborationItem->sync();
     }
 
-    public function setPostExpirationInfo( Post $post, $expiryDays )
+    public function setPostExpirationInfo(Post $post, $expiryDays)
     {
-        $this->getCollaborationItem( $post->internalId );
-        $this->collaborationItem->setAttribute(
+        $collaborationItem = $this->getCollaborationItem($post);
+        $collaborationItem->setAttribute(
             self::COLLABORATION_FIELD_EXPIRY,
-            ExpiryTools::addDaysToTimestamp( $this->collaborationItem->attribute( 'created' ), $expiryDays )
+            ExpiryTools::addDaysToTimestamp($collaborationItem->attribute('created'), $expiryDays)
         );
-        $this->collaborationItem->store();
-        $this->refreshPost( $post );
+        $collaborationItem->store();
     }
 
-    public function setPostCategory( Post $post, $category )
+    public function setPostCategory(Post $post, $category)
     {
-        $this->getContentObjectDataMap( $post->id );
-        if ( isset( $this->contentObjectDataMap['category'] ) )
-        {
-            $this->contentObjectDataMap['category']->fromString( $category );
-            $this->contentObjectDataMap['category']->store();
-            $this->refreshPost( $post );
+        $contentObjectDataMap = $this->getContentObject($post)->dataMap();
+        if (isset($contentObjectDataMap['category'])) {
+            $contentObjectDataMap['category']->fromString($category);
+            $contentObjectDataMap['category']->store();
         }
     }
 
-    public function setPostArea( Post $post, $area )
+    public function setPostArea(Post $post, $area)
     {
-        $this->getContentObjectDataMap( $post->id );
-        if ( isset( $this->contentObjectDataMap['area'] ) )
-        {
-            $this->contentObjectDataMap['area']->fromString( $area );
-            $this->contentObjectDataMap['area']->store();
-            $this->refreshPost( $post );
+        $contentObjectDataMap = $this->getContentObject($post)->dataMap();
+        if (isset($contentObjectDataMap['area'])) {
+            $contentObjectDataMap['area']->fromString($area);
+            $contentObjectDataMap['area']->store();
         }
+    }
+
+    public function addAttachment(Post $post, $files)
+    {
+        $contentObjectDataMap = $this->getContentObject($post)->dataMap();
+        if (isset($contentObjectDataMap['attachment'])
+            && ($contentObjectDataMap['attachment']->attribute('data_type_string') == \eZBinaryFileType::DATA_TYPE_STRING
+                || (class_exists('\OCMultiBinaryType') && $contentObjectDataMap['attachment']->attribute('data_type_string') == \OCMultiBinaryType::DATA_TYPE_STRING))
+        ) {
+            $attribute = $contentObjectDataMap['attachment'];
+            foreach ($files as $file) {
+                $tempFilePath = \eZSys::cacheDirectory() . '/fileupload/' . $file['filename'];
+                \eZFile::create(basename($tempFilePath), dirname($tempFilePath), base64_decode($file['file']));
+                $attribute->dataType()->insertRegularFile(
+                    $attribute->attribute('object'),
+                    $attribute->attribute('version'),
+                    $attribute->attribute('language_code'),
+                    $attribute,
+                    $tempFilePath,
+                    $response
+                );
+                @unlink($tempFilePath);
+            }
+        }
+    }
+
+    public function removeAttachment(Post $post, $files)
+    {
+        $contentObjectDataMap = $this->getContentObject($post)->dataMap();
+        if (isset($contentObjectDataMap['attachment'])) {
+            if (class_exists('\OCMultiBinaryType') && $contentObjectDataMap['attachment']->attribute('data_type_string') == \OCMultiBinaryType::DATA_TYPE_STRING) {
+                /** @var \eZMultiBinaryFile[] $currentFiles */
+                $currentFiles = $contentObjectDataMap['attachment']->content();
+                foreach ($files as $file) {
+                    $filename = false;
+                    foreach ($currentFiles as $currentFile) {
+                        if ($currentFile->attribute('original_filename') == $file) {
+                            $filename = $currentFile->attribute('filename');
+                            break;
+                        }
+                    }
+                    if ($filename) {
+                        $http = new \eZHTTPTool();
+                        $postValue = [];
+                        $postValue[$contentObjectDataMap['attachment']->attribute('id') . '_delete_multibinary'][$filename] = 1;
+                        $http->setPostVariable('CustomActionButton', $postValue);
+                        $contentObjectDataMap['attachment']->customHTTPAction($http, 'delete_multibinary', []);
+                    }
+                }
+            } elseif ($contentObjectDataMap['attachment']->attribute('data_type_string') == \eZBinaryFileType::DATA_TYPE_STRING) {
+                $http = new \eZHTTPTool();
+                $contentObjectDataMap['attachment']->customHTTPAction($http, 'delete_binary', []);
+            }
+        }
+
     }
 
 }

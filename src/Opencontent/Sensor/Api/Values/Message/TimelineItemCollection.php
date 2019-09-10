@@ -17,14 +17,12 @@ class TimelineItemCollection extends MessageCollection
      *
      * @return TimelineItemCollection
      */
-    public function getByType( $type )
+    public function getByType($type)
     {
         $result = new TimelineItemCollection();
-        foreach( $this->messages as $message )
-        {
-            if ( $message->type == $type )
-            {
-                $result->addMessage( $message );
+        foreach ($this->messages as $message) {
+            if ($message->type == $type) {
+                $result->addMessage($message);
             }
         }
         return $result;

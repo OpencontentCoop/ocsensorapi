@@ -27,32 +27,35 @@ class PermissionService implements PermissionServiceInterface
      * @param Repository $repository
      * @param PermissionDefinition[] $permissionDefinitions
      */
-    public function __construct( Repository $repository, $permissionDefinitions )
+    public function __construct(Repository $repository, $permissionDefinitions)
     {
         $this->repository = $repository;
         $this->permissionDefinitions = $permissionDefinitions;
     }
 
-    public function loadPermissionDefinitionByIdentifier( $identifier )
+    public function loadPermissionDefinitionByIdentifier($identifier)
     {
-        foreach( $this->permissionDefinitions as $permissionDefinition )
-        {
-            if ( $permissionDefinition->identifier == $identifier )
+        foreach ($this->permissionDefinitions as $permissionDefinition) {
+            if ($permissionDefinition->identifier == $identifier)
                 return $permissionDefinition;
         }
-        throw new BaseException( "Permission $identifier not found" );
+        throw new BaseException("Permission $identifier not found");
     }
 
-    public function loadUserPostPermissionCollection( User $user, Post $post )
+    public function loadUserPostPermissionCollection(User $user, Post $post)
     {
         $permissionCollection = new PermissionCollection();
-        foreach( $this->permissionDefinitions as $permissionDefinition )
-        {
+        foreach ($this->permissionDefinitions as $permissionDefinition) {
             $permission = new Permission();
             $permission->identifier = $permissionDefinition->identifier;
-            $permission->grant = (bool) $permissionDefinition->userHasPermission( $user, $post );
-            $permissionCollection->addPermission( $permission );
+            $permission->grant = (bool)$permissionDefinition->userHasPermission($user, $post);
+            $permissionCollection->addPermission($permission);
         }
         return $permissionCollection;
+    }
+
+    public function loadCurrentUserPostPermissionCollection(Post $post)
+    {
+        return $this->loadUserPostPermissionCollection($this->repository->getCurrentUser(), $post);
     }
 }

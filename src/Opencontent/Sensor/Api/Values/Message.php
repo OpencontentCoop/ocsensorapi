@@ -7,6 +7,9 @@ use Opencontent\Sensor\Api\Exportable;
 
 abstract class Message extends Exportable
 {
+    /**
+     * @var int
+     */
     public $id;
 
     /**
@@ -28,5 +31,7 @@ abstract class Message extends Exportable
      * @var string
      */
     public $text;
+
+    public $richText;
 
 }

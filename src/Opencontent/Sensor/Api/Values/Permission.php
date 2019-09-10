@@ -4,6 +4,10 @@ namespace Opencontent\Sensor\Api\Values;
 
 use Opencontent\Sensor\Api\Exportable;
 
+/**
+ * Class Permission
+ * @package Opencontent\Sensor\Api\Values
+ */
 class Permission extends Exportable
 {
     /**

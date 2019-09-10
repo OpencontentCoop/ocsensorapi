@@ -6,52 +6,83 @@ use eZContentObjectTreeNode;
 use eZContentObjectAttribute;
 use eZGmapLocation;
 
-class TreeNodeItem
+class TreeNodeItem implements \JsonSerializable
 {
     protected $name;
 
     protected $id;
 
+    protected $node_id;
+
+    protected $type;
+
     protected $geo;
 
+    protected $level;
+
+    protected $can_remove;
+
+    protected $can_edit;
+
+    protected $can_create;
+
+    protected $languages;
+
+    /**
+     * @var TreeNodeItem[]
+     */
     protected $children;
 
 
-    public function __construct( $data = array() )
+    public function __construct($data = array())
     {
         $this->name = $data['name'];
-        $this->id = $data['id'];
+        $this->id = (int)$data['id'];
+        $this->node_id = (int)$data['node_id'];
+        $this->type = $data['type'];
         $this->geo = $data['geo'];
         $this->children = $data['children'];
+        $this->level = $data['level'];
+        $this->can_remove = $data['can_remove'];
+        $this->can_edit = $data['can_edit'];
+        $this->can_create = $data['can_create'];
+        $this->languages = $data['languages'];
     }
 
-    public static function walk( eZContentObjectTreeNode $node, $parameters = array() )
+    public static function walk(eZContentObjectTreeNode $node, $parameters = array(), $level = -1)
     {
         $data = array();
-        $data['name'] = $node->attribute( 'name' );
-        $data['id'] = $node->attribute( 'contentobject_id' );
-        $data['geo'] = self::geo( $node );
-        $data['children'] = self::children( $node, $parameters );
-        return new TreeNodeItem( $data );
+        $data['name'] = $node->attribute('name');
+        $data['id'] = (int)$node->attribute('contentobject_id');
+        $data['node_id'] = (int)$node->attribute('node_id');
+        $data['type'] = $node->attribute('class_identifier');
+        $data['geo'] = self::geo($node);
+        $data['level'] = $level;
+        $data['can_remove'] = $node->canRemove();
+        $data['can_edit'] = $node->canEdit();
+        $data['can_create'] = $node->canCreate();
+        $data['languages'] = $node->object()->availableLanguages();
+        $level++;
+        $data['children'] = self::children($node, $parameters, $level);
+        return new TreeNodeItem($data);
     }
 
-    public static function __set_state( $array )
+    public static function __set_state($array)
     {
-        $object = new static( $array );
+        $object = new static($array);
         return $object;
     }
 
-    protected static function geo( eZContentObjectTreeNode $node )
+    protected static function geo(eZContentObjectTreeNode $node)
     {
         /** @var eZContentObjectAttribute[] $dataMap */
-        $dataMap = $node->attribute( 'data_map' );
-        if ( isset( $dataMap['geo'] ) && $dataMap['geo']->hasContent() )
-        {
+        $dataMap = $node->attribute('data_map');
+        if (isset($dataMap['geo']) && $dataMap['geo']->hasContent()) {
             /** @var eZGmapLocation $content */
-            $content = $dataMap['geo']->content() ;
-            $data = array( 'lat' => $content->attribute( 'latitude' ), 'lng' => $content->attribute( 'longitude' ) );
+            $content = $dataMap['geo']->content();
+            $data = array('lat' => $content->attribute('latitude'), 'lng' => $content->attribute('longitude'));
             return array(
-                'id' => $node->attribute( 'contentobject_id' ),
+                'id' => (int)$node->attribute('contentobject_id'),
                 'coords' => array(
                     $data['lat'],
                     $data['lng']
@@ -61,35 +92,30 @@ class TreeNodeItem
         return null;
     }
 
-    public static function children( eZContentObjectTreeNode $node, $parameters = array() )
+    public static function children(eZContentObjectTreeNode $node, $parameters = array(), $level = -1)
     {
         $data = array();
-        if ( $node->childrenCount( false ) > 0 )
-        {
-            if ( !$parameters['classes'] )
-            {
-                $children = $node->subTree( array(
+        if ($node->childrenCount(false) > 0) {
+            if (!$parameters['classes']) {
+                $children = $node->subTree(array(
                     'Depth' => 1,
                     'DepthOperator' => 'eq',
                     'Limitation' => array(),
-                    'SortBy' => $node->attribute( 'sort_array' )
-                ) );
-            }
-            else
-            {
-                $children = $node->subTree( array(
+                    'SortBy' => $node->attribute('sort_array')
+                ));
+            } else {
+                $children = $node->subTree(array(
                     'Depth' => 1,
                     'DepthOperator' => 'eq',
                     'ClassFilterType' => 'include',
                     'ClassFilterArray' => $parameters['classes'],
                     'Limitation' => array(),
-                    'SortBy' => $node->attribute( 'sort_array' )
-                ) );
+                    'SortBy' => $node->attribute('sort_array')
+                ));
             }
             /** @var eZContentObjectTreeNode[] $children */
-            foreach( $children as $child )
-            {
-                $data[] = TreeNodeItem::walk( $child, $parameters );
+            foreach ($children as $child) {
+                $data[] = TreeNodeItem::walk($child, $parameters, $level);
             }
         }
         return $data;
@@ -101,13 +127,14 @@ class TreeNodeItem
             'id',
             'name',
             'geo',
-            'children'
+            'children',
+            'level',
         );
     }
 
-    public function hasAttribute( $name )
+    public function hasAttribute($name)
     {
-        return in_array( $name, $this->attributes() );
+        return in_array($name, $this->attributes());
     }
 
     /**
@@ -115,17 +142,64 @@ class TreeNodeItem
      *
      * @return int|string|TreeNodeItem[]
      */
-    public function attribute( $name )
+    public function attribute($name)
     {
-        if ( $name == 'id' )
+        if ($name == 'id')
             return $this->id;
-        elseif ( $name == 'name' )
+        elseif ($name == 'name')
             return $this->name;
-        elseif ( $name == 'geo' )
+        elseif ($name == 'geo')
             return $this->geo;
-        elseif( $name == 'children' )
+        elseif ($name == 'children')
             return $this->children;
+        elseif ($name == 'level')
+            return $this->level;
 
         return false;
     }
+
+    public function jsonSerialize()
+    {
+        $data = [
+            'id' => $this->id,
+            'node_id' => $this->node_id,
+            'type' => $this->type,
+            'name' => $this->name,
+            'geo' => $this->geo,
+            'level' => $this->level,
+            'can_remove' => $this->can_remove,
+            'can_edit' => $this->can_edit,
+            'can_create' => $this->can_create,
+            'languages' => $this->languages,
+            'children' => []
+        ];
+
+        foreach ($this->children as $item) {
+            $data['children'][] = $item->jsonSerialize();
+        }
+
+        return $data;
+    }
+
+    public function toArray()
+    {
+        $data = [];
+        $data['name'] = $this->name;
+        $data['id'] = $this->id;
+        $data['node_id'] = $this->node_id;
+        $data['type'] = $this->type;
+        $data['geo'] = $this->geo;
+        $data['level'] = $this->level;
+        $data['can_remove'] = $this->can_remove;
+        $data['can_edit'] = $this->can_edit;
+        $data['can_create'] = $this->can_create;
+        $data['languages'] = $this->languages;
+        $data['children'] = [];
+        foreach ($this->children as $child){
+            $data['children'][] = $child->toArray();
+        }
+
+        return $data;
+    }
+
 }

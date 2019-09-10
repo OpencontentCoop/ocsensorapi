@@ -4,6 +4,10 @@ namespace Opencontent\Sensor\Api\Values\Post;
 
 use Opencontent\Sensor\Api\Exportable;
 
+/**
+ * Class WorkflowStatus
+ * @package Opencontent\Sensor\Api\Values\Post
+ */
 class WorkflowStatus extends Exportable
 {
     const WAITING = 0;
@@ -18,22 +22,28 @@ class WorkflowStatus extends Exportable
 
     const REOPENED = 6;
 
+    /**
+     * @var integer
+     */
     public $code;
 
+    /**
+     *
+     * @var string
+     */
     public $identifier;
 
-    public static function instanceByCode( $code )
+    public static function instanceByCode($code)
     {
         $instance = new self();
-        $instance->code = intval( $code );
-        $instance->identifier = $instance->getIdentifierByCode( $code );
+        $instance->code = intval($code);
+        $instance->identifier = $instance->getIdentifierByCode($code);
         return $instance;
     }
 
-    protected function getIdentifierByCode( $code )
+    protected function getIdentifierByCode($code)
     {
-        switch( $code )
-        {
+        switch ($code) {
             case self::WAITING:
                 return 'waiting';
 
@@ -57,7 +67,7 @@ class WorkflowStatus extends Exportable
         }
     }
 
-    public function is( $identifier )
+    public function is($identifier)
     {
         return $this->identifier === $identifier || $this->code === $identifier;
     }

@@ -16,9 +16,21 @@ abstract class UserIs extends PermissionDefinition
      *
      * @return bool|User
      */
-    public function userIs( $roleId, User $user, Post $post )
+    public function userIs($roleId, User $user, Post $post)
     {
-        $collection = $post->participants->getParticipantsByRole( $roleId );
-        return $collection->getUserById( $user->id );
+        $collection = $post->participants->getParticipantsByRole($roleId);
+        return $collection->getUserById($user->id);
+    }
+
+    public function userIsUserParticipant($roleId, User $user, Post $post)
+    {
+        $collection = $post->participants->getParticipantsByRole($roleId);
+        foreach ($collection as $participant){
+            if ($participant->id == $user->id){
+                return true;
+            }
+        }
+
+        return false;
     }
 }

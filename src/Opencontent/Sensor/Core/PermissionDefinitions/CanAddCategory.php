@@ -12,8 +12,8 @@ class CanAddCategory extends UserIs
 {
     public $identifier = 'can_add_category';
 
-    public function userHasPermission( User $user, Post $post )
+    public function userHasPermission(User $user, Post $post)
     {
-        return $this->userIs( ParticipantRole::ROLE_APPROVER, $user, $post );
+        return $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post);
     }
 }

@@ -68,7 +68,12 @@ class TreeNodeItem
         {
             if ( !$parameters['classes'] )
             {
-                $children = $node->children();
+                $children = $node->subTree( array(
+                    'Depth' => 1,
+                    'DepthOperator' => 'eq',
+                    'Limitation' => array(),
+                    'SortBy' => $node->attribute( 'sort_array' )
+                ) );
             }
             else
             {

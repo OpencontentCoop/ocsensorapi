@@ -77,7 +77,7 @@ interface PostService
      * @param Post $post
      * @return Post
      */
-    public function refreshPost(Post $post);
+    public function refreshPost(Post $post, $modifyTimestamp = true);
 
     /**
      * @param Post $post

@@ -10,7 +10,7 @@ class ExpiryTools
         $creation = new \DateTime();
         $creation->setTimestamp($creationTimestamp);
         $creation->add(self::expiringInterval($days));
-        return $creation->format('U');
+        return $creation->getTimestamp();
     }
 
     protected static function expiringInterval($days)

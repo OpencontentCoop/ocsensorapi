@@ -264,12 +264,12 @@ class UserService extends UserServiceBase
         eZCollaborationItemParticipantLink::setLastRead($post->internalId, $user->id, $timestamp);
     }
 
-    protected function getClassIdentifierAsString()
+    public function getClassIdentifierAsString()
     {
         return 'user';
     }
 
-    protected function getSubtreeAsString()
+    public function getSubtreeAsString()
     {
         return $this->repository->getUserRootNode()->attribute('node_id');
     }

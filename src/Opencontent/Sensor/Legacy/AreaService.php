@@ -144,12 +144,12 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
         // TODO: Implement removeArea() method.
     }
 
-    protected function getClassIdentifierAsString()
+    public function getClassIdentifierAsString()
     {
         return 'sensor_area';
     }
 
-    protected function getSubtreeAsString()
+    public function getSubtreeAsString()
     {
         return $this->repository->getAreasRootNode()->attribute('node_id');
     }

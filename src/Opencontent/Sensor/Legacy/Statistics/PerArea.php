@@ -58,10 +58,10 @@ class PerArea extends StatisticFactory
                     'data' => []
                 ];
                 $item['data'][] = [
-                    'interval' => '*',
+                    'interval' => 'all',
                     'count' => $pivotItem['count']
                 ];
-                $this->data['intervals']['*'] = '*';
+                $this->data['intervals']['all'] = 'all';
                 foreach ($pivotItem['pivot'] as $value) {
                     $intervalName = is_callable($intervalNameParser) ? $intervalNameParser($value['value']) : $value['value'];
                     $item['data'][] = [

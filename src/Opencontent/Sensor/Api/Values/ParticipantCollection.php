@@ -16,7 +16,7 @@ class ParticipantCollection extends Collection
     /**
      * @param $id
      *
-     * @return Participant
+     * @return Participant|boolean
      */
     public function getParticipantById($id)
     {

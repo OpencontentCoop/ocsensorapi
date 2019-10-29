@@ -170,12 +170,12 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
         // TODO: Implement removeCategory() method.
     }
 
-    protected function getClassIdentifierAsString()
+    public function getClassIdentifierAsString()
     {
         return 'sensor_category';
     }
 
-    protected function getSubtreeAsString()
+    public function getSubtreeAsString()
     {
         return $this->repository->getCategoriesRootNode()->attribute('node_id');
     }

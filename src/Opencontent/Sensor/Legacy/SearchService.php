@@ -8,10 +8,11 @@ use Opencontent\Opendata\GeoJson\Geometry;
 use Opencontent\Opendata\GeoJson\Properties;
 use Opencontent\Sensor\Core\SearchService as BaseSearchService;
 use Opencontent\Sensor\Api\Values\Post;
-use Opencontent\Sensor\Api\SearchQuery;
 use Opencontent\Sensor\Api\Exception;
 use Opencontent\Opendata\Api\ContentSearch;
+use Opencontent\Opendata\Api\EnvironmentSettings;
 use Opencontent\Opendata\Api\Values\SearchResults;
+use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Opendata\Api\SearchResultDecoratorInterface;
 use Opencontent\Opendata\Api\SearchResultDecoratorQueryBuilderAware;
 use Opencontent\Opendata\Api\QueryLanguage\EzFind\SearchResultInfo;
@@ -41,6 +42,44 @@ class SearchService extends BaseSearchService
         }
 
         throw new Exception\NotFoundException("Post $postId not found");
+    }
+
+    /**
+     * @param $query
+     * @param int $limit
+     * @param string $cursor
+     * @return array|mixed|SearchResults
+     * @throws \Opencontent\Opendata\Api\Exception\OutOfRangeException
+     */
+    public function searchOperatorAnGroups($query, $limit, $cursor)
+    {
+        $classString = $this->repository->getOperatorService()->getClassIdentifierAsString() . ',' . $this->repository->getGroupService()->getClassIdentifierAsString();
+        $subtreeString = $this->repository->getOperatorService()->getSubtreeAsString() . ',' . $this->repository->getGroupService()->getSubtreeAsString();
+        $searchQuery = $query ? 'raw[meta_name_t] = ' . $query : '';
+        $query = "classes [{$classString}] and subtree [{$subtreeString}] and $searchQuery limit $limit cursor [$cursor]";
+        $search = new ContentSearch();
+        $search->setCurrentEnvironmentSettings(new \DefaultEnvironmentSettings());
+
+        $operatorsClasses = explode(',', $this->repository->getOperatorService()->getClassIdentifierAsString());
+        $groupClasses = explode(',', $this->repository->getGroupService()->getClassIdentifierAsString());
+
+        $result = $search->search($query);
+        $items = [];
+        foreach ($result->searchHits as $item) {
+
+            $data = false;
+
+            if (in_array($item['metadata']['classIdentifier'], $operatorsClasses)){
+                $data = OperatorService::fromResultContent($item, $this->repository);
+            }elseif (in_array($item['metadata']['classIdentifier'], $groupClasses)){
+                $data = GroupService::fromResultContent($item, $this->repository);
+            }
+            if ($data) {
+                $items[$item['metadata']['id']] = $data;
+            }
+        }
+
+        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor];
     }
 
     /**

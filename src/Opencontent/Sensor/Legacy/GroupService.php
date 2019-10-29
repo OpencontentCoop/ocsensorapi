@@ -90,23 +90,28 @@ class GroupService extends \Opencontent\Sensor\Core\GroupService
 
     private function internalLoadGroup(array $content)
     {
-        $group = new Group();
-        $group->id = (int)$content['metadata']['id'];
-        $group->name = $content['metadata']['name'][$this->repository->getCurrentLanguage()];
-        if (isset($content['data'][$this->repository->getCurrentLanguage()]['email'])){
-            $group->email = $content['data'][$this->repository->getCurrentLanguage()]['email'];
-        }
-
-        return $group;
+        return self::fromResultContent($content, $this->repository);
     }
 
-    protected function getClassIdentifierAsString()
+    public function getClassIdentifierAsString()
     {
         return 'sensor_group';
     }
 
-    protected function getSubtreeAsString()
+    public function getSubtreeAsString()
     {
         return $this->repository->getGroupsRootNode()->attribute('node_id');
+    }
+
+    public static function fromResultContent($content, Repository $repository)
+    {
+        $group = new Group();
+        $group->id = (int)$content['metadata']['id'];
+        $group->name = $content['metadata']['name'][$repository->getCurrentLanguage()];
+        if (isset($content['data'][$repository->getCurrentLanguage()]['email'])){
+            $group->email = $content['data'][$repository->getCurrentLanguage()]['email'];
+        }
+
+        return $group;
     }
 }

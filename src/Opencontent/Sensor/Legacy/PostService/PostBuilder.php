@@ -150,9 +150,9 @@ class PostBuilder
         );
 
         $expirationInfo = new Post\ExpirationInfo();
-        $expirationInfo->creationDateTime = $publishedDateTime;
-        $expirationInfo->expirationDateTime = $expirationDateTime;
-        $diff = $expirationDateTime->diff($publishedDateTime);
+        $expirationInfo->creationDateTime = clone $publishedDateTime;
+        $expirationInfo->expirationDateTime = clone $expirationDateTime;
+        $diff = $expirationDateTime->setTime(0,0)->diff($publishedDateTime->setTime(0,0));
         if ($diff instanceof DateInterval) {
             $expirationInfo->days = $diff->days;
         }

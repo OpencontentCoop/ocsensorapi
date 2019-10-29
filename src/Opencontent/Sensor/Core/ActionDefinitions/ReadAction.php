@@ -23,6 +23,8 @@ class ReadAction extends ActionDefinition
             $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::READ);
             $repository->getMessageService()->addTimelineItemByWorkflowStatus($post, Post\WorkflowStatus::READ);
             $post = $repository->getPostService()->refreshPost($post);
+        }elseif ($post->participants->getUserById($user->id) instanceof User){
+            $post = $repository->getPostService()->refreshPost($post, false);
         }
 
         $this->fireEvent($repository, $post, $user);

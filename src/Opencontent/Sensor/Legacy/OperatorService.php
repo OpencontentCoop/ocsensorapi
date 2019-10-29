@@ -33,7 +33,7 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
         }
     }
 
-    private function fromUser(User $user)
+    private static function fromUser(User $user)
     {
         $operator = new Operator();
         foreach (get_object_vars($user) as $key => $value){
@@ -45,7 +45,12 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
 
     private function internalLoadOperator($content)
     {
-        return $this->fromUser($this->repository->getUserService()->loadUser($content['metadata']['id']));
+        return self::fromResultContent($content, $this->repository);
+    }
+
+    public static function fromResultContent($content, Repository $repository)
+    {
+        return self::fromUser($repository->getUserService()->loadUser($content['metadata']['id']));
     }
 
     public function loadOperators($query, $limit, $cursor)
@@ -133,12 +138,12 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
         throw new UnexpectedException("Update failed");
     }
 
-    protected function getClassIdentifierAsString()
+    public function getClassIdentifierAsString()
     {
         return 'sensor_operator';
     }
 
-    protected function getSubtreeAsString()
+    public function getSubtreeAsString()
     {
         return $this->repository->getAreasRootNode()->attribute('node_id');
     }

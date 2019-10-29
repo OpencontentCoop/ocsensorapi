@@ -57,7 +57,8 @@ class TreeNode
 
     public static function getCacheManager($treeId)
     {
-        $cacheFile = $treeId . '.cache';
+        $userRoleIdList = \eZUser::currentUser()->roleIDList();
+        $cacheFile = $treeId . '_' . md5(implode('_', $userRoleIdList)) . '.cache';
         $language = eZLocale::currentLocaleCode();
         $extraPath = eZDir::filenamePath($treeId);
         $cacheFilePath = eZDir::path(array(eZSys::cacheDirectory(), 'sensor', $language, 'tree', $extraPath, $cacheFile));

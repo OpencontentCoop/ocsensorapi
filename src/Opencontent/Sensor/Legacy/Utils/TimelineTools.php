@@ -80,6 +80,9 @@ class TimelineTools
             foreach ($nameParts as $namePart) {
                 if (is_numeric($namePart)) {
                     $participant = $participants->getParticipantById(intval($namePart));
+                    if (!$participant) {
+                        $participant = $participants->getUserById(intval($namePart));
+                    }
                     $nameString[] = $participant->name;
                 } else {
                     $nameString[] = $namePart;

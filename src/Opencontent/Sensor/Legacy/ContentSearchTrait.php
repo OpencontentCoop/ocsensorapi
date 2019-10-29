@@ -12,9 +12,9 @@ trait ContentSearchTrait
 {
     protected $environmentSettings;
 
-    abstract protected function getClassIdentifierAsString();
+    abstract public function getClassIdentifierAsString();
 
-    abstract protected function getSubtreeAsString();
+    abstract public function getSubtreeAsString();
 
     /**
      * @return \DefaultEnvironmentSettings

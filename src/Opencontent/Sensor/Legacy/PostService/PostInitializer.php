@@ -56,7 +56,7 @@ class PostInitializer
         $collaborationItem->setAttribute(
             PostService::COLLABORATION_FIELD_EXPIRY,
             ExpiryTools::addDaysToTimestamp(
-                $this->contentObject->attribute('published'),
+                time(),
                 $this->repository->getSensorSettings()->get('DefaultPostExpirationDaysInterval')
             )
         );

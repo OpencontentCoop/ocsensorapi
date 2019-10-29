@@ -296,13 +296,15 @@ class PostService extends PostServiceBase
         return $collaborationItem;
     }
 
-    public function refreshPost(Post $post)
+    public function refreshPost(Post $post, $modifyTimestamp = true)
     {
         eZContentObject::clearCache($post->id);
         $timestamp = time();
         $contentObject = $this->getContentObject($post);
-        $contentObject->setAttribute('modified', $timestamp);
-        $contentObject->store();
+        if ($modifyTimestamp) {
+            $contentObject->setAttribute('modified', $timestamp);
+            $contentObject->store();
+        }
         eZContentCacheManager::clearContentCacheIfNeeded($contentObject->attribute('id'));
         eZSearch::addObject($contentObject, true);
         return $this->loadPost($post->id);

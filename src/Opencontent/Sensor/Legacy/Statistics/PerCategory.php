@@ -52,6 +52,8 @@ class PerCategory extends StatisticFactory
                 'intervals' => [],
                 'series' => [],
             ];
+
+            $dataForCount = [];
             $series = [];
             $pivotItems = $search->pivot["submeta_category___id____si,{$byInterval}"];
             foreach ($pivotItems as $pivotItem) {
@@ -64,12 +66,14 @@ class PerCategory extends StatisticFactory
                     'count' => $pivotItem['count']
                 ];
                 $this->data['intervals']['all'] = 'all';
+                $dataForCount[$item['name']]['all'] = $pivotItem['count'];
                 foreach ($pivotItem['pivot'] as $value) {
                     $intervalName = is_callable($intervalNameParser) ? $intervalNameParser($value['value']) : $value['value'];
                     $item['data'][] = [
                         'interval' => $intervalName,
                         'count' => $value['count']
                     ];
+                    $dataForCount[$item['name']][$intervalName] = $value['count'];
                     $this->data['intervals'][$value['value']] = $intervalName;
                 }
                 $series[$pivotItem['value']] = $item;
@@ -77,21 +81,60 @@ class PerCategory extends StatisticFactory
             $this->data['intervals'] = array_values($this->data['intervals']);
             sort($this->data['intervals']);
 
+            $selectedCategory = [];
+            if ($this->hasParameter('category')) {
+                $selectedCategory = $this->getParameter('category');
+                if (!empty($selectedCategory)) {
+                    if (!is_array($selectedCategory)) {
+                        $selectedCategory = [$selectedCategory];
+                    }
+                }
+            }
+
             $categoryTree = $this->repository->getCategoriesTree();
             foreach ($categoryTree->attribute('children') as $categoryTreeItem){
                 if (isset($series[$categoryTreeItem->attribute('id')])) {
                     $item = $series[$categoryTreeItem->attribute('id')];
-                    $item['name'] = $categoryTreeItem->attribute('name');
-                    $item['id'] = $categoryTreeItem->attribute('id');
-                    $item['series'] = [];
-                    foreach ($categoryTreeItem->attribute('children') as $categoryTreeItemChild) {
-                        if (isset($series[$categoryTreeItemChild->attribute('id')])) {
-                            $child = $series[$categoryTreeItemChild->attribute('id')];
-                            $child['name'] = $categoryTreeItemChild->attribute('name');
-                            $child['id'] = $categoryTreeItemChild->attribute('id');
-                            $item['series'][] = $child;
+                }else {
+                    $item = ['data' => []];
+                    foreach ($this->data['intervals'] as $interval) {
+                        $item['data'][] = [
+                            'interval' => $interval,
+                            'count' => 0
+                        ];
+                    }
+                }
+                $item['name'] = $categoryTreeItem->attribute('name');
+                $item['id'] = $categoryTreeItem->attribute('id');
+                $item['series'] = [];
+
+                $recountTotal = [];
+                foreach ($categoryTreeItem->attribute('children') as $categoryTreeItemChild) {
+                    if (isset($series[$categoryTreeItemChild->attribute('id')])) {
+                        $child = $series[$categoryTreeItemChild->attribute('id')];
+                        $child['name'] = $categoryTreeItemChild->attribute('name');
+                        $child['id'] = $categoryTreeItemChild->attribute('id');
+                        $recountTotal[] = $child['id'];
+                        if (in_array($item['id'], $selectedCategory)){
+                            $child['series'] = [];
+                            $this->data['series'][] = $child;
                         }
                     }
+                }
+
+                if (empty($selectedCategory)) {
+                    foreach ($item['data'] as $index => $datum) {
+                        foreach ($recountTotal as $childId) {
+                            if (isset($dataForCount[$childId][$datum['interval']])) {
+                                $item['data'][$index]['count'] += $dataForCount[$childId][$datum['interval']];
+                            }
+                        }
+                    }
+                }
+
+                $hasContent = array_sum(array_column($item['data'], 'count')) > 0;
+
+                if ($hasContent) {
                     $this->data['series'][] = $item;
                 }
             }

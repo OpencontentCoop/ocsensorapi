@@ -180,8 +180,7 @@ class PostInitializer
 
     private function setModeration(Post $post, User $user)
     {
-        $globalModeration = $this->repository->getRootNodeAttribute('enable_moderation');
-        if ($globalModeration && $globalModeration->attribute( 'data_type_string' ) == 'ezboolean' && $globalModeration->attribute( 'data_int' ) == 1){
+        if ($this->repository->isModerationEnabled()){
             $moderation = 'waiting';
         }else {
             $moderation = ($user->moderationMode) ? 'waiting' : 'skipped';

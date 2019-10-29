@@ -8,6 +8,7 @@ use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
 use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Legacy\Repository;
 use eZContentObject;
+use eZContentObjectVersion;
 use eZCollaborationItem;
 use Opencontent\Sensor\Legacy\PostService;
 use Opencontent\Sensor\Legacy\Utils\ExpiryTools;
@@ -27,10 +28,16 @@ class PostInitializer
      */
     private $contentObject;
 
-    public function __construct($repository, eZContentObject $object)
+    /**
+     * @var eZContentObjectVersion
+     */
+    private $contentObjectVersion;
+
+    public function __construct($repository, $object, $version)
     {
         $this->repository = $repository;
         $this->contentObject = $object;
+        $this->contentObjectVersion = $version;
     }
 
     public function init()
@@ -156,7 +163,7 @@ class PostInitializer
     private function setPrivacy(Post $post)
     {
         /** @var \eZContentObjectAttribute[] $dataMap */
-        $dataMap = $this->contentObject->attribute('data_map');
+        $dataMap = $this->contentObjectVersion->attribute('data_map');
         if (isset($dataMap['privacy'])) {
             if (($dataMap['privacy']->attribute('data_type_string') == 'ezboolean' && $dataMap['privacy']->attribute('data_int') == 0)
                 || ($dataMap['privacy']->attribute('data_type_string') == 'ezselection' && strtolower($dataMap['privacy']->attribute('data_text')) == 'no')) {

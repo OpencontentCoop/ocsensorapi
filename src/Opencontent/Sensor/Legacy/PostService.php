@@ -69,16 +69,20 @@ class PostService extends PostServiceBase
             )
         );
         $contentObject = eZContentObject::fetch(intval($postId));
-        if ($collaborationItem instanceof eZCollaborationItem && $contentObject instanceof eZContentObject) {
-            $builder = new PostBuilder($this->repository, $contentObject, $collaborationItem);
-            $post = $builder->build();
-            $this->refreshExpirationInfo($post);
-            $this->setCommentsIsOpen($post);
-            $this->setUserPostAware($post);
-
-            return $post;
+        if (!$collaborationItem instanceof eZCollaborationItem){
+            throw new NotFoundException("eZCollaborationItem $type not found for object $postId");
         }
-        throw new NotFoundException("eZCollaborationItem $type not found for object $postId");
+        if (!$contentObject instanceof eZContentObject){
+            throw new NotFoundException("eZContentObject not found for object $postId");
+        }
+
+        $builder = new PostBuilder($this->repository, $contentObject, $collaborationItem);
+        $post = $builder->build();
+        $this->refreshExpirationInfo($post);
+        $this->setCommentsIsOpen($post);
+        $this->setUserPostAware($post);
+
+        return $post;
     }
 
     /**

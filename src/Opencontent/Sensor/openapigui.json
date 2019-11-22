@@ -628,10 +628,6 @@
                                     "category_id": {
                                         "type": "integer",
                                         "format": "int64"
-                                    },
-                                    "assign_to_operator": {
-                                        "type": "integer",
-                                        "format": "int64"
                                     }
                                 },
                                 "type": "object"

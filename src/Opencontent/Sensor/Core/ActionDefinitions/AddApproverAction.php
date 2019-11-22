@@ -50,6 +50,10 @@ class AddApproverAction extends ActionDefinition
             $makeApproverIds = array($makeApproverId);
         }
 
+        if (!$allowMultipleApprover){
+            $makeObserverIds = array_unique(array_merge($makeObserverIds, $currentApproverIds));
+        }
+
         foreach ($makeApproverIds as $id) {
             $repository->getParticipantService()->addPostParticipant($post, $id, $roleApprover);
             $isChanged = true;

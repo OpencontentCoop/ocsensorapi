@@ -50,6 +50,9 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
                 $category->groupsIdList[] = (int)$item['id'];
             }
         }
+        foreach ($content['data'][$this->repository->getCurrentLanguage()]['observer'] as $item) {
+            $category->observersIdList[] = (int)$item['id'];
+        }
 
         return $category;
     }

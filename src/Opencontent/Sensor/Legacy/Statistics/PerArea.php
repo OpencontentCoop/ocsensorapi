@@ -30,12 +30,12 @@ class PerArea extends StatisticFactory
 
     public function getName()
     {
-        return ezpI18n::tr('sensor/chart', 'Aree');
+        return ezpI18n::tr('sensor/chart', 'Zone');
     }
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni per area');
+        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni per zona');
     }
 
     public function getData()

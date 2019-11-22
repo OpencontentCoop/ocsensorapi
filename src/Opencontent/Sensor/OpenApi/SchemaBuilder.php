@@ -1847,7 +1847,7 @@ class SchemaBuilder
                 ];
                 break;
             case 'PrivateMessage':
-                $schema->title = 'Comment';
+                $schema->title = 'PrivateMessage';
                 $schema->type = 'object';
                 $schema->properties = [
                     'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'Post ID', 'description' => 'Unique identifier']),
@@ -1860,7 +1860,7 @@ class SchemaBuilder
                 break;
 
             case 'Response':
-                $schema->title = 'Comment';
+                $schema->title = 'Response';
                 $schema->type = 'object';
                 $schema->properties = [
                     'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'Post ID', 'description' => 'Unique identifier']),
@@ -1879,7 +1879,7 @@ class SchemaBuilder
                 break;
 
             case 'TimelineItem':
-                $schema->title = 'Comment';
+                $schema->title = 'TimelineItem';
                 $schema->type = 'object';
                 $schema->properties = [
                     'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'Post ID', 'description' => 'Unique identifier']),

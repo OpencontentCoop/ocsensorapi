@@ -18,6 +18,8 @@ class TreeNodeItem implements \JsonSerializable
 
     protected $geo;
 
+    protected $group;
+
     protected $level;
 
     protected $can_remove;
@@ -41,6 +43,7 @@ class TreeNodeItem implements \JsonSerializable
         $this->node_id = (int)$data['node_id'];
         $this->type = $data['type'];
         $this->geo = $data['geo'];
+        $this->group = $data['group'];
         $this->children = $data['children'];
         $this->level = $data['level'];
         $this->can_remove = $data['can_remove'];
@@ -57,6 +60,7 @@ class TreeNodeItem implements \JsonSerializable
         $data['node_id'] = (int)$node->attribute('node_id');
         $data['type'] = $node->attribute('class_identifier');
         $data['geo'] = self::geo($node);
+        $data['group'] = self::group($node);
         $data['level'] = $level;
         $data['can_remove'] = $node->canRemove();
         $data['can_edit'] = $node->canEdit();
@@ -71,6 +75,22 @@ class TreeNodeItem implements \JsonSerializable
     {
         $object = new static($array);
         return $object;
+    }
+
+    protected static function group(eZContentObjectTreeNode $node)
+    {
+        /** @var eZContentObjectAttribute[] $dataMap */
+        $dataMap = $node->attribute('data_map');
+        if (isset($dataMap['approver']) && $dataMap['approver']->hasContent()) {
+            $idList = explode('-', $dataMap['approver']->toString());
+            if (count($idList) > 0){
+                $object = \eZContentObject::fetch((int)$idList[0]);
+                if ($object instanceof \eZContentObject){
+                    return $object->attribute('name');
+                }
+            }
+        }
+        return null;
     }
 
     protected static function geo(eZContentObjectTreeNode $node)
@@ -127,6 +147,7 @@ class TreeNodeItem implements \JsonSerializable
             'id',
             'name',
             'geo',
+            'group',
             'children',
             'level',
         );
@@ -150,6 +171,8 @@ class TreeNodeItem implements \JsonSerializable
             return $this->name;
         elseif ($name == 'geo')
             return $this->geo;
+        elseif ($name == 'group')
+            return $this->group;
         elseif ($name == 'children')
             return $this->children;
         elseif ($name == 'level')
@@ -166,6 +189,7 @@ class TreeNodeItem implements \JsonSerializable
             'type' => $this->type,
             'name' => $this->name,
             'geo' => $this->geo,
+            'group' => $this->group,
             'level' => $this->level,
             'can_remove' => $this->can_remove,
             'can_edit' => $this->can_edit,
@@ -189,6 +213,7 @@ class TreeNodeItem implements \JsonSerializable
         $data['node_id'] = $this->node_id;
         $data['type'] = $this->type;
         $data['geo'] = $this->geo;
+        $data['group'] = $this->group;
         $data['level'] = $this->level;
         $data['can_remove'] = $this->can_remove;
         $data['can_edit'] = $this->can_edit;

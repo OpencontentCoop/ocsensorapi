@@ -40,8 +40,20 @@ class AddAreaAction extends ActionDefinition
 
         $areaId = array_shift($areaIdList);
 
-        $repository->getPostService()->setPostArea($post, $areaId);
-        $post = $repository->getPostService()->refreshPost($post);
-        $this->fireEvent($repository, $post, $user, array('areas' => $areaIdList));
+        $isChanged = true;
+        foreach ($post->areas as $area) {
+            if ($area->id == $areaId){
+                $isChanged = false;
+                break;
+            }
+        }
+
+        if ($isChanged) {
+            $repository->getPostService()->setPostArea($post, $areaId);
+            $post = $repository->getPostService()->refreshPost($post);
+            $this->fireEvent($repository, $post, $user, array('areas' => $areaId));
+        }else{
+            $repository->getLogger()->notice('Area already set in post', array('areas' => $areaId));
+        }
     }
 }

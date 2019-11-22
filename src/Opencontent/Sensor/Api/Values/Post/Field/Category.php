@@ -30,6 +30,11 @@ class Category extends Field
      */
     public $groupsIdList = array();
 
+    /**
+     * @var integer[]
+     */
+    public $observersIdList = array();
+
     public function __toString()
     {
         return '' . $this->id;

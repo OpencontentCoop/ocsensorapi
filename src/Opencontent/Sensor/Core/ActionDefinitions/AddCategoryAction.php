@@ -8,6 +8,8 @@ use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\Participant;
+use Opencontent\Sensor\Api\Values\Participant\ApproverCollection;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
@@ -25,20 +27,6 @@ class AddCategoryAction extends ActionDefinition
         $parameter->isRequired = true;
         $parameter->type = 'array';
         $this->parameterDefinitions[] = $parameter;
-
-        $parameter = new ActionDefinitionParameter();
-        $parameter->identifier = 'assign_to_operator';
-        $parameter->isRequired = false;
-        $parameter->type = 'int';
-        $parameter->defaultValue = 0;
-        $this->parameterDefinitions[] = $parameter;
-
-        $parameter = new ActionDefinitionParameter();
-        $parameter->identifier = 'assign_to_group';
-        $parameter->isRequired = false;
-        $parameter->type = 'int';
-        $parameter->defaultValue = 0;
-        $this->parameterDefinitions[] = $parameter;
     }
 
     public function run(Repository $repository, Action $action, Post $post, User $user)
@@ -52,41 +40,94 @@ class AddCategoryAction extends ActionDefinition
                 throw new InvalidInputException("Item $categoryId is not a valid category");
             }
         }
+
+        $isChanged = true;
         if ($repository->getSensorSettings()->get('UniqueCategoryCount')) {
             $categoryIdList = array(array_shift($categoryIdList));
-        }
 
-        $repository->getPostService()->setPostCategory($post, implode('-', $categoryIdList));
-        $post = $repository->getPostService()->refreshPost($post);
-
-        $this->fireEvent($repository, $post, $user, array('categories' => $categoryIdList));
-
-        if ($action->getParameterValue('assign_to_operator') && $repository->getSensorSettings()->get('CategoryAutomaticAssign')) {
-            $post = $repository->getPostService()->loadPost($post->id); //reload post
-            $ownerIdList = array();
-            foreach ($post->categories as $category)
-                $ownerIdList = array_merge($ownerIdList, $category->operatorsIdList);
-
-            if (!empty($ownerIdList)) {
-                $action = new Action();
-                $action->identifier = 'assign';
-                $action->setParameter('participant_ids', $ownerIdList);
-                $repository->getActionService()->runAction($action, $post);
+            foreach ($post->categories as $category) {
+                if (in_array($category->id, $categoryIdList)) {
+                    //$isChanged = false;
+                    break;
+                }
             }
         }
 
-        if ($action->getParameterValue('assign_to_group') && $repository->getSensorSettings()->get('CategoryAutomaticAssign')) {
-            $post = $repository->getPostService()->loadPost($post->id); //reload post
-            $approverIdList = array();
-            foreach ($post->categories as $category)
-                $approverIdList = array_merge($approverIdList, $category->groupsIdList);
+        if ($isChanged) {
+            $repository->getPostService()->setPostCategory($post, implode('-', $categoryIdList));
+            $post = $repository->getPostService()->refreshPost($post);
 
-            if (!empty($approverIdList)) {
-                $action = new Action();
-                $action->identifier = 'add_approver';
-                $action->setParameter('participant_ids', $approverIdList);
-                $repository->getActionService()->runAction($action, $post);
+            $this->fireEvent($repository, $post, $user, array('categories' => $categoryIdList));
+
+            if ($repository->getSensorSettings()->get('CategoryAutomaticAssign')) {
+
+                $post = $repository->getPostService()->loadPost($post->id); //reload post
+
+                $approverIdList = array();
+                foreach ($post->categories as $category) {
+                    $approverIdList = array_merge($approverIdList, $category->groupsIdList);
+                }
+
+                $observerIdList = array();
+                foreach ($post->categories as $category) {
+                    $observerIdList = array_merge($observerIdList, $category->observersIdList);
+                }
+
+                if (!empty($observerIdList)) {
+                    $action = new Action();
+                    $action->identifier = 'add_observer';
+                    $action->setParameter('participant_ids', $observerIdList);
+                    $repository->getActionService()->runAction($action, $post);
+                    $post = $repository->getPostService()->loadPost($post->id);
+                }
+
+
+                if (!empty($approverIdList)) {
+
+                    //@todo check if group contains users
+
+                    $action = new Action();
+                    $action->identifier = 'add_approver';
+                    $action->setParameter('participant_ids', $approverIdList);
+                    $repository->getActionService()->runAction($action, $post);
+                    $post = $repository->getPostService()->loadPost($post->id);
+
+                    $ownerId = $this->getOperatorFromApprovers($repository, $post);
+                    if ($ownerId) {
+                        $action = new Action();
+                        $action->identifier = 'assign';
+                        $action->setParameter('participant_ids', [$ownerId]);
+                        // run action without check permission because current approver is now observer
+                        $repository->getActionService()->loadActionDefinitionByIdentifier($action->identifier)->run(
+                            $repository,
+                            $action,
+                            $post,
+                            $repository->getCurrentUser()
+                        );;
+                    }
+                }
+            }
+        }else{
+            $repository->getLogger()->notice('Category already set in post', array('categories' => $categoryIdList));
+        }
+    }
+
+    private function getOperatorFromApprovers(Repository $repository, Post $post)
+    {
+        $currentApprovers = [];
+        /** @var Participant $approver */
+        foreach ($post->approvers as $approver) {
+            if ($approver->type = 'group') {
+                $currentApprovers = array_merge($currentApprovers, $approver->users);
             }
         }
+
+        if (!empty($currentApprovers)) {
+            $luckyUser = $currentApprovers[array_rand($currentApprovers, 1)];
+            $repository->getLogger()->warning($luckyUser->name);
+            return $luckyUser->id;
+        }
+
+        return false;
     }
 }

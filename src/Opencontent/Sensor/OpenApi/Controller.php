@@ -420,7 +420,6 @@ class Controller
         $action->identifier = 'add_category';
         $payload = $this->restController->getPayload();
         $action->setParameter('category_id', $payload['category_id']);
-        $action->setParameter('assign_to_operator', isset($payload['assign_to_operator']) ? (int)$payload['assign_to_operator'] : 0);
         $this->repository->getActionService()->runAction($action, $post);
         $result = new ezpRestMvcResult();
         $result->variables = ['items' => $this->serializer['area']->serializeItems($this->loadPost()->categories)];

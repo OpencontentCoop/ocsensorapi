@@ -82,7 +82,7 @@ class PostBuilder
         $post->participants = $this->repository->getParticipantService()->loadPostParticipants(
             $post
         );
-        $post->reporter = $this->repository->getUserService()->loadUser($this->contentObject->attribute('owner_id'));
+        $post->reporter = $this->loadPostReporter();
         $post->approvers = Participant\ApproverCollection::fromCollection(
             $this->repository->getParticipantService()->loadPostParticipantsByRole(
                 $post,
@@ -102,11 +102,12 @@ class PostBuilder
             )
         );
 
-        $post->author = clone $post->reporter;
+        $post->author = $this->repository->getUserService()->loadUser($this->contentObject->attribute('owner_id'));
         $authorName = $this->loadPostAuthorName();
         if ($authorName) {
             $post->author->name = $authorName;
         }
+
 
         $post->comments = $this->repository->getMessageService()->loadCommentCollectionByPost($post);
         $post->privateMessages = $this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post);
@@ -116,11 +117,22 @@ class PostBuilder
         return $post;
     }
 
+    protected function loadPostReporter()
+    {
+        $reporter = clone $this->repository->getUserService()->loadUser($this->contentObject->attribute('owner_id'));
+        if (isset($this->contentObjectDataMap['reporter']) && $this->contentObjectDataMap['reporter']->hasContent()) {
+            $reporter = $this->repository->getUserService()->loadUser((int)$this->contentObjectDataMap['reporter']->toString());
+        }
+
+        return $reporter;
+    }
+
     protected function loadPostAuthorName()
     {
         $authorName = false;
         if (isset($this->contentObjectDataMap['on_behalf_of'])
             && $this->contentObjectDataMap['on_behalf_of']->hasContent()
+            && !is_numeric($this->contentObjectDataMap['on_behalf_of']->toString())
         ) {
             $authorName = $this->contentObjectDataMap['on_behalf_of']->toString();
             if (isset($this->contentObjectDataMap['on_behalf_of_detail'])

@@ -33,16 +33,22 @@ class PostInitializer
      */
     private $contentObjectVersion;
 
+    /**
+     * @var User
+     */
+    private $currentUser;
+
     public function __construct($repository, $object, $version)
     {
         $this->repository = $repository;
         $this->contentObject = $object;
         $this->contentObjectVersion = $version;
+        $this->setPostAuthorAndReporter();
     }
 
     public function init()
     {
-        $user = $this->repository->getCurrentUser();
+        $user = $this->currentUser;
 
         $db = \eZDB::instance();
         $res = (array)$db->arrayQuery("SELECT id FROM ezcollab_item WHERE data_int1 = " . $this->contentObject->attribute('id') . " ORDER BY id desc");
@@ -112,13 +118,13 @@ class PostInitializer
         $event = new Event();
         $event->identifier = 'on_create';
         $event->post = $post;
-        $event->user = $user;
+        $event->user = $this->repository->getCurrentUser();
         $this->repository->getEventService()->fire($event);
     }
 
     public function refresh()
     {
-        $user = $this->repository->getCurrentUser();
+        $user = $this->currentUser;
         $post = $this->repository->getPostService()->loadPost($this->contentObject->attribute('id'));
         $this->setModeration($post, $user);
         $this->setPrivacy($post);
@@ -127,7 +133,7 @@ class PostInitializer
         $event = new Event();
         $event->identifier = 'on_update';
         $event->post = $post;
-        $event->user = $user;
+        $event->user = $this->repository->getCurrentUser();
         $this->repository->getEventService()->fire($event);
     }
 
@@ -202,5 +208,33 @@ class PostInitializer
         $db->query("DELETE FROM ezcollab_item_participant_link WHERE collaboration_id = $itemId");
         $db->query("DELETE FROM ezcollab_item_status WHERE collaboration_id = $itemId");
         $db->commit();
+    }
+
+    private function setPostAuthorAndReporter()
+    {
+        $currentUser = $this->repository->getCurrentUser();
+        $this->currentUser = $currentUser;
+
+        if ($currentUser->behalfOfMode) {
+            /** @var \eZContentObjectAttribute[] $dataMap */
+            $dataMap = $this->contentObjectVersion->attribute('data_map');
+            if (isset($dataMap['on_behalf_of'])
+                && $dataMap['on_behalf_of']->hasContent()
+                && is_numeric($dataMap['on_behalf_of']->toString())
+                && isset($dataMap['reporter']))
+            {
+                $eZUser = eZUser::fetch((int)$dataMap['on_behalf_of']->toString());
+                if ($eZUser instanceof eZUser) {
+
+                    $this->contentObject->setAttribute('owner_id', $eZUser->id());
+                    $this->contentObject->store();
+
+                    $dataMap['reporter']->fromString($currentUser->id);
+                    $dataMap['reporter']->store();
+
+                    $this->currentUser = $this->repository->getUserService()->loadFromEzUser($eZUser);
+                }
+            }
+        }
     }
 }

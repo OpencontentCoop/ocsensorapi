@@ -15,18 +15,11 @@ class FirstAreaApproverScenario implements ScenarioInterface
      */
     private $repository;
 
+    private $approvers;
+
     public function __construct($repository)
     {
         $this->repository = $repository;
-    }
-
-    public function match(Post $post, User $user)
-    {
-        return true;
-    }
-
-    public function getApprovers()
-    {
         $areas = $this->repository->getAreasTree()->attribute('children');
         if (count($areas)) {
             $firstAreaId = $areas[0]->attribute('id');
@@ -34,12 +27,20 @@ class FirstAreaApproverScenario implements ScenarioInterface
             if ($firstAreaObject instanceof eZContentObject) {
                 $dataMap = $firstAreaObject->dataMap();
                 if (isset($dataMap['approver']) && $dataMap['approver']->hasContent()) {
-                    return explode('-', $dataMap['approver']->toString());
+                    $this->approvers = explode('-', $dataMap['approver']->toString());
                 }
             }
         }
+    }
 
-        return [];
+    public function match(Post $post, User $user)
+    {
+        return count($this->approvers) > 0;
+    }
+
+    public function getApprovers()
+    {
+        return $this->approvers;
     }
 
     public function getOwners()

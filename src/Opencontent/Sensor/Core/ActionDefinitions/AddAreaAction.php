@@ -52,8 +52,17 @@ class AddAreaAction extends ActionDefinition
             $repository->getPostService()->setPostArea($post, $areaId);
             $post = $repository->getPostService()->refreshPost($post);
             $this->fireEvent($repository, $post, $user, array('areas' => $areaId));
-        }else{
-            $repository->getLogger()->notice('Area already set in post', array('areas' => $areaId));
+        }
+
+        $observerIdList = array();
+        foreach ($post->areas as $area) {
+            $observerIdList = array_merge($observerIdList, $area->observersIdList);
+        }
+        if (!empty($observerIdList)) {
+            $action = new Action();
+            $action->identifier = 'add_observer';
+            $action->setParameter('participant_ids', $observerIdList);
+            $repository->getActionService()->runAction($action, $post);
         }
     }
 }

@@ -48,11 +48,11 @@ class ParticipantService extends ParticipantServiceBase
         if ($this->participantRoles === null) {
             $this->participantRoles = new ParticipantRoleCollection();
 
-            $role = new ParticipantRole();
-            $role->id = eZCollaborationItemParticipantLink::ROLE_STANDARD;
-            $role->identifier = ParticipantRole::ROLE_STANDARD;
-            $role->name = ezpI18n::tr('sensor/role_name', 'Standard');
-            $this->participantRoles->addParticipantRole($role);
+            //$role = new ParticipantRole();
+            //$role->id = eZCollaborationItemParticipantLink::ROLE_STANDARD;
+            //$role->identifier = ParticipantRole::ROLE_STANDARD;
+            //$role->name = ezpI18n::tr('sensor/role_name', 'Standard');
+            //$this->participantRoles->addParticipantRole($role);
 
             $role = new ParticipantRole();
             $role->id = eZCollaborationItemParticipantLink::ROLE_OBSERVER;

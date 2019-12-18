@@ -72,6 +72,9 @@ class AddCategoryAction extends ActionDefinition
                 foreach ($post->categories as $category) {
                     $observerIdList = array_merge($observerIdList, $category->observersIdList);
                 }
+                foreach ($post->areas as $area) {
+                    $observerIdList = array_merge($observerIdList, $area->observersIdList);
+                }
 
                 if (!empty($observerIdList)) {
                     $action = new Action();
@@ -106,6 +109,7 @@ class AddCategoryAction extends ActionDefinition
                         );;
                     }
                 }
+                $repository->getUserService()->setLastAccessDateTime($user, $post);
             }
         }else{
             $repository->getLogger()->notice('Category already set in post', array('categories' => $categoryIdList));

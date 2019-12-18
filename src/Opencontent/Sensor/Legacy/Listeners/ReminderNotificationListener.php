@@ -7,7 +7,7 @@ use League\Event\EventInterface;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Legacy\Repository;
-
+use Opencontent\Sensor\Legacy\Utils\MailValidator;
 
 class ReminderNotificationListener extends AbstractListener
 {
@@ -62,7 +62,7 @@ class ReminderNotificationListener extends AbstractListener
                                 $this->repository->getLogger()->error("User $userId not found", ['event' => $event->getName()]);
                                 continue;
                             }
-                            if (!\eZMail::validate($user->email)) {
+                            if (!MailValidator::validate($user->email)) {
                                 $this->repository->getLogger()->error("Mail of user $userId is not valid", ['event' => $event->getName()]);
                                 continue;
                             }

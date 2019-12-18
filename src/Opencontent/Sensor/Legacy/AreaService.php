@@ -37,7 +37,14 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
         $area->name = $content['metadata']['name'][$this->repository->getCurrentLanguage()];
         $area->operatorsIdList = [];
         foreach ($content['data'][$this->repository->getCurrentLanguage()]['approver'] as $item) {
-            $area->operatorsIdList[] = (int)$item['id'];
+            if (in_array($item['classIdentifier'], \eZUser::fetchUserClassNames())) {
+                $area->operatorsIdList[] = (int)$item['id'];
+            } else {
+                $area->groupsIdList[] = (int)$item['id'];
+            }
+        }
+        foreach ($content['data'][$this->repository->getCurrentLanguage()]['observer'] as $item) {
+            $area->observersIdList[] = (int)$item['id'];
         }
         if (isset($content['data'][$this->repository->getCurrentLanguage()]['geo'])) {
             $geo = new GeoLocation();

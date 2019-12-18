@@ -16,6 +16,7 @@ use Opencontent\Sensor\Api\SearchService;
 use Opencontent\Sensor\Legacy\SearchService\QueryBuilder;
 use Opencontent\QueryLanguage\Parser\Item;
 use Opencontent\QueryLanguage\Parser\Parameter;
+use Opencontent\Sensor\Legacy\Utils\MailValidator;
 
 class Controller
 {
@@ -534,7 +535,7 @@ class Controller
         if (empty($payload['email'])) {
             throw new InvalidInputException("Field email is required");
         }
-        if (!\eZMail::validate($payload['email'])) {
+        if (!MailValidator::validate($payload['email'])) {
             throw new InvalidInputException("Invalid email address");
         }
         if (\eZUser::fetchByEmail($payload['email'])) {
@@ -572,7 +573,7 @@ class Controller
         if (empty($payload['email'])) {
             throw new InvalidInputException("Field email is required");
         }
-        if (!\eZMail::validate($payload['email'])) {
+        if (!MailValidator::validate($payload['email'])) {
             throw new InvalidInputException("Invalid email address");
         }
         if (\eZUser::fetchByEmail($payload['email']) && $user->email != $payload['email']) {
@@ -624,7 +625,7 @@ class Controller
         if (empty($payload['email'])) {
             throw new InvalidInputException("Field email is required");
         }
-        if (!\eZMail::validate($payload['email'])) {
+        if (!MailValidator::validate($payload['email'])) {
             throw new InvalidInputException("Invalid email address");
         }
         if (\eZUser::fetchByEmail($payload['email'])) {
@@ -663,7 +664,7 @@ class Controller
         if (empty($payload['email'])) {
             throw new InvalidInputException("Field email is required");
         }
-        if (!\eZMail::validate($payload['email'])) {
+        if (!MailValidator::validate($payload['email'])) {
             throw new InvalidInputException("Invalid email address");
         }
         if (\eZUser::fetchByEmail($payload['email']) && $operator->email != $payload['email']) {
@@ -717,7 +718,7 @@ class Controller
         if (empty($payload['email'])) {
             throw new InvalidInputException("Field email is required");
         }
-        if (!\eZMail::validate($payload['email'])) {
+        if (!MailValidator::validate($payload['email'])) {
             throw new InvalidInputException("Invalid email address");
         }
 
@@ -766,7 +767,7 @@ class Controller
         if (empty($payload['email'])) {
             throw new InvalidInputException("Field email is required");
         }
-        if (!\eZMail::validate($payload['email'])) {
+        if (!MailValidator::validate($payload['email'])) {
             throw new InvalidInputException("Invalid email address");
         }
 

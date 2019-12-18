@@ -10,6 +10,7 @@ use Opencontent\Sensor\Api\Values\NotificationType;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Legacy\Repository;
+use Opencontent\Sensor\Legacy\Utils\MailValidator;
 
 class MailNotificationListener extends AbstractListener
 {
@@ -126,14 +127,14 @@ class MailNotificationListener extends AbstractListener
         if ($participant->type == 'user') {
             foreach ($participant->users as $user) {
                 $userNotifications = $this->repository->getNotificationService()->getUserNotifications($user);
-                if (in_array($notificationIdentifier, $userNotifications) && \eZMail::validate($user->email)) {
+                if (in_array($notificationIdentifier, $userNotifications) && MailValidator::validate($user->email)) {
                     $addresses[] = $user->email;
                 }
             }
         }elseif ($participant->type == 'group') {
             try {
                 $group = $this->repository->getGroupService()->loadGroup($participant->id);
-                if ($group instanceof Group && \eZMail::validate($group->email)) {
+                if ($group instanceof Group && MailValidator::validate($group->email)) {
                     $addresses[] = $group->email;
                 }
             }catch (\Exception $e){

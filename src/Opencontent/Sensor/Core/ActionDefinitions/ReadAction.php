@@ -16,18 +16,23 @@ class ReadAction extends ActionDefinition
 
     public function run(Repository $repository, Action $action, Post $post, User $user)
     {
-        $repository->getUserService()->setLastAccessDateTime($user, $post);
         if ($post->approvers->getUserById($user->id) instanceof User
             && ($post->workflowStatus->is(Post\WorkflowStatus::WAITING)
                 || $post->workflowStatus->is(Post\WorkflowStatus::REOPENED))) {
+
+            $repository->getUserService()->setLastAccessDateTime($user, $post);
             $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::READ);
             $repository->getMessageService()->addTimelineItemByWorkflowStatus($post, Post\WorkflowStatus::READ);
             $post = $repository->getPostService()->refreshPost($post);
-        }elseif ($post->participants->getUserById($user->id) instanceof User){
-            $post = $repository->getPostService()->refreshPost($post, false);
-        }
+            $this->fireEvent($repository, $post, $user);
 
-        $this->fireEvent($repository, $post, $user);
+        }elseif ($post->participants->getUserById($user->id) instanceof User){
+
+            $repository->getUserService()->setLastAccessDateTime($user, $post);
+            $post = $repository->getPostService()->refreshPost($post, false);
+            $this->fireEvent($repository, $post, $user);
+
+        }
     }
 }
 

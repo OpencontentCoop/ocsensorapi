@@ -20,7 +20,7 @@ class FirstAreaApproverScenario implements ScenarioInterface
     public function __construct($repository)
     {
         $this->repository = $repository;
-        if ($this->repository->getAreasTree() instanceof \eZContentObjectTreeNode) {
+        if ($this->repository->getAreasRootNode() instanceof \eZContentObjectTreeNode) {
             $areas = $this->repository->getAreasTree()->attribute('children');
             if (count($areas)) {
                 $firstAreaId = $areas[0]->attribute('id');

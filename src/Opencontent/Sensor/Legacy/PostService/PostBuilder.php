@@ -114,7 +114,20 @@ class PostBuilder
         $post->timelineItems = $this->repository->getMessageService()->loadTimelineItemCollectionByPost($post);
         $post->responses = $this->repository->getMessageService()->loadResponseCollectionByPost($post);
 
+        $post->meta = $this->loadPostMeta();
+
         return $post;
+    }
+
+    protected function loadPostMeta()
+    {
+        if (isset($this->contentObjectDataMap['meta'])
+            && $this->contentObjectDataMap['meta']->hasContent()
+        ) {
+            return (array)json_decode($this->contentObjectDataMap['meta']->toString(), true);
+        }
+
+        return array();
     }
 
     protected function loadPostReporter()

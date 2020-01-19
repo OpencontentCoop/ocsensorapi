@@ -18,6 +18,8 @@ class TreeNodeItem implements \JsonSerializable
 
     protected $geo;
 
+    protected $bounding_box;
+
     protected $group;
 
     protected $level;
@@ -43,6 +45,7 @@ class TreeNodeItem implements \JsonSerializable
         $this->node_id = (int)$data['node_id'];
         $this->type = $data['type'];
         $this->geo = $data['geo'];
+        $this->bounding_box = $data['bounding_box'];
         $this->group = $data['group'];
         $this->children = $data['children'];
         $this->level = $data['level'];
@@ -60,6 +63,7 @@ class TreeNodeItem implements \JsonSerializable
         $data['node_id'] = (int)$node->attribute('node_id');
         $data['type'] = $node->attribute('class_identifier');
         $data['geo'] = self::geo($node);
+        $data['bounding_box'] = self::boundingBox($node);
         $data['group'] = self::group($node);
         $data['level'] = $level;
         $data['can_remove'] = $node->canRemove();
@@ -112,6 +116,18 @@ class TreeNodeItem implements \JsonSerializable
         return null;
     }
 
+    protected static function boundingBox(eZContentObjectTreeNode $node)
+    {
+        /** @var eZContentObjectAttribute[] $dataMap */
+        $dataMap = $node->attribute('data_map');
+        if (isset($dataMap['bounding_box']) && $dataMap['bounding_box']->hasContent()) {
+            /** @var eZGmapLocation $content */
+            $content = $dataMap['bounding_box']->content();
+            return $content;
+        }
+        return null;
+    }
+
     public static function children(eZContentObjectTreeNode $node, $parameters = array(), $level = -1)
     {
         $data = array();
@@ -147,6 +163,7 @@ class TreeNodeItem implements \JsonSerializable
             'id',
             'name',
             'geo',
+            'bounding_box',
             'group',
             'children',
             'level',
@@ -171,6 +188,8 @@ class TreeNodeItem implements \JsonSerializable
             return $this->name;
         elseif ($name == 'geo')
             return $this->geo;
+        elseif ($name == 'bounding_box')
+            return $this->bounding_box;
         elseif ($name == 'group')
             return $this->group;
         elseif ($name == 'children')
@@ -189,6 +208,7 @@ class TreeNodeItem implements \JsonSerializable
             'type' => $this->type,
             'name' => $this->name,
             'geo' => $this->geo,
+            'bounding_box' => $this->bounding_box,
             'group' => $this->group,
             'level' => $this->level,
             'can_remove' => $this->can_remove,
@@ -213,6 +233,7 @@ class TreeNodeItem implements \JsonSerializable
         $data['node_id'] = $this->node_id;
         $data['type'] = $this->type;
         $data['geo'] = $this->geo;
+        $data['bounding_box'] = $this->bounding_box;
         $data['group'] = $this->group;
         $data['level'] = $this->level;
         $data['can_remove'] = $this->can_remove;

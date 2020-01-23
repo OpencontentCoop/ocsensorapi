@@ -1816,7 +1816,7 @@ class SchemaBuilder
                     'reporter' => $this->buildSchemaProperty(['type' => 'integer', 'title' => 'Reporter']),
                     'image' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'url', 'title' => 'Image', 'nullable' => true]),
                     'is_comments_allowed' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'Comments allowed']),
-
+                    'address_meta_info' => $this->buildSchemaProperty(['type' => 'object', 'title' => 'Key/value meta informations about geo location']),
                 ];
                 break;
 

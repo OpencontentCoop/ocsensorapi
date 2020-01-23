@@ -156,6 +156,11 @@ class Post extends Exportable
      */
     public $areas;
 
+    /**
+     * @var array
+     */
+    public $meta = array();
+
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);

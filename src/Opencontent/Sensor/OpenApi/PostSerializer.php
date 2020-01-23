@@ -30,6 +30,7 @@ class PostSerializer extends AbstractSerializer
             'reporter' => (int)$post->reporter->id,
             'image' => isset($post->images[0]) ? $post->images[0]->jsonSerialize()['original'] : null,
             'is_comments_allowed' => $post->commentsIsOpen,
+            'address_meta_info' => $post->meta,
         ]);
     }
 }

@@ -64,7 +64,8 @@ class SchemaBuilder
             [
                 'servers' => $this->buildServers(),
                 'tags' => $this->buildTags(),
-                'components' => $this->buildComponents()
+                'components' => $this->buildComponents(),
+                'security' => [['basicAuth' => []]]
             ]
         );
 
@@ -195,6 +196,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -226,6 +228,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\Reference('#/components/requestBodies/Post')
@@ -250,6 +253,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -272,6 +276,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -298,6 +303,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -320,6 +326,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -346,6 +353,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -368,6 +376,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -394,6 +403,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -417,9 +427,11 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                             new OA\Parameter('participantId', OA\Parameter::IN_PATH, 'ID of participant', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -443,6 +455,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -465,6 +478,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -492,9 +506,11 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                             new OA\Parameter('commentId', OA\Parameter::IN_PATH, 'ID of comment to edit', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -521,6 +537,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -543,6 +560,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -573,9 +591,11 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                             new OA\Parameter('privateMessageId', OA\Parameter::IN_PATH, 'ID of private message to edit', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -602,6 +622,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -624,6 +645,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -651,9 +673,11 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                             new OA\Parameter('responseId', OA\Parameter::IN_PATH, 'ID of response to edit', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -680,6 +704,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -702,6 +727,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -725,9 +751,11 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                             new OA\Parameter('filename', OA\Parameter::IN_PATH, 'Filename of attachment to remove', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'string']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -751,6 +779,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -774,6 +803,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -796,6 +826,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -822,6 +853,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -844,6 +876,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -870,6 +903,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -893,6 +927,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -915,6 +950,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -941,6 +977,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -963,6 +1000,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -989,6 +1027,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -1011,6 +1050,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -1038,6 +1078,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
@@ -1107,6 +1148,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('userId', OA\Parameter::IN_PATH, 'ID of user', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -1128,6 +1170,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('userId', OA\Parameter::IN_PATH, 'ID of user', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\Reference('#/components/requestBodies/User')
@@ -1195,6 +1238,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('operatorId', OA\Parameter::IN_PATH, 'ID of operator', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -1216,6 +1260,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('operatorId', OA\Parameter::IN_PATH, 'ID of operator', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\Reference('#/components/requestBodies/Operator')
@@ -1283,6 +1328,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('groupId', OA\Parameter::IN_PATH, 'ID of group', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -1304,6 +1350,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('groupId', OA\Parameter::IN_PATH, 'ID of group', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\Reference('#/components/requestBodies/Group')
@@ -1327,6 +1374,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('groupId', OA\Parameter::IN_PATH, 'ID of group', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                             new OA\Parameter('limit', OA\Parameter::IN_QUERY, 'Limit to restrict the number of entries on a page', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer', 'minimum' => 1, 'maximum' => SearchService::MAX_LIMIT, 'default' => SearchService::DEFAULT_LIMIT, 'nullable' => true]),
@@ -1399,6 +1447,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('categoryId', OA\Parameter::IN_PATH, 'ID of category', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -1420,6 +1469,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('categoryId', OA\Parameter::IN_PATH, 'ID of category', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\Reference('#/components/requestBodies/Category')
@@ -1487,6 +1537,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('areaId', OA\Parameter::IN_PATH, 'ID of area', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ]
                     ]
@@ -1508,6 +1559,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('areaId', OA\Parameter::IN_PATH, 'ID of area', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
                             ]),
                         ],
                         'requestBody' => new OA\Reference('#/components/requestBodies/Area')
@@ -1554,6 +1606,7 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('statIdentifier', OA\Parameter::IN_PATH, 'ID of stat', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'string']),
+                                'required' => true,
                             ]),
                             new OA\Parameter('interval', OA\Parameter::IN_QUERY, 'Time interval of stat data', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'string', 'default' => StatisticFactory::DEFAULT_INTERVAL, 'enum' => ['monthly', 'quarterly', 'half-yearly', 'yearly']]),
@@ -1628,7 +1681,6 @@ class SchemaBuilder
             'NewArea' => $this->buildSchema('NewArea'),
 
             'CategoryCollection' => $this->buildSchema('CategoryCollection'),
-            'CategoryTree' => $this->buildSchema('CategoryTree'),
             'Category' => $this->buildSchema('Category'),
             'NewCategory' => $this->buildSchema('NewCategory'),
 

@@ -101,8 +101,9 @@ class Controller
         $post = $this->repository->getPostService()->createPost($postCreateStruct);
         if ($postCreateStruct->imagePath) @unlink($postCreateStruct->imagePath);
 
+        header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->status = new \ezpRestStatusResponse(201, $this->serializer['post']->serialize($post));
+        $result->variables = $this->serializer['post']->serialize($post);
 
         return $result;
     }
@@ -222,11 +223,9 @@ class Controller
         $action->setParameter('text', $this->restController->getPayload()['text']);
         $this->repository->getActionService()->runAction($action, $post);
 
+        header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->status = new \ezpRestStatusResponse(
-            201,
-            $this->serializer['message']->serialize($this->repository->getMessageService()->loadCommentCollectionByPost($post)->last())
-        );
+        $result->variables = $this->serializer['message']->serialize($this->repository->getMessageService()->loadCommentCollectionByPost($post)->last());
 
         return $result;
     }
@@ -259,15 +258,15 @@ class Controller
         $post = $this->loadPost();
         $action = new Action();
         $action->identifier = 'send_private_message';
-        $action->setParameter('participant_ids', $this->restController->getPayload()['receivers']);
         $action->setParameter('text', $this->restController->getPayload()['text']);
+        if (isset($this->restController->getPayload()['text'])) {
+            $action->setParameter('participant_ids', $this->restController->getPayload()['receivers']);
+        }
         $this->repository->getActionService()->runAction($action, $post);
 
+        header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->status = new \ezpRestStatusResponse(
-            201,
-            $this->serializer['message']->serialize($this->repository->getMessageService()->loadCommentCollectionByPost($post)->last())
-        );
+        $result->variables = $this->serializer['message']->serialize($this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post)->last());
 
         return $result;
     }
@@ -303,11 +302,9 @@ class Controller
         $action->setParameter('text', $this->restController->getPayload()['text']);
         $this->repository->getActionService()->runAction($action, $post);
 
+        header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->status = new \ezpRestStatusResponse(
-            201,
-            $this->serializer['message']->serialize($this->repository->getMessageService()->loadResponseCollectionByPost($post)->last())
-        );
+        $result->variables = $this->serializer['message']->serialize($this->repository->getMessageService()->loadResponseCollectionByPost($post)->last());
 
         return $result;
     }
@@ -343,11 +340,9 @@ class Controller
         $action->setParameter('files', $this->restController->getPayload()['files']);
         $this->repository->getActionService()->runAction($action, $post);
 
+        header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->status = new \ezpRestStatusResponse(
-            201,
-            ['items' => $this->serializer['attachment']->serializeItems($this->loadPost()->attachments)]
-        );
+        $result->variables = ['items' => $this->serializer['attachment']->serializeItems($this->loadPost()->attachments)];
 
         return $result;
     }
@@ -360,11 +355,8 @@ class Controller
         $action->setParameter('files', [$this->restController->filename]);
         $this->repository->getActionService()->runAction($action, $post);
 
+        header("HTTP/1.1 200 " . \ezpRestStatusResponse::$statusCodes[200]);
         $result = new ezpRestMvcResult();
-        $result->status = new \ezpRestStatusResponse(
-            204,
-            \ezpRestStatusResponse::$statusCodes[204]
-        );
 
         return $result;
     }
@@ -453,25 +445,35 @@ class Controller
             $this->restController->getPayload()['identifier']
         );
 
-        if ($newStatus->identifier === WorkflowStatus::CLOSED) {
+        if ($newStatus->code === WorkflowStatus::CLOSED) {
             $action = new Action();
             $action->identifier = 'close';
             $this->repository->getActionService()->runAction($action, $post);
             $result->variables = ['identifier' => $this->loadPost()->workflowStatus->identifier];
-        } elseif ($newStatus->identifier === WorkflowStatus::FIXED) {
-            if ($this->repository->getCurrentUser()->permissions->hasPermission('can_force_fix')){
+        } elseif ($newStatus->code === WorkflowStatus::FIXED) {
+            if ($this->repository->getCurrentUser()->permissions->hasPermission('can_force_fix')) {
                 $action = new Action();
                 $action->identifier = 'force_fix';
                 $this->repository->getActionService()->runAction($action, $post);
                 $result->variables = ['identifier' => $this->loadPost()->workflowStatus->identifier];
-            }else{
+            } else {
                 $action = new Action();
                 $action->identifier = 'fix';
                 $this->repository->getActionService()->runAction($action, $post);
                 $result->variables = ['identifier' => $this->loadPost()->workflowStatus->identifier];
             }
+        } elseif ($newStatus->code === WorkflowStatus::REOPENED) {
+            $action = new Action();
+            $action->identifier = 'reopen';
+            $this->repository->getActionService()->runAction($action, $post);
+            $result->variables = ['identifier' => $this->loadPost()->workflowStatus->identifier];
+        } elseif ($newStatus->code === WorkflowStatus::READ) {
+            $action = new Action();
+            $action->identifier = 'read';
+            $this->repository->getActionService()->runAction($action, $post);
+            $result->variables = ['identifier' => $this->loadPost()->workflowStatus->identifier];
         } else {
-            throw new InvalidArgumentException("Can not set workflow status {$newStatus->identifier}");
+            throw new InvalidArgumentException("Can not set workflow status to {$newStatus->identifier}");
         }
 
         return $result;
@@ -491,12 +493,12 @@ class Controller
         $post = $this->loadPost();
         $newStatus = $this->restController->getPayload()['identifier'];
 
-        if ($newStatus === 'public'){
+        if ($newStatus === 'public') {
             $action = new Action();
             $action->identifier = 'make_public';
             $this->repository->getActionService()->runAction($action, $post);
             $result->variables = ['identifier' => $this->loadPost()->privacy->identifier];
-        }elseif ($newStatus === 'private'){
+        } elseif ($newStatus === 'private') {
             $action = new Action();
             $action->identifier = 'make_private';
             $this->repository->getActionService()->runAction($action, $post);
@@ -527,8 +529,8 @@ class Controller
             'accepted',
             'refused'
         ];
-        
-        if (!in_array($newStatus, $availableStatuses)){
+
+        if (!in_array($newStatus, $availableStatuses)) {
             throw new InvalidArgumentException("Can not set moderation status {$newStatus}");
         }
 
@@ -537,7 +539,7 @@ class Controller
         $action->setParameter('status', $newStatus);
         $this->repository->getActionService()->runAction($action, $post);
         $result->variables = ['identifier' => $this->loadPost()->moderation->identifier];
-        
+
         return $result;
     }
 

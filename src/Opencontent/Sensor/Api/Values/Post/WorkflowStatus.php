@@ -49,7 +49,7 @@ class WorkflowStatus extends Exportable
      */
     public static function instanceByIdentifier($identifier)
     {
-        switch ($code) {
+        switch ($identifier) {
             case 'waiting';
                 return self::instanceByCode(self::WAITING);
 
@@ -70,7 +70,7 @@ class WorkflowStatus extends Exportable
 
         }
 
-        throw new InvalidArgumentException("Unknow $identifier workflow status");
+        throw new InvalidArgumentException("Unknown $identifier workflow status");
     }
 
     protected function getIdentifierByCode($code)

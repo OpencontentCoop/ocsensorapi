@@ -739,7 +739,7 @@ class SchemaBuilder
             '/posts/{postId}/attachments/{filename}' => new OA\PathItem([
                 'delete' => new OA\Operation(
                     [
-                        '204' => new OA\Response('Successful response'),
+                        '200' => new OA\Response('Successful response'),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
                         '404' => new OA\Response('Not found'),
@@ -954,7 +954,7 @@ class SchemaBuilder
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
-                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string', 'enum' => ['fixed', 'closed']])]])
+                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string', 'enum' => ['read', 'fixed', 'closed', 'reopened']])]])
                         ]], 'Workflow status identifier', true)
                     ]
                 ),

@@ -30,7 +30,7 @@ class SendPrivateMessageAction extends ActionDefinition
 
         $parameter = new ActionDefinitionParameter();
         $parameter->identifier = 'participant_ids';
-        $parameter->isRequired = true;
+        $parameter->isRequired = false;
         $parameter->type = 'array';
         $this->parameterDefinitions[] = $parameter;
     }
@@ -41,7 +41,12 @@ class SendPrivateMessageAction extends ActionDefinition
         $receiverIdList = (array)$action->getParameterValue('participant_ids');
 
         if (empty($receiverIdList)) {
-            throw new InvalidInputException("Participant list is required");
+            $receiverIdList = [];
+            foreach($post->participants->getParticipantIdList() as $participantId){
+                if ($post->participants->getParticipantById($participantId)->roleIdentifier != ParticipantRole::ROLE_AUTHOR){
+                    $receiverIdList[] = $participantId;
+                }
+            }
         }
 
         $participantIdList = $post->participants->getParticipantIdList();

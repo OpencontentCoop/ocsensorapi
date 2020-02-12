@@ -7,6 +7,7 @@ use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Values\Post\Field\GeoLocation;
 use Opencontent\Sensor\Api\Values\Post\Field\Image;
+use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
 use Opencontent\Sensor\Api\Values\PostCreateStruct;
 use Opencontent\Sensor\Api\Values\PostUpdateStruct;
 use Opencontent\Sensor\OpenApi;
@@ -448,8 +449,30 @@ class Controller
     {
         $result = new ezpRestMvcResult();
         $post = $this->loadPost();
-        $newStatus = $this->restController->getPayload()['identifier'];
+        $newStatus = WorkflowStatus::instanceByIdentifier(
+            $this->restController->getPayload()['identifier']
+        );
 
+        if ($newStatus->identifier === WorkflowStatus::CLOSED) {
+            $action = new Action();
+            $action->identifier = 'close';
+            $this->repository->getActionService()->runAction($action, $post);
+            $result->variables = ['identifier' => $this->loadPost()->workflowStatus->identifier];
+        } elseif ($newStatus->identifier === WorkflowStatus::FIXED) {
+            if ($this->repository->getCurrentUser()->permissions->hasPermission('can_force_fix')){
+                $action = new Action();
+                $action->identifier = 'force_fix';
+                $this->repository->getActionService()->runAction($action, $post);
+                $result->variables = ['identifier' => $this->loadPost()->workflowStatus->identifier];
+            }else{
+                $action = new Action();
+                $action->identifier = 'fix';
+                $this->repository->getActionService()->runAction($action, $post);
+                $result->variables = ['identifier' => $this->loadPost()->workflowStatus->identifier];
+            }
+        } else {
+            throw new InvalidArgumentException("Can not set workflow status {$newStatus->identifier}");
+        }
 
         return $result;
     }
@@ -465,6 +488,22 @@ class Controller
     public function setPrivacyStatusByPostId()
     {
         $result = new ezpRestMvcResult();
+        $post = $this->loadPost();
+        $newStatus = $this->restController->getPayload()['identifier'];
+
+        if ($newStatus === 'public'){
+            $action = new Action();
+            $action->identifier = 'make_public';
+            $this->repository->getActionService()->runAction($action, $post);
+            $result->variables = ['identifier' => $this->loadPost()->privacy->identifier];
+        }elseif ($newStatus === 'private'){
+            $action = new Action();
+            $action->identifier = 'make_private';
+            $this->repository->getActionService()->runAction($action, $post);
+            $result->variables = ['identifier' => $this->loadPost()->privacy->identifier];
+        } else {
+            throw new InvalidArgumentException("Can not set privacy status {$newStatus}");
+        }
 
         return $result;
     }
@@ -480,7 +519,25 @@ class Controller
     public function setModerationStatusByPostId()
     {
         $result = new ezpRestMvcResult();
+        $post = $this->loadPost();
+        $newStatus = $this->restController->getPayload()['identifier'];
 
+        $availableStatuses = [
+            'waiting',
+            'accepted',
+            'refused'
+        ];
+        
+        if (!in_array($newStatus, $availableStatuses)){
+            throw new InvalidArgumentException("Can not set moderation status {$newStatus}");
+        }
+
+        $action = new Action();
+        $action->identifier = 'moderate';
+        $action->setParameter('status', $newStatus);
+        $this->repository->getActionService()->runAction($action, $post);
+        $result->variables = ['identifier' => $this->loadPost()->moderation->identifier];
+        
         return $result;
     }
 

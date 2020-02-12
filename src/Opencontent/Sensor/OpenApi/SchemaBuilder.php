@@ -954,7 +954,7 @@ class SchemaBuilder
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
-                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string'])]])
+                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string', 'enum' => ['fixed', 'closed']])]])
                         ]], 'Workflow status identifier', true)
                     ]
                 ),
@@ -1004,7 +1004,7 @@ class SchemaBuilder
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
-                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string'])]])
+                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string', 'enum' => ['public', 'private']])]])
                         ]], 'Privacy status identifier', true)
                     ]
                 ),
@@ -1054,7 +1054,7 @@ class SchemaBuilder
                             ]),
                         ],
                         'requestBody' => new OA\RequestBody(['application/json' => [
-                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string'])]])
+                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string', 'enum' => ['waiting', 'accepted', 'refused']])]])
                         ]], 'Moderation status identifier', true)
                     ]
                 ),

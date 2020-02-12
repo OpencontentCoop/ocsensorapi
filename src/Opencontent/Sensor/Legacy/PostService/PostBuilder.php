@@ -127,7 +127,7 @@ class PostBuilder
             return (array)json_decode($this->contentObjectDataMap['meta']->toString(), true);
         }
 
-        return array();
+        return null;
     }
 
     protected function loadPostReporter()

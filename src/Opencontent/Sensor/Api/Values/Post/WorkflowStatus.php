@@ -2,6 +2,7 @@
 
 namespace Opencontent\Sensor\Api\Values\Post;
 
+use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use Opencontent\Sensor\Api\Exportable;
 
 /**
@@ -39,6 +40,37 @@ class WorkflowStatus extends Exportable
         $instance->code = intval($code);
         $instance->identifier = $instance->getIdentifierByCode($code);
         return $instance;
+    }
+
+    /**
+     * @param $identifier
+     * @return WorkflowStatus
+     * @throws InvalidArgumentException
+     */
+    public static function instanceByIdentifier($identifier)
+    {
+        switch ($code) {
+            case 'waiting';
+                return self::instanceByCode(self::WAITING);
+
+            case 'read';
+                return self::instanceByCode(self::READ);
+
+            case 'assigned';
+                return self::instanceByCode(self::ASSIGNED);
+
+            case 'closed';
+                return self::instanceByCode(self::CLOSED);
+
+            case 'fixed';
+                return self::instanceByCode(self::FIXED);
+
+            case 'reopened';
+                return self::instanceByCode(self::REOPENED);
+
+        }
+
+        throw new InvalidArgumentException("Unknow $identifier workflow status");
     }
 
     protected function getIdentifierByCode($code)

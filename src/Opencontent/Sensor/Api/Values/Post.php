@@ -159,7 +159,7 @@ class Post extends Exportable
     /**
      * @var array
      */
-    public $meta = array();
+    public $meta;
 
     public function jsonSerialize()
     {

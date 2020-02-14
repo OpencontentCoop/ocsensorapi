@@ -19,7 +19,7 @@ class LogListener extends AbstractListener
     public function handle(EventInterface $event, $param = null)
     {
         if ($param instanceof SensorEvent){
-            $this->repository->getLogger()->info("Event '{$param->identifier}' on post {$param->post->id} from user {$param->user->id}", $param->parameters);
+            $this->repository->getLogger()->debug("Event '{$param->identifier}' on post {$param->post->id} from user {$param->user->id}", $param->parameters);
         }
     }
 

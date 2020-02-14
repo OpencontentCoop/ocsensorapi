@@ -14,7 +14,7 @@ use Opencontent\Sensor\Legacy\Utils\MailValidator;
 
 class MailNotificationListener extends AbstractListener
 {
-    private $repository;
+    protected $repository;
 
     public function __construct(Repository $repository)
     {
@@ -121,7 +121,7 @@ class MailNotificationListener extends AbstractListener
         }
     }
 
-    private function getAddressFromParticipant(Participant $participant, $notificationIdentifier)
+    protected function getAddressFromParticipant(Participant $participant, $notificationIdentifier)
     {
         $addresses = [];
         if ($participant->type == 'user') {
@@ -145,7 +145,7 @@ class MailNotificationListener extends AbstractListener
         return $addresses;
     }
 
-    private function sendMail($addresses, $mailSubject, $mailBody, $mailParameters)
+    protected function sendMail($addresses, $mailSubject, $mailBody, $mailParameters)
     {
         /** @var \eZMailNotificationTransport $transport */
         $transport = \eZNotificationTransport::instance('ezmail');
@@ -159,7 +159,7 @@ class MailNotificationListener extends AbstractListener
 
     }
 
-    private function getNotificationMailTemplate($participantRole)
+    protected function getNotificationMailTemplate($participantRole)
     {
         if ($participantRole == ParticipantRole::ROLE_APPROVER) {
 

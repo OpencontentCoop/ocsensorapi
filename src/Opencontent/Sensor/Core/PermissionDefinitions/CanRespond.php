@@ -14,7 +14,7 @@ class CanRespond extends UserIs
     {
         return (
             !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
-            && !$post->workflowStatus->is(Post\WorkflowStatus::ASSIGNED)
+            && (!$post->workflowStatus->is(Post\WorkflowStatus::ASSIGNED) || $this->participantIs(ParticipantRole::ROLE_OWNER, $user, $post))
             && $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post)
         );
     }

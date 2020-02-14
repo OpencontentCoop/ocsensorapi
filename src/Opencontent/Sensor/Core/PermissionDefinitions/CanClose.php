@@ -15,6 +15,6 @@ class CanClose extends UserIs
     {
         return $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post)
             && !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
-            && !$post->workflowStatus->is(Post\WorkflowStatus::ASSIGNED);
+            && (!$post->workflowStatus->is(Post\WorkflowStatus::ASSIGNED) || $this->participantIs(ParticipantRole::ROLE_OWNER, $user, $post));
     }
 }

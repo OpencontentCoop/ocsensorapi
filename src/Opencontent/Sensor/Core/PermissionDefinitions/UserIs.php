@@ -22,7 +22,7 @@ abstract class UserIs extends PermissionDefinition
         return $collection->getUserById($user->id);
     }
 
-    public function userIsUserParticipant($roleId, User $user, Post $post)
+    public function participantIs($roleId, User $user, Post $post)
     {
         $collection = $post->participants->getParticipantsByRole($roleId);
         foreach ($collection as $participant){

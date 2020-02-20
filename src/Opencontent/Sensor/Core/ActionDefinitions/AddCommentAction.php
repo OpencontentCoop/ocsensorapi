@@ -46,7 +46,7 @@ class AddCommentAction extends ActionDefinition
         $this->fireEvent($repository, $post, $user, array('text' => $text));
 
         if ($post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
-            && $post->author->getUserById($user->id)
+            && $post->author->id == $user->id
             && $repository->getSensorSettings()->get('AuthorCanReopen')) {
             $action = new Action();
             $action->identifier = 'reopen';

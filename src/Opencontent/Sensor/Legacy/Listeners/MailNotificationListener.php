@@ -4,11 +4,14 @@ namespace Opencontent\Sensor\Legacy\Listeners;
 
 use League\Event\AbstractListener;
 use League\Event\EventInterface;
+use Opencontent\QueryLanguage\Parser\Exception;
 use Opencontent\Sensor\Api\Values\Event as SensorEvent;
 use Opencontent\Sensor\Api\Values\Group;
 use Opencontent\Sensor\Api\Values\NotificationType;
+use Opencontent\Sensor\Api\Values\Operator;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
+use Opencontent\Sensor\Core\SearchService;
 use Opencontent\Sensor\Legacy\Repository;
 use Opencontent\Sensor\Legacy\Utils\MailValidator;
 
@@ -136,13 +139,39 @@ class MailNotificationListener extends AbstractListener
                 $group = $this->repository->getGroupService()->loadGroup($participant->id);
                 if ($group instanceof Group && MailValidator::validate($group->email)) {
                     $addresses[] = $group->email;
+                    $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*');
+                    $operators = $operatorResult['items'];
+                    $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
+                    foreach ($operators as $operator) {
+                        $userNotifications = $this->repository->getNotificationService()->getUserNotifications($operator);
+                        if (in_array($notificationIdentifier, $userNotifications) && MailValidator::validate($operator->email)) {
+                            $addresses[] = $operator->email;
+                        }
+                    }
                 }
             }catch (\Exception $e){
                 $this->repository->getLogger()->error($e->getMessage(), ['participant' => $participant->name, 'notification' => $notificationIdentifier]);
             }
         }
-
         return $addresses;
+    }
+
+    /**
+     * @param Group $group
+     * @param $operatorResult
+     * @param $operators
+     * @return Operator[]
+     * @throws \Opencontent\Sensor\Api\Exception\InvalidInputException
+     */
+    private function recursiveLoadOperatorsByGroup(Group $group, $operatorResult, &$operators)
+    {
+        if ($operatorResult['next']) {
+            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next']);
+            $operators = array_merge($operatorResult['items'], $operators);
+            $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
+        }
+
+        return $operators;
     }
 
     protected function sendMail($addresses, $mailSubject, $mailBody, $mailParameters)

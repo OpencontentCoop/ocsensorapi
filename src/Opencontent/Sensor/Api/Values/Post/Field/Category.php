@@ -33,6 +33,11 @@ class Category extends Field
     /**
      * @var integer[]
      */
+    public $ownersIdList = array();
+
+    /**
+     * @var integer[]
+     */
     public $observersIdList = array();
 
     public function __toString()

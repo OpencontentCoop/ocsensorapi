@@ -68,6 +68,11 @@ class AddCategoryAction extends ActionDefinition
                     $approverIdList = array_merge($approverIdList, $category->groupsIdList);
                 }
 
+                $ownerIdList = array();
+                foreach ($post->categories as $category) {
+                    $ownerIdList = array_merge($ownerIdList, $category->ownersIdList);
+                }
+
                 $observerIdList = array();
                 foreach ($post->categories as $category) {
                     $observerIdList = array_merge($observerIdList, $category->observersIdList);
@@ -95,7 +100,13 @@ class AddCategoryAction extends ActionDefinition
                     $repository->getActionService()->runAction($action, $post);
                     $post = $repository->getPostService()->loadPost($post->id);
 
-                    $ownerId = $this->getOperatorFromApprovers($repository, $post);
+                    if (empty($ownerIdList)){
+                        $ownerId = $this->getOperatorFromApprovers($repository, $post);
+                    }else{
+                        $ownerId = array_shift($ownerIdList);
+                        $repository->getLogger()->info('Select category owner: ' . $ownerId);
+                    }
+
                     if ($ownerId) {
                         $action = new Action();
                         $action->identifier = 'assign';
@@ -128,7 +139,7 @@ class AddCategoryAction extends ActionDefinition
 
         if (!empty($currentApprovers)) {
             $luckyUser = $currentApprovers[array_rand($currentApprovers, 1)];
-            $repository->getLogger()->warning($luckyUser->name);
+            $repository->getLogger()->warning('Select lucky operator as owner: ' . $luckyUser->name);
             return $luckyUser->id;
         }
 

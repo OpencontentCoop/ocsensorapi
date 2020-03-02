@@ -38,6 +38,7 @@ class AssignAction extends ActionDefinition
         $makeObserverIds = array_diff($currentOwnerIds, $participantIds);
 
         if ($makeObserverIds == $currentOwnerIds && empty($makeOwnerIds)) {
+            $repository->getLogger()->notice('Post is already assigned', array('make_owners' => $makeOwnerIds));
             return;
         }
 

@@ -20,6 +20,11 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
 
     protected $categories = [];
 
+    /**
+     * @param $categoryId
+     * @return Category
+     * @throws NotFoundException
+     */
     public function loadCategory($categoryId)
     {
         if (isset($this->categories[$categoryId])) {
@@ -37,29 +42,52 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
         }
     }
 
+    /**
+     * @param array $content
+     * @return Category
+     */
     private function internalLoadCategory(array $content)
     {
+        $language = $this->repository->getCurrentLanguage();
+
         $category = new Category();
         $category->id = (int)$content['metadata']['id'];
-        $category->name = $content['metadata']['name'][$this->repository->getCurrentLanguage()];
+        $category->name = $content['metadata']['name'][$language];
         $category->operatorsIdList = [];
-        foreach ($content['data'][$this->repository->getCurrentLanguage()]['approver'] as $item) {
-            if (in_array($item['classIdentifier'], \eZUser::fetchUserClassNames())) {
-                $category->operatorsIdList[] = (int)$item['id'];
-            } else {
-                $category->groupsIdList[] = (int)$item['id'];
+
+        if (isset($content['data'][$language]['approver'])) {
+            foreach ($content['data'][$language]['approver'] as $item) {
+                if (in_array($item['classIdentifier'], \eZUser::fetchUserClassNames())) {
+                    $category->operatorsIdList[] = (int)$item['id'];
+                } else {
+                    $category->groupsIdList[] = (int)$item['id'];
+                }
             }
         }
-        foreach ($content['data'][$this->repository->getCurrentLanguage()]['owner'] as $item) {
-            $category->ownersIdList[] = (int)$item['id'];
+
+        if (isset($content['data'][$language]['owner'])) {
+            foreach ($content['data'][$language]['owner'] as $item) {
+                $category->ownersIdList[] = (int)$item['id'];
+            }
         }
-        foreach ($content['data'][$this->repository->getCurrentLanguage()]['observer'] as $item) {
-            $category->observersIdList[] = (int)$item['id'];
+
+        if (isset($content['data'][$language]['observer'])) {
+            foreach ($content['data'][$language]['observer'] as $item) {
+                $category->observersIdList[] = (int)$item['id'];
+            }
         }
 
         return $category;
     }
 
+    /**
+     * @param $query
+     * @param $limit
+     * @param $cursor
+     * @return array
+     * @throws InvalidInputException
+     * @throws \Opencontent\Opendata\Api\Exception\OutOfRangeException
+     */
     public function loadCategories($query, $limit, $cursor)
     {
         if ($limit > \Opencontent\Sensor\Api\SearchService::MAX_LIMIT) {
@@ -76,6 +104,14 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
         return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor];
     }
 
+    /**
+     * @param $payload
+     * @return Category
+     * @throws InvalidInputException
+     * @throws NotFoundException
+     * @throws UnauthorizedException
+     * @throws UnexpectedException
+     */
     public function createCategory($payload)
     {
         if (isset($payload['parent'])) {
@@ -119,6 +155,15 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
         return $this->loadCategory($object->attribute('id'));
     }
 
+    /**
+     * @param Category $category
+     * @param $payload
+     * @return Category
+     * @throws InvalidInputException
+     * @throws NotFoundException
+     * @throws UnauthorizedException
+     * @throws UnexpectedException
+     */
     public function updateCategory(Category $category, $payload)
     {
         $contentObject = \eZContentObject::fetch($category->id);

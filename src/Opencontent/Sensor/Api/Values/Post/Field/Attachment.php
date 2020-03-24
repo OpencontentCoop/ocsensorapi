@@ -16,10 +16,16 @@ class Attachment extends Field
      */
     public $downloadUrl;
 
+    /**
+     * @var string
+     */
+    public $apiUrl;
+
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);
         $objectVars['downloadUrl'] = '_site_url_/' . $objectVars['downloadUrl'];
+        $objectVars['apiUrl'] = '_site_url_/' . $objectVars['apiUrl'];
 
         return self::toJson($objectVars);
     }

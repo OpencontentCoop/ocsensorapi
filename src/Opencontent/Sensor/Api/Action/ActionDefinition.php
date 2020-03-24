@@ -83,4 +83,9 @@ abstract class ActionDefinition
         $event->parameters = $eventParameters;
         $repository->getEventService()->fire($event);
     }
+
+    protected function arrayIsEqual($a, $b)
+    {
+        return count($a) == count($b) && array_diff($a, $b) === array_diff($b, $a);
+    }
 }

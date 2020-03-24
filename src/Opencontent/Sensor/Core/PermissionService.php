@@ -43,7 +43,7 @@ class PermissionService implements PermissionServiceInterface
     }
 
     public function loadUserPostPermissionCollection(User $user, Post $post)
-    {
+    {        
         $permissionCollection = new PermissionCollection();
         foreach ($this->permissionDefinitions as $permissionDefinition) {
             $permission = new Permission();
@@ -55,7 +55,7 @@ class PermissionService implements PermissionServiceInterface
     }
 
     public function loadCurrentUserPostPermissionCollection(Post $post)
-    {
+    {        
         return $this->loadUserPostPermissionCollection($this->repository->getCurrentUser(), $post);
     }
 }

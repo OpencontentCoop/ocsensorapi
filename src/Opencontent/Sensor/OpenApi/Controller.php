@@ -100,6 +100,9 @@ class Controller
 
         $post = $this->repository->getPostService()->createPost($postCreateStruct);
         if ($postCreateStruct->imagePath) @unlink($postCreateStruct->imagePath);
+        foreach ($postCreateStruct->imagePaths as $imagePath){
+            @unlink($imagePath);
+        }
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
@@ -122,6 +125,9 @@ class Controller
         $postUpdateStruct->setPost($this->loadPost());
         $post = $this->repository->getPostService()->updatePost($postUpdateStruct);
         if ($postUpdateStruct->imagePath) @unlink($postUpdateStruct->imagePath);
+        foreach ($postUpdateStruct->imagePaths as $imagePath){
+            @unlink($imagePath);
+        }
 
         $result = new ezpRestMvcResult();
         $result->variables = $this->serializer['post']->serialize($post);
@@ -1042,7 +1048,8 @@ class Controller
     }
 
     /**
-     * @return PostUpdateStruct
+     * @return PostCreateStruct|PostUpdateStruct
+     * @throws InvalidArgumentException
      * @throws InvalidInputException
      */
     private function loadPostUpdateStruct()
@@ -1052,7 +1059,8 @@ class Controller
     }
 
     /**
-     * @return PostCreateStruct
+     * @return PostCreateStruct|PostUpdateStruct
+     * @throws InvalidArgumentException
      * @throws InvalidInputException
      */
     private function loadPostCreateStruct()
@@ -1061,6 +1069,12 @@ class Controller
         return $this->loadPostStruct($postStruct);
     }
 
+    /**
+     * @param PostCreateStruct|PostUpdateStruct $postCreateStruct
+     * @return PostCreateStruct|PostUpdateStruct
+     * @throws InvalidArgumentException
+     * @throws InvalidInputException
+     */
     private function loadPostStruct($postCreateStruct)
     {
         $payload = $this->restController->getPayload();
@@ -1094,9 +1108,27 @@ class Controller
             $postCreateStruct->type = $payload['type'];
         }
 
-        $postCreateStruct->privacy = isset($payload['is_private']) && $payload['is_private'] ? 'private' : 'public';
+        if ($this->apiSettings->getRepository()->getSensorSettings()->get('HidePrivacyChoice')){
+            $postCreateStruct->privacy = 'private';
+        }else {
+            $postCreateStruct->privacy = isset($payload['is_private']) && $payload['is_private'] ? 'private' : 'public';
+        }
 
-        if (isset($payload['image'])) {
+        if (isset($payload['images'])) {
+            foreach ($payload['images'] as $image) {
+                if (empty($image['filename']) || empty($image['file'])) {
+                    throw new InvalidInputException("Field images has wrong format");
+                }
+            }
+            $imagePaths = [];
+            foreach ($payload['images'] as $image) {
+                $imagePath = \eZSys::cacheDirectory() . '/' . $image['filename'];
+                \eZFile::create(basename($imagePath), dirname($imagePath), base64_decode($image['file']));
+                $imagePaths[] = $imagePath;
+            }
+            $postCreateStruct->imagePaths = $imagePaths;
+
+        }elseif (isset($payload['image'])) {
             if (empty($payload['image']['filename']) || empty($payload['image']['file'])) {
                 throw new InvalidInputException("Field image has wrong format");
             }

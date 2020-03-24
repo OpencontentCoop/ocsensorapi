@@ -25,6 +25,11 @@ class Image extends Field
      */
     public $thumbnail;
 
+    /**
+     * @var string
+     */
+    public $apiUrl;
+
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);
@@ -32,6 +37,7 @@ class Image extends Field
         unset($objectVars['fileName']);
         $objectVars['original'] = (isset($objectVars['original']['url'])) ? '_site_url_/' . $objectVars['original']['url'] : '';
         $objectVars['thumbnail'] = (isset($objectVars['thumbnail']['url'])) ? '_site_url_/' . $objectVars['thumbnail']['url'] : '';
+        $objectVars['apiUrl'] = '_site_url_/' . $objectVars['apiUrl'];
 
         return self::toJson($objectVars);
     }

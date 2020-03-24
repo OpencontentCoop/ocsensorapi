@@ -13,6 +13,11 @@ class PostSerializer extends AbstractSerializer
      */
     public function serialize($post, array $parameters = [])
     {
+        $images = [];
+        foreach ($post->images as $image){
+            $images[] = $image->jsonSerialize()['apiUrl'];
+        }
+
         return $this->apiSettings->replacePlaceholders([
             'id' => (int)$post->id,
             'published_at' => $this->formatDate($post->published),
@@ -28,7 +33,8 @@ class PostSerializer extends AbstractSerializer
             'moderation_status' => $post->moderation->identifier,
             'author' => (int)$post->author->id,
             'reporter' => (int)$post->reporter->id,
-            'image' => isset($post->images[0]) ? $post->images[0]->jsonSerialize()['original'] : null,
+            'image' => isset($images[0]) ? $images[0] : null,
+            'images' => $images,
             'is_comments_allowed' => $post->commentsIsOpen,
             'address_meta_info' => $post->meta,
         ]);

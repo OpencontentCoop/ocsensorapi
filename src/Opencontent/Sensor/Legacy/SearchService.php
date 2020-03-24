@@ -41,7 +41,7 @@ class SearchService extends BaseSearchService
             return $result->searchHits[0];
         }
 
-        throw new Exception\NotFoundException("Post $postId not found");
+        throw new Exception\NotFoundException();
     }
 
     /**

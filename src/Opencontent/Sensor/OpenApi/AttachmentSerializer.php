@@ -14,7 +14,7 @@ class AttachmentSerializer extends AbstractSerializer
      */
     public function serialize($item, array $parameters = [])
     {
-        return $this->apiSettings->replacePlaceholders($item->jsonSerialize()['downloadUrl']);
+        return $this->apiSettings->replacePlaceholders($item->jsonSerialize()['apiUrl']);
     }
 
 }

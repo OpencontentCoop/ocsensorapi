@@ -5,6 +5,8 @@ namespace Opencontent\Sensor\Legacy;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\PermissionException;
 use Opencontent\Sensor\Api\Values\Message\PrivateMessageCollection;
+use Opencontent\Sensor\Api\Values\Message\TimelineItemCollection;
+use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Core\PostService as PostServiceBase;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\PostCreateStruct;
@@ -144,7 +146,6 @@ class PostService extends PostServiceBase
         );
 
         $privateMessages = new PrivateMessageCollection();
-
         foreach ($post->privateMessages->messages as $message) {
             if ($message->getReceiverById($this->repository->getCurrentUser()->id)
                 || $message->getReceiverByIdList($this->repository->getCurrentUser()->groups)
@@ -153,6 +154,19 @@ class PostService extends PostServiceBase
             }
         }
         $post->privateMessages = $privateMessages;
+
+        if ($this->repository->getSensorSettings()->get('HideTimelineDetails')){
+            $currentParticipant = $post->participants->getParticipantByUserId($this->repository->getCurrentUser()->id);            
+            if (!$currentParticipant || $currentParticipant->roleIdentifier == ParticipantRole::ROLE_AUTHOR){ 
+                $timelineMessages = new TimelineItemCollection();
+                foreach ($post->timelineItems->messages as $message){
+                    if ($message->type == 'read' || $message->type == 'closed'){
+                        $timelineMessages->addMessage($message);
+                    }
+                }
+                $post->timelineItems = $timelineMessages;
+            }
+        }
     }
 
     public function setCommentsIsOpen(Post $post)
@@ -186,6 +200,7 @@ class PostService extends PostServiceBase
                 'type' => (string)$post->type,
                 'geo' => (string)$post->geoLocation,
                 'image' => $post->imagePath,
+                'images' => implode('|', $post->imagePaths),
                 'privacy' => (string)$post->privacy == 'public',
                 'area' => implode('-', $post->areas),
                 'category' => implode('-', $post->categories),
@@ -218,6 +233,9 @@ class PostService extends PostServiceBase
         }
         if ((string)$post->privacy != '') {
             $attributes['privacy'] = (string)$post->privacy == 'public';
+        }
+        if (!empty($post->imagePaths)) {
+            $attributes['images'] = implode('|', $post->imagePaths);
         }
 
         if (\eZContentFunctions::updateAndPublishObject($contentObject, ['attributes' => $attributes])) {

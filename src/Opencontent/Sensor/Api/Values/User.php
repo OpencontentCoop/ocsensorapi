@@ -33,6 +33,11 @@ class User extends Exportable
     public $email;
 
     /**
+     * @var string
+     */
+    public $fiscalCode;
+
+    /**
      * @var PermissionCollection
      */
     public $permissions;

@@ -160,6 +160,7 @@ abstract class Repository implements RepositoryInterface
     public function setPermissionDefinitions($permissionDefinitions)
     {
         $this->permissionDefinitions = $permissionDefinitions;
-        $this->participantService = null;
+        $this->permissionService = null;
+        $this->participantService = null;        
     }
 }

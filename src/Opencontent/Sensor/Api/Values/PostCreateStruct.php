@@ -42,6 +42,11 @@ class PostCreateStruct
     public $imagePath;
 
     /**
+     * @var string[]
+     */
+    public $imagePaths = [];
+
+    /**
      * @var array
      */
     public $categories;

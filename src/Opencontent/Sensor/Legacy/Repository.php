@@ -125,6 +125,22 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
     }
 
     /**
+     * @return TreeNodeItem
+     */
+    public function getOperatorsTree()
+    {
+        return TreeNode::walk($this->getOperatorsRootNode(), array('classes' => array('sensor_operator')));
+    }
+
+    /**
+     * @return TreeNodeItem
+     */
+    public function getGroupsTree()
+    {
+        return TreeNode::walk($this->getGroupsRootNode(), array('classes' => array('sensor_group')));
+    }
+
+    /**
      * @return \Opencontent\Sensor\Legacy\PostService
      */
     public function getPostService()

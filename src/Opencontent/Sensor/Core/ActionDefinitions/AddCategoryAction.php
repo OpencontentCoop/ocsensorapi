@@ -100,9 +100,9 @@ class AddCategoryAction extends ActionDefinition
                     $repository->getActionService()->runAction($action, $post);
                     $post = $repository->getPostService()->loadPost($post->id);
 
-                    if (empty($ownerIdList)){
-                        $ownerId = $this->getOperatorFromApprovers($repository, $post);
-                    }else{
+                    if (empty($ownerIdList)) {
+                        $ownerId = $this->getRandomOperatorFromApprovers($repository, $post);
+                    } else {
                         $ownerId = array_shift($ownerIdList);
                         $repository->getLogger()->info('Select category owner: ' . $ownerId);
                     }
@@ -117,30 +117,32 @@ class AddCategoryAction extends ActionDefinition
                             $action,
                             $post,
                             $repository->getCurrentUser()
-                        );;
+                        );
                     }
                 }
                 $repository->getUserService()->setLastAccessDateTime($user, $post);
             }
-        }else{
+        } else {
             $repository->getLogger()->notice('Category already set in post', array('categories' => $categoryIdList));
         }
     }
 
-    private function getOperatorFromApprovers(Repository $repository, Post $post)
+    private function getRandomOperatorFromApprovers(Repository $repository, Post $post)
     {
-        $currentApprovers = [];
-        /** @var Participant $approver */
-        foreach ($post->approvers as $approver) {
-            if ($approver->type = 'group') {
-                $currentApprovers = array_merge($currentApprovers, $approver->users);
+        if ($repository->getSensorSettings()->get('CategoryAutomaticAssignToRandomOperator')) {
+            $currentApprovers = [];
+            /** @var Participant $approver */
+            foreach ($post->approvers as $approver) {
+                if ($approver->type = 'group') {
+                    $currentApprovers = array_merge($currentApprovers, $approver->users);
+                }
             }
-        }
 
-        if (!empty($currentApprovers)) {
-            $luckyUser = $currentApprovers[array_rand($currentApprovers, 1)];
-            $repository->getLogger()->warning('Select lucky operator as owner: ' . $luckyUser->name);
-            return $luckyUser->id;
+            if (!empty($currentApprovers)) {
+                $luckyUser = $currentApprovers[array_rand($currentApprovers, 1)];
+                $repository->getLogger()->warning('Select lucky operator as owner: ' . $luckyUser->name);
+                return $luckyUser->id;
+            }
         }
 
         return false;

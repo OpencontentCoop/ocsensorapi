@@ -19,6 +19,13 @@ class CloseAction extends ActionDefinition
 
     public function run(Repository $repository, Action $action, Post $post, User $user)
     {
+        foreach ($post->owners as $owner) {
+            $repository->getParticipantService()->addPostParticipant(
+                $post,
+                $owner->id,
+                $repository->getParticipantService()->loadParticipantRoleCollection()->getParticipantRoleById(ParticipantRole::ROLE_OBSERVER)
+            );
+        }
         $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::CLOSED);
         $repository->getMessageService()->addTimelineItemByWorkflowStatus($post, Post\WorkflowStatus::CLOSED);
         $post = $repository->getPostService()->refreshPost($post);

@@ -94,6 +94,15 @@ class TreeNodeItem implements \JsonSerializable
                 }
             }
         }
+        if (isset($dataMap['struttura_di_competenza']) && $dataMap['struttura_di_competenza']->hasContent()) {
+            $idList = explode('-', $dataMap['struttura_di_competenza']->toString());
+            if (count($idList) > 0){
+                $object = \eZContentObject::fetch((int)$idList[0]);
+                if ($object instanceof \eZContentObject){
+                    return $object->attribute('name');
+                }
+            }
+        }
         return null;
     }
 

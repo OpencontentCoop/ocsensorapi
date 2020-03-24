@@ -304,6 +304,7 @@ class PostBuilder
         if (isset($this->contentObjectDataMap['image'])
             && $this->contentObjectDataMap['image']->hasContent()
         ) {
+            $attribute = $this->contentObjectDataMap['image'];
             /** @var eZImageAliasHandler $content */
             $content = $this->contentObjectDataMap['image']->content();
             $image = new Post\Field\Image();
@@ -311,17 +312,71 @@ class PostBuilder
             $structure = array(
                 'width' => null,
                 'height' => null,
-                'mime_typ' => null,
+                'mime_type' => null,
                 'filename' => null,
                 'suffix' => null,
                 'url' => null,
                 'filesize' => null
             );
+
             $original = array_intersect_key($content->attribute('original'), $structure);
             $thumb = array_intersect_key($content->attribute('large'), $structure);
             $image->original = $original;
             $image->thumbnail = $thumb;
+            $image->apiUrl = 'api/sensor/file/'
+                . $attribute->attribute('id') . '-' . $attribute->attribute('version') . '-' . $attribute->attribute('language_code')
+                . '/' . base64_encode($image->fileName)
+                . '/' . $image->fileName;
+
             $data[] = $image;
+        }
+
+        if (isset($this->contentObjectDataMap['images'])
+            && $this->contentObjectDataMap['images']->hasContent()
+        ) {
+            $attribute = $this->contentObjectDataMap['images'];
+            /** @var \eZMultiBinaryFile[] $files */
+            $files = $this->contentObjectDataMap['images']->content();
+            foreach ($files as $file) {
+                $image = new Post\Field\Image();
+                $image->fileName = $file->attribute('original_filename');
+
+                $fileHandler = \eZClusterFileHandler::instance($file->attribute('filepath'));
+                $fileHandler->fetch();
+
+                $width = null;
+                $height = null;
+                $info = getimagesize($file->attribute('filepath'));
+                if ($info) {
+                    $width = $info[0];
+                    $height = $info[1];
+                }
+
+                $image->apiUrl = 'api/sensor/file/'
+                    . $attribute->attribute('id') . '-' . $attribute->attribute('version') . '-' . $attribute->attribute('language_code')
+                    . '/' . base64_encode($file->attribute('filename'))
+                    . '/' . $file->attribute('original_filename');
+
+                $url = 'ocmultibinary/download/' . $attribute->attribute('contentobject_id')
+                    . '/' . $attribute->attribute('id')
+                    . '/' . $attribute->attribute('version')
+                    . '/' . $file->attribute('filename')
+                    . '/file/' . $file->attribute('original_filename');
+
+
+                $image->original = $image->thumbnail = array(
+                    'width' => $width,
+                    'height' => $height,
+                    'mime_type' => $fileHandler->dataType(),
+                    'filename' => $file->attribute('original_filename'),
+                    'suffix' => \eZFile::suffix($file->attribute('original_filename')),
+                    'url' => $url,
+                    'filesize' => $fileHandler->size()
+                );
+                $data[] = $image;
+
+                $fileHandler->deleteLocal();
+            }
         }
 
         return $data;
@@ -333,12 +388,13 @@ class PostBuilder
         if (isset($this->contentObjectDataMap['attachment'])
             && $this->contentObjectDataMap['attachment']->hasContent()
         ) {
+            $attribute = $this->contentObjectDataMap['attachment'];
             $files = array();
             $prefix = 'content';
-            if ($this->contentObjectDataMap['attachment']->attribute('data_type_string') == \eZBinaryFileType::DATA_TYPE_STRING) {
-                $files = [$this->contentObjectDataMap['attachment']->content()];
-            } elseif (class_exists('\OCMultiBinaryType') && $this->contentObjectDataMap['attachment']->attribute('data_type_string') == \OCMultiBinaryType::DATA_TYPE_STRING) {
-                $files = $this->contentObjectDataMap['attachment']->content();
+            if ($attribute->attribute('data_type_string') == \eZBinaryFileType::DATA_TYPE_STRING) {
+                $files = [$attribute->content()];
+            } elseif (class_exists('\OCMultiBinaryType') && $attribute->attribute('data_type_string') == \OCMultiBinaryType::DATA_TYPE_STRING) {
+                $files = $attribute->content();
                 $prefix = 'ocmultibinary';
             }
 
@@ -346,10 +402,17 @@ class PostBuilder
                 if ($file instanceof \eZBinaryFile) {
                     $attachment = new Post\Field\Attachment();
                     $attachment->filename = $file->attribute('original_filename');
+
                     $attachment->downloadUrl = $prefix . '/download/' . $this->contentObjectDataMap['attachment']->attribute('contentobject_id')
                         . '/' . $this->contentObjectDataMap['attachment']->attribute('id')
                         . '/' . $this->contentObjectDataMap['attachment']->attribute('version')
                         . '/' . $file->attribute('original_filename');
+
+                    $attachment->apiUrl = 'api/sensor/file/'
+                        . $attribute->attribute('id') . '-' . $attribute->attribute('version') . '-' . $attribute->attribute('language_code')
+                        . '/' . base64_encode($file->attribute('filename'))
+                        . '/' . $file->attribute('original_filename');
+
                     $data[] = $attachment;
                 }
             }
@@ -408,7 +471,7 @@ class PostBuilder
             $content = $this->contentObjectDataMap['geo']->content();
             $geo->latitude = $content->attribute('latitude');
             $geo->longitude = $content->attribute('longitude');
-            $geo->address = $content->attribute('address');
+            $geo->address = html_entity_decode($content->attribute('address'));
         }
 
         return $geo;

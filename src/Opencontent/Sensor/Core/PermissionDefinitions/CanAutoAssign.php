@@ -11,7 +11,7 @@ class CanAutoAssign extends UserIs
     public $identifier = 'can_auto_assign';
 
     public function userHasPermission(User $user, Post $post)
-    {
+    {        
         return !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
             && !$this->participantIs(ParticipantRole::ROLE_APPROVER, $user, $post)
             && ($this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post)

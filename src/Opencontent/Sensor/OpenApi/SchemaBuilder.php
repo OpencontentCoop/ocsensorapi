@@ -92,7 +92,7 @@ class SchemaBuilder
                 'license' => new OA\License("GNU General Public License, version 2", "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"),
 
                 //@todo @see https://opensource.zalando.com/restful-api-guidelines/#215
-                'xApiId' => new OpenApiBase\ExtensionProperty('api-id', 'be447a40-ee4f-11e9-81b4-2a2ae2dbcce4'),
+                'xApiId' => new OpenApiBase\ExtensionProperty('api-id', 'abb5bf40-077d-42f5-b0fe-079538e6d650'),
 
                 //@see https://opensource.zalando.com/restful-api-guidelines/#219
                 'xAudience' => new OpenApiBase\ExtensionProperty('audience', 'external-public'),
@@ -1764,7 +1764,7 @@ class SchemaBuilder
                 ];
                 break;
             case 'AttachmentCollection':
-                $schema->title = 'PublicConversation';
+                $schema->title = 'AttachmentCollection';
                 $schema->type = 'object';
                 $schema->properties = [
                     'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'url', 'title' => 'File'])]),
@@ -1827,6 +1827,14 @@ class SchemaBuilder
                             ];
                         }
 
+                        if ($identifier == 'images') {
+                            $properties = [
+                                'type' => 'array',
+                                'title' => $attribute->attribute('name'),
+                                'items' => ['ref' => '#/components/schemas/Image']
+                            ];
+                        }
+
                         if ($identifier == 'type') {
                             $properties['enum'] = $typeEnum;
                             $properties['default'] = $typeEnum[0];
@@ -1834,6 +1842,9 @@ class SchemaBuilder
                         }
 
                         if ($identifier == 'privacy') {
+                            if ($this->apiSettings->getRepository()->getSensorSettings()->get('HidePrivacyChoice')){
+                                continue;
+                            }
                             $identifier = 'is_private';
                             $properties = [
                                 'type' => 'boolean',
@@ -1866,7 +1877,8 @@ class SchemaBuilder
                     'moderation_status' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Moderation status', 'enum' => ['waiting', 'approved']]),
                     'author' => $this->buildSchemaProperty(['type' => 'integer', 'title' => 'Author']),
                     'reporter' => $this->buildSchemaProperty(['type' => 'integer', 'title' => 'Reporter']),
-                    'image' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'url', 'title' => 'Image', 'nullable' => true]),
+                    'image' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'url', 'title' => 'Image (first post image)', 'nullable' => true]),
+                    'images' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'string', 'format' => 'url'], 'title' => 'Images']),
                     'is_comments_allowed' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'Comments allowed']),
                     'address_meta_info' => $this->buildSchemaProperty(['type' => 'object', 'title' => 'Key/value meta informations about geo location']),
                 ];
@@ -2067,6 +2079,7 @@ class SchemaBuilder
                     'first_name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'First name']),
                     'last_name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Last name']),
                     'email' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Email', 'format' => 'email']),
+                    'fiscal_code' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Fiscal Code']),
                 ];
                 break;
 

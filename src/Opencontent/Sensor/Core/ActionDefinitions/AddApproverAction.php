@@ -30,48 +30,52 @@ class AddApproverAction extends ActionDefinition
         $isChanged = false;
         $allowMultipleApprover = $repository->getSensorSettings()->get('AllowMultipleApprover');
 
-        $participantIds = (array)$action->getParameterValue('participant_ids');
         $currentApproverIds = $post->approvers->getParticipantIdList();
-        $currentOwnerIds = $post->owners->getParticipantIdList();
-        $makeApproverIds = array_diff($participantIds, $currentApproverIds);
-        $makeObserverIds = array_diff($currentOwnerIds, $participantIds);
 
-        if ($makeApproverIds == $currentOwnerIds && empty($makeApproverIds)) {
+        $selectedParticipantIds = (array)$action->getParameterValue('participant_ids');
+        if (!$allowMultipleApprover) {
+            $selectedParticipantIds = [array_shift($selectedParticipantIds)];
+        }
+
+        if ($this->arrayIsEqual($selectedParticipantIds, $currentApproverIds)) {
             return;
         }
+
+        $makeObserverIds = [];
+        foreach ($currentApproverIds as $currentApproverId){
+            if (!in_array($currentApproverId, $selectedParticipantIds)){
+                $makeObserverIds[] = $currentApproverId;
+            }
+        }
+
+        $repository->getLogger()->info('selected ' . implode(',', $selectedParticipantIds));
+        $repository->getLogger()->info('current ' . implode(',', $currentApproverIds));
+        $repository->getLogger()->info('make_observer ' . implode(',', $makeObserverIds));
 
         $roles = $repository->getParticipantService()->loadParticipantRoleCollection();
         $roleApprover = $roles->getParticipantRoleById(ParticipantRole::ROLE_APPROVER);
         $roleObserver = $roles->getParticipantRoleById(ParticipantRole::ROLE_OBSERVER);
 
-        if (!$allowMultipleApprover && count($makeApproverIds) > 1) {
-            $makeApproverId = array_shift($makeApproverIds);
-            $makeObserverIds = array_unique(array_merge($makeObserverIds, $makeApproverIds));
-            $makeApproverIds = array($makeApproverId);
-        }
-
-        if (!$allowMultipleApprover){
-            $makeObserverIds = array_unique(array_merge($makeObserverIds, $currentApproverIds));
-        }
-
-        foreach ($makeApproverIds as $id) {
+        foreach ($selectedParticipantIds as $id) {
             $repository->getParticipantService()->addPostParticipant($post, $id, $roleApprover);
             $isChanged = true;
         }
 
-        if ($isChanged) {
-            if (!$allowMultipleApprover) {
-                foreach ($makeObserverIds as $id) {
-                    $repository->getParticipantService()->addPostParticipant(
-                        $post,
-                        $id,
-                        $roleObserver
-                    );
-                }
-            }
+        foreach ($makeObserverIds as $id) {
+            $repository->getParticipantService()->addPostParticipant(
+                $post,
+                $id,
+                $roleObserver
+            );
+            $isChanged = true;
+        }
 
+        if ($isChanged) {
             $post = $repository->getPostService()->refreshPost($post);
-            $this->fireEvent($repository, $post, $user, array('approvers' => $makeApproverIds));
+            $this->fireEvent($repository, $post, $user, array(
+                'approvers' => $selectedParticipantIds,
+                'observers' => $makeObserverIds,
+            ));
         }
     }
 }

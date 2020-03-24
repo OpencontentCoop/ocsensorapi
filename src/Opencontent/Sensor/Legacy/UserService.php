@@ -46,6 +46,7 @@ class UserService extends UserServiceBase
                     $user->email = $ezUser->Email;
                     $user->name = $userObject->name(false, $this->repository->getCurrentLanguage());
                     $user->description = $this->loadUserDescription($userObject);
+                    $user->fiscalCode = $this->loadUserFiscalCode($userObject);
                     $user->isEnabled = $ezUser->isEnabled();
                     $socialUser = \SensorUserInfo::instance($ezUser);
                     $user->behalfOfMode = $socialUser->hasCanBehalfOfMode();
@@ -92,6 +93,7 @@ class UserService extends UserServiceBase
                 'first_name' => (string)$payload['first_name'],
                 'last_name' => (string)$payload['last_name'],
                 'user_account' => $payload['email'].'|'.$payload['email'] .'||md5_password|1', // foo|foo@ez.no|1234|md5_password|0
+                'fiscal_code' => (string)$payload['fiscal_code'],
             ]
         ];
 
@@ -111,6 +113,7 @@ class UserService extends UserServiceBase
             $attributes = [
                 'first_name' => (string)$payload['first_name'],
                 'last_name' => (string)$payload['last_name'],
+                'fiscal_code' => (string)$payload['fiscal_code'],
             ];
             if (\eZContentFunctions::updateAndPublishObject($contentObject, ['attributes' => $attributes])) {
                 if ($payload['email'] != $user->email) {
@@ -139,6 +142,7 @@ class UserService extends UserServiceBase
                     $user->email = $ezUser->Email;
                     $user->name = $userObject->name(false, $this->repository->getCurrentLanguage());
                     $user->description = $this->loadUserDescription($userObject);
+                    $user->fiscalCode = $this->loadUserFiscalCode($userObject);
                     $user->isEnabled = $ezUser->isEnabled();
                     $socialUser = $this->getSensorUser($ezUser);
                     $user->commentMode = !$socialUser->hasDenyCommentMode();
@@ -162,6 +166,17 @@ class UserService extends UserServiceBase
         }
 
         return [];
+    }
+    
+    private function loadUserFiscalCode(eZContentObject $contentObject)
+    {
+        $dataMap = $contentObject->dataMap();
+        $attributeIdentifier = 'fiscal_code';
+        if (isset($dataMap[$attributeIdentifier]) && $dataMap[$attributeIdentifier]->hasContent()) {
+            return $dataMap[$attributeIdentifier]->content();
+        }
+
+        return '';
     }
 
     private function loadUserDescription(eZContentObject $contentObject)

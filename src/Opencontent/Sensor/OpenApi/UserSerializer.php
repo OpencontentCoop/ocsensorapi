@@ -18,6 +18,7 @@ class UserSerializer extends AbstractSerializer
             'id' => (int)$item->id,
             'name' => trim($item->name),
             'description' => trim($item->description),
+            'fiscal_code' => trim($item->fiscalCode),
             'email' => $item->email,
             'last_access_at' => $this->formatDate($item->lastAccessDateTime),
             'is_moderated' => (boolean)$item->moderationMode,

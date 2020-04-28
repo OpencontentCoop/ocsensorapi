@@ -161,6 +161,11 @@ class Post extends Exportable
      */
     public $meta;
 
+    /**
+     * @var integer[]
+     */
+    public $relatedItems = [];
+
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);

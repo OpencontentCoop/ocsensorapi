@@ -116,6 +116,8 @@ class PostBuilder
 
         $post->meta = $this->loadPostMeta();
 
+        $post->relatedItems = $this->loadPostRelatedItems();
+
         return $post;
     }
 
@@ -177,7 +179,7 @@ class PostBuilder
         $expirationInfo = new Post\ExpirationInfo();
         $expirationInfo->creationDateTime = clone $publishedDateTime;
         $expirationInfo->expirationDateTime = clone $expirationDateTime;
-        $diff = $expirationDateTime->setTime(0,0)->diff($publishedDateTime->setTime(0,0));
+        $diff = $expirationDateTime->setTime(0, 0)->diff($publishedDateTime->setTime(0, 0));
         if ($diff instanceof DateInterval) {
             $expirationInfo->days = $diff->days;
         }
@@ -484,5 +486,23 @@ class PostBuilder
         }
 
         return false;
+    }
+
+    protected function loadPostRelatedItems()
+    {
+        $list = [];
+        $relatedObjects = (array)$this->contentObject->relatedContentObjectList(false, false, 0, false,
+            ['AllRelations' => \eZContentFunctionCollection::contentobjectRelationTypeMask(['common']), 'AsObject' => false]
+        );
+        $relatedObjects = array_merge($relatedObjects, (array)$this->contentObject->reverseRelatedObjectList(false, 0, false,
+            ['AllRelations' => \eZContentFunctionCollection::contentobjectRelationTypeMask(['common']), 'AsObject' => false]
+        ));
+        foreach ($relatedObjects as $relatedObject){
+            if ($relatedObject['contentclass_identifier'] == $this->repository->getPostContentClassIdentifier()){
+                $list[] = (int) $relatedObject['id'];
+            }
+        }
+
+        return array_unique($list);
     }
 }

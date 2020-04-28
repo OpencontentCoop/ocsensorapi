@@ -99,6 +99,8 @@ class SolrMapper
             'semester' => 'sensor_semester_i',
             'year' => 'sensor_year_i',
 
+            'related_id_list' => 'sensor_related_id_list_lk',
+
             //'published' => 'published',
             //'modified' => 'modified',
         );
@@ -278,6 +280,8 @@ class SolrMapper
         $data['sensor_quarter_i'] = $this->post->published->format('Y') . $quarter;
         $data['sensor_semester_i'] = $this->post->published->format('Y') . $semester;
         $data['sensor_year_i'] = $this->post->published->format('Y');
+
+        $data['sensor_related_id_list_lk'] = implode(',', $this->post->relatedItems);
 
         $solrStorage = new \ezfSolrStorage();
         $value = $solrStorage->serializeData(serialize($this->post));

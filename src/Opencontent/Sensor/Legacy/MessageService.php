@@ -2,20 +2,14 @@
 
 namespace Opencontent\Sensor\Legacy;
 
+use eZCollaborationItemMessageLink;
+use eZCollaborationSimpleMessage;
+use eZPersistentObject;
 use Opencontent\Sensor\Api\Values\Message;
-use Opencontent\Sensor\Api\Values\Participant;
-use Opencontent\Sensor\Api\Values\User;
-use Opencontent\Sensor\Core\MessageService as MessageServiceBase;
 use Opencontent\Sensor\Api\Values\MessageStruct;
 use Opencontent\Sensor\Api\Values\Post;
-use Opencontent\Sensor\Api\Exception\BaseException;
-use eZPersistentObject;
-use eZCollaborationItem;
-use eZCollaborationSimpleMessage;
-use eZCollaborationItemMessageLink;
-use ezpI18n;
-use eZUser;
-use eZTemplate;
+use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Core\MessageService as MessageServiceBase;
 use Opencontent\Sensor\Legacy\Utils\TimelineTools;
 
 class MessageService extends MessageServiceBase
@@ -301,23 +295,48 @@ class MessageService extends MessageServiceBase
 
     protected function createMessage(MessageStruct $struct)
     {
-        $simpleMessage = eZCollaborationSimpleMessage::create(
-            $this->repository->getSensorCollaborationHandlerTypeString() . '_comment',
-            $struct->text,
-            $struct->creator->id
-        );
-        $simpleMessage->store();
+        $time = time();
+
+        $fields = [
+            'message_type' => $this->repository->getSensorCollaborationHandlerTypeString() . '_comment',
+            'data_text1' => $struct->text,
+            'created' => $time,
+            'modified' => $time,
+            'creator_id' => $struct->creator->id,
+        ];
+
+        // avoid duplicated message in same second
+        $simpleMessage = eZCollaborationSimpleMessage::fetchObject(eZCollaborationSimpleMessage::definition(), null, $fields, true);
+
+        if (!$simpleMessage instanceof eZCollaborationSimpleMessage) {
+            $simpleMessage = new eZCollaborationSimpleMessage($fields);
+            $simpleMessage->store();
+        }
 
         return $simpleMessage;
     }
 
     protected function linkMessage(eZCollaborationSimpleMessage $message, MessageStruct $struct, $type)
     {
-        $db = \eZDB::instance();
-        $db->begin();
-        $messageLink = eZCollaborationItemMessageLink::create($struct->post->internalId, $message->ID, $type, $struct->creator->id);
-        $messageLink->store();
-        $db->commit();
+        $time = time();
+        $fields = [
+            'collaboration_id' => $struct->post->internalId,
+            'message_id' => $message->ID,
+            'message_type' => $type,
+            'participant_id' => $struct->creator->id,
+            'created' => $time,
+            'modified' => $time
+        ];
+
+        // avoid duplicated message in same second
+        $messageLink = eZCollaborationItemMessageLink::fetchObject(eZCollaborationItemMessageLink::definition(), null, $fields, true);
+        if (!$messageLink instanceof eZCollaborationItemMessageLink) {
+            $db = \eZDB::instance();
+            $db->begin();
+            $messageLink = new eZCollaborationItemMessageLink($fields);
+            $messageLink->store();
+            $db->commit();
+        }
 
         $this->repository->getUserService()->setLastAccessDateTime($struct->creator, $struct->post);
     }

@@ -108,7 +108,6 @@ class PostBuilder
             $post->author->name = $authorName;
         }
 
-
         $post->comments = $this->repository->getMessageService()->loadCommentCollectionByPost($post);
         $post->privateMessages = $this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post);
         $post->timelineItems = $this->repository->getMessageService()->loadTimelineItemCollectionByPost($post);
@@ -118,7 +117,43 @@ class PostBuilder
 
         $post->relatedItems = $this->loadPostRelatedItems();
 
+        $this->checkApproversConsistency($post);
+
         return $post;
+    }
+
+    private function checkApproversConsistency(Post $post)
+    {
+        if ($this->collaborationItem->attribute(PostService::COLLABORATION_FIELD_STATUS) !== false) {
+
+            $approversCount = 0;
+            foreach ($post->approvers as $approver){
+                if ($approver->type !== 'removed'){
+                    $approversCount++;
+                }
+            }
+
+            if ($approversCount === 0) {
+                $this->repository->getLogger()->warning("Reset post approvers in post $post->id");
+
+                $scenarioLoader = new ScenarioLoader($this->repository, $post, $post->author);
+                $scenario = $scenarioLoader->getScenario();
+                $roles = $this->repository->getParticipantService()->loadParticipantRoleCollection();
+                foreach ($scenario->getApprovers() as $participantId) {
+                    $this->repository->getParticipantService()->addPostParticipant(
+                        $post,
+                        $participantId,
+                        $roles->getParticipantRoleById(ParticipantRole::ROLE_APPROVER)
+                    );
+                }
+                $post->approvers = Participant\ApproverCollection::fromCollection(
+                    $this->repository->getParticipantService()->loadPostParticipantsByRole(
+                        $post,
+                        ParticipantRole::ROLE_APPROVER
+                    )
+                );
+            }
+        }
     }
 
     protected function loadPostMeta()

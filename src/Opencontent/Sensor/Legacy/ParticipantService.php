@@ -259,6 +259,8 @@ class ParticipantService extends ParticipantServiceBase
         $participant->lastAccessDateTime = Utils::getDateTimeFromTimestamp(
             $participantLink->attribute('last_read')
         );
+        $participant->type = 'removed';
+        $participant->name = '?';
 
         if ($contentObject instanceof eZContentObject) {
             $participant->name = $contentObject->name(

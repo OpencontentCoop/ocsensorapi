@@ -20,9 +20,14 @@ class ReadAction extends ActionDefinition
             && ($post->workflowStatus->is(Post\WorkflowStatus::WAITING)
                 || $post->workflowStatus->is(Post\WorkflowStatus::REOPENED))) {
 
+            $isFirstRead = $post->workflowStatus->is(Post\WorkflowStatus::WAITING);
+
             $repository->getUserService()->setLastAccessDateTime($user, $post);
             $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::READ);
             $repository->getMessageService()->addTimelineItemByWorkflowStatus($post, Post\WorkflowStatus::READ);
+            if ($isFirstRead){
+                $this->fireEvent($repository, $post, $user, [], 'on_approver_first_read');
+            }
             $post = $repository->getPostService()->refreshPost($post);
             $this->fireEvent($repository, $post, $user);
 

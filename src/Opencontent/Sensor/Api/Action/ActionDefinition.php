@@ -74,10 +74,10 @@ abstract class ActionDefinition
         return $action;
     }
 
-    protected function fireEvent(Repository $repository, Post $post, User $user, $eventParameters = array())
+    protected function fireEvent(Repository $repository, Post $post, User $user, $eventParameters = array(), $eventIdentifier = null)
     {
         $event = new Event();
-        $event->identifier = 'on_' . $this->identifier;
+        $event->identifier = $eventIdentifier ? $eventIdentifier : 'on_' . $this->identifier;
         $event->post = $post;
         $event->user = $user;
         $event->parameters = $eventParameters;

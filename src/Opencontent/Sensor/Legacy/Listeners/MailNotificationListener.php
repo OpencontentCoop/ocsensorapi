@@ -137,8 +137,10 @@ class MailNotificationListener extends AbstractListener
         }elseif ($participant->type == 'group') {
             try {
                 $group = $this->repository->getGroupService()->loadGroup($participant->id);
-                if ($group instanceof Group && MailValidator::validate($group->email)) {
-                    $addresses[] = $group->email;
+                if ($group instanceof Group) {
+                    if (MailValidator::validate($group->email)) {
+                        $addresses[] = $group->email;
+                    }
                     $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*');
                     $operators = $operatorResult['items'];
                     $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
@@ -153,7 +155,7 @@ class MailNotificationListener extends AbstractListener
                 $this->repository->getLogger()->error($e->getMessage(), ['participant' => $participant->name, 'notification' => $notificationIdentifier]);
             }
         }
-        return $addresses;
+        return array_unique($addresses);
     }
 
     /**

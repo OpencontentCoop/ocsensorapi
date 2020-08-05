@@ -10,6 +10,7 @@ use Opencontent\Sensor\Api\Values\User;
 abstract class UserIs extends PermissionDefinition
 {
     /**
+     * Verifica se $user è compreso negli utenti del partecipante con il ruolo $roleId
      * @param $roleId
      * @param User $user
      * @param Post $post
@@ -22,6 +23,13 @@ abstract class UserIs extends PermissionDefinition
         return $collection->getUserById($user->id);
     }
 
+    /**
+     * Verifica se $user partecipa con il ruolo $roleId
+     * @param $roleId
+     * @param User $user
+     * @param Post $post
+     * @return bool
+     */
     public function participantIs($roleId, User $user, Post $post)
     {
         $collection = $post->participants->getParticipantsByRole($roleId);

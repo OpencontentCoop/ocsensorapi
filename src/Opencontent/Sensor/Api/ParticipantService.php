@@ -62,6 +62,13 @@ interface ParticipantService
      * @param int $id
      *
      */
+    public function removePostParticipant(Post $post, $id);
+
+    /**
+     * @param Post $post
+     * @param int $id
+     *
+     */
     public function restorePostParticipant(Post $post, $id);
 
     public function activatePostParticipants(Post $post);

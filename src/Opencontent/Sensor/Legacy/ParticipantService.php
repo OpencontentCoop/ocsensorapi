@@ -170,6 +170,28 @@ class ParticipantService extends ParticipantServiceBase
         }
     }
 
+    public function removePostParticipant(Post $post, $id)
+    {
+        $db = \eZDB::instance();
+        $db->begin();
+        $link = eZCollaborationItemParticipantLink::fetch(
+            $post->internalId,
+            $id
+        );
+        if ($link instanceof eZCollaborationItemParticipantLink) {
+            $link->remove();
+        }
+        $groupLink = eZPersistentObject::fetchObject(
+            eZCollaborationItemGroupLink::definition(),
+            null,
+            ['collaboration_id' => $post->internalId, 'user_id' => $id]
+        );
+        if ($groupLink instanceof eZCollaborationItemGroupLink) {
+            $groupLink->remove();
+        }
+        $db->commit();
+    }
+
     public function restorePostParticipant(Post $post, $id)
     {
         /** @var eZCollaborationItemGroupLink $group */

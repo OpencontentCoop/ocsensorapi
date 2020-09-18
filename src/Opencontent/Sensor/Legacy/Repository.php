@@ -286,4 +286,12 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
         $this->listeners[$event][$priority][] = $listener;
         $this->eventService = null;
     }
+
+    public function getPermissionService()
+    {
+        if ($this->permissionService === null) {
+            $this->permissionService = new PermissionService($this, $this->permissionDefinitions);
+        }
+        return $this->permissionService;
+    }
 }

@@ -20,14 +20,24 @@ class FixAction extends ActionDefinition
 
     public function run(Repository $repository, Action $action, Post $post, User $user)
     {
+        $roles = $repository->getParticipantService()->loadParticipantRoleCollection();
+        $roleObserver = $roles->getParticipantRoleById(ParticipantRole::ROLE_OBSERVER);
+        $allowMultipleOwner = $repository->getSensorSettings()->get('AllowMultipleOwner');
         if ($post->owners->getUserById($user->id)) {
-            $roles = $repository->getParticipantService()->loadParticipantRoleCollection();
-            $roleObserver = $roles->getParticipantRoleById(ParticipantRole::ROLE_OBSERVER);
             $repository->getParticipantService()->addPostParticipant(
                 $post,
                 $post->owners->getParticipantByUserId($user->id)->id,
                 $roleObserver
             );
+            if (!$allowMultipleOwner){
+                foreach ($post->owners as $owner) {
+                    $repository->getParticipantService()->addPostParticipant(
+                        $post,
+                        $owner->id,
+                        $roleObserver
+                    );
+                }
+            }
         }
         $repository->getMessageService()->addTimelineItemByWorkflowStatus($post, Post\WorkflowStatus::FIXED);
         if ($repository->getParticipantService()->loadPostParticipantsByRole($post, ParticipantRole::ROLE_OWNER)->count() == 0) {

@@ -3,6 +3,7 @@
 namespace Opencontent\Sensor\Legacy\SearchService;
 
 use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Legacy\Utils;
 
@@ -74,6 +75,7 @@ class SolrMapper
             'approver_name_list' => 'sensor_approver_name_list_lk',
             'owner_id_list' => 'sensor_owner_id_list_lk',
             'owner_name_list' => 'sensor_owner_name_list_lk',
+            'owner_user_id_list' => 'sensor_owner_user_id_list_lk',
             'observer_id_list' => 'sensor_observer_id_list_lk',
             'observer_name_list' => 'sensor_observer_name_list_lk',
             'history_owner_name' => 'sensor_history_owner_name_lk',
@@ -228,9 +230,14 @@ class SolrMapper
 
         if ($this->post->owners instanceof \Opencontent\Sensor\Api\Values\Participant\OwnerCollection) {
             $data['sensor_owner_id_list_lk'] = implode(',', $this->post->owners->getUserIdList());
+            $data['sensor_owner_name_list_lk'] = [];
             $participantNameList = array();
-            foreach ($this->post->owners->participants as $participant)
+            foreach ($this->post->owners->participants as $participant) {
                 $participantNameList[] = $participant->name;
+                if ($participant->type == Participant::TYPE_USER) {
+                    $data['sensor_owner_user_id_list_lk'][] = $participant->id;
+                }
+            }
             $data['sensor_owner_name_list_lk'] = implode(',', $participantNameList);
         }
 

@@ -8,14 +8,9 @@ use Opencontent\Sensor\Api\Values\User;
 interface UserService
 {
     /**
-     * @param $postId
-     *
-     * @return Post
-     * @throw \Exception
-     *
      * @param $id
-     *
      * @return User
+     * @throw \Exception
      */
     public function loadUser($id);
 

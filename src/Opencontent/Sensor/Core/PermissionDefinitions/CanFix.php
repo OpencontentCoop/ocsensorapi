@@ -13,7 +13,7 @@ class CanFix extends UserIs
 
     public function userHasPermission(User $user, Post $post)
     {        
-        return $this->userIs(ParticipantRole::ROLE_OWNER, $user, $post)
+        return $this->participantIs(ParticipantRole::ROLE_OWNER, $user, $post)
             && $post->workflowStatus->is(Post\WorkflowStatus::ASSIGNED);
     }
 }

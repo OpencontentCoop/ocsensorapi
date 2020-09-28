@@ -34,7 +34,7 @@ class AddObserverAction extends ActionDefinition
         $currentApproverIds = [];
         /** @var Participant $approver */
         foreach ($post->approvers as $approver){
-            if ($approver->type == 'user'){
+            if ($approver->type == Participant::TYPE_USER){
                 $currentApproverIds[] = $approver->id;
             }
         }

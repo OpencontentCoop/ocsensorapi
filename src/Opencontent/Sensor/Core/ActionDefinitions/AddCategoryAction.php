@@ -8,11 +8,14 @@ use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\Group;
+use Opencontent\Sensor\Api\Values\Operator;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\Participant\ApproverCollection;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Legacy\SearchService;
 
 class AddCategoryAction extends ActionDefinition
 {
@@ -68,6 +71,11 @@ class AddCategoryAction extends ActionDefinition
                     $approverIdList = array_merge($approverIdList, $category->groupsIdList);
                 }
 
+                $ownerGroupsIdList = array();
+                foreach ($post->categories as $category) {
+                    $ownerGroupsIdList = array_merge($ownerGroupsIdList, $category->ownerGroupsIdList);
+                }
+
                 $ownerIdList = array();
                 foreach ($post->categories as $category) {
                     $ownerIdList = array_merge($ownerIdList, $category->ownersIdList);
@@ -82,6 +90,7 @@ class AddCategoryAction extends ActionDefinition
                 }
 
                 if (!empty($observerIdList)) {
+                    $repository->getLogger()->debug('Add observer by category', ['observers' => $observerIdList]);
                     $action = new Action();
                     $action->identifier = 'add_observer';
                     $action->setParameter('participant_ids', $observerIdList);
@@ -89,37 +98,43 @@ class AddCategoryAction extends ActionDefinition
                     $post = $repository->getPostService()->loadPost($post->id);
                 }
 
+                if (empty($ownerIdList)
+                    && empty($ownerGroupsIdList)
+                    && !empty($approverIdList)
+                    && $repository->getSensorSettings()->get('CategoryAutomaticAssignToRandomOperator')
+                ) {
+                    $luckyOwnerId = $this->getRandomOperatorFromGroups($repository, $approverIdList);
+                    $repository->getLogger()->debug('Find random operator by approver', ['approvers' => $approverIdList, 'random' => $luckyOwnerId]);
+                    if ($luckyOwnerId){
+                        $ownerIdList = [$luckyOwnerId];
+                    }
+                }
+
+                if (!empty($ownerIdList) || !empty($ownerGroupsIdList)) {
+                    if (empty($ownerIdList)) {
+                        $luckyOwnerId = $this->getRandomOperatorFromGroups($repository, $ownerGroupsIdList);
+                        if ($luckyOwnerId){
+                            $ownerIdList = [$luckyOwnerId];
+                        }
+                    }
+                    $repository->getLogger()->debug('Add owners by category', ['owners' => $ownerIdList, 'owner_groups' => $ownerGroupsIdList]);
+                    $action = new Action();
+                    $action->identifier = 'assign';
+                    $action->setParameter('participant_ids', $ownerIdList);
+                    $action->setParameter('group_ids', $ownerGroupsIdList);
+                    $repository->getActionService()->runAction($action, $post);
+                    $post = $repository->getPostService()->loadPost($post->id);
+                }
 
                 if (!empty($approverIdList)) {
-
-                    //@todo check if group contains users
-
+                    $repository->getLogger()->debug('Add approver by category', ['approvers' => $observerIdList]);
                     $action = new Action();
                     $action->identifier = 'add_approver';
                     $action->setParameter('participant_ids', $approverIdList);
                     $repository->getActionService()->runAction($action, $post);
                     $post = $repository->getPostService()->loadPost($post->id);
-
-                    if (empty($ownerIdList)) {
-                        $ownerId = $this->getRandomOperatorFromApprovers($repository, $post);
-                    } else {
-                        $ownerId = array_shift($ownerIdList);
-                        $repository->getLogger()->info('Select category owner: ' . $ownerId);
-                    }
-
-                    if ($ownerId) {
-                        $action = new Action();
-                        $action->identifier = 'assign';
-                        $action->setParameter('participant_ids', [$ownerId]);
-                        // run action without check permission because current approver is now observer
-                        $repository->getActionService()->loadActionDefinitionByIdentifier($action->identifier)->run(
-                            $repository,
-                            $action,
-                            $post,
-                            $repository->getCurrentUser()
-                        );
-                    }
                 }
+
                 $repository->getUserService()->setLastAccessDateTime($user, $post);
             }
         } else {
@@ -127,24 +142,37 @@ class AddCategoryAction extends ActionDefinition
         }
     }
 
-    private function getRandomOperatorFromApprovers(Repository $repository, Post $post)
+    private function getRandomOperatorFromGroups(Repository $repository, $ownerGroupsIdList)
     {
         if ($repository->getSensorSettings()->get('CategoryAutomaticAssignToRandomOperator')) {
-            $currentApprovers = [];
-            /** @var Participant $approver */
-            foreach ($post->approvers as $approver) {
-                if ($approver->type = 'group') {
-                    $currentApprovers = array_merge($currentApprovers, $approver->users);
+            foreach ($ownerGroupsIdList as $ownerGroupsId){
+                $group = $repository->getGroupService()->loadGroup($ownerGroupsId);
+                if ($group instanceof Group){
+                    $operatorResult = $repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*');
+                    $operators = $operatorResult['items'];
+                    $this->recursiveLoadOperatorsByGroup($repository, $group, $operatorResult, $operators);
                 }
             }
 
-            if (!empty($currentApprovers)) {
-                $luckyUser = $currentApprovers[array_rand($currentApprovers, 1)];
-                $repository->getLogger()->warning('Select lucky operator as owner: ' . $luckyUser->name);
+            if (!empty($operators)) {
+                /** @var Operator $luckyUser */
+                $luckyUser = $operators[array_rand($operators, 1)];
+                $repository->getLogger()->warning('Select lucky operator as owner: ' . $luckyUser->name . ' (' . $luckyUser->id . ')');
                 return $luckyUser->id;
             }
         }
 
         return false;
+    }
+
+    private function recursiveLoadOperatorsByGroup(Repository $repository, Group $group, $operatorResult, &$operators)
+    {
+        if ($operatorResult['next']) {
+            $operatorResult = $repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next']);
+            $operators = array_merge($operatorResult['items'], $operators);
+            $this->recursiveLoadOperatorsByGroup($repository, $group, $operatorResult, $operators);
+        }
+
+        return $operators;
     }
 }

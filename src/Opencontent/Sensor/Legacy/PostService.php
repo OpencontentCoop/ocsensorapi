@@ -320,6 +320,7 @@ class PostService extends PostServiceBase
 
     public function refreshPost(Post $post, $modifyTimestamp = true)
     {
+        $this->repository->getLogger()->debug($modifyTimestamp ? 'Hard refresh post' : 'Refresh post');
         eZContentObject::clearCache($post->id);
         $timestamp = time();
         $contentObject = $this->getContentObject($post);

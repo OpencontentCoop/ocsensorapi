@@ -14,7 +14,7 @@ class CanAddAttachment extends UserIs
     {
         return
             !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
-            && ( $this->userIs(ParticipantRole::ROLE_OWNER, $user, $post)
+            && ( $this->participantIs(ParticipantRole::ROLE_OWNER, $user, $post)
                 || $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post) );
     }
 }

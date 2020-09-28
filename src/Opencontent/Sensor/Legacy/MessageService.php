@@ -51,6 +51,15 @@ class MessageService extends MessageServiceBase
      */
     protected $responsesByPost = array();
 
+    private function clearMemoryCache($post)
+    {
+        unset($this->countMessagesByPost[$post->internalId]);
+        unset($this->commentsByPost[$post->internalId]);
+        unset($this->privateMessagesByPost[$post->internalId]);
+        unset($this->timelineItemsByPost[$post->internalId]);
+        unset($this->responsesByPost[$post->internalId]);
+    }
+
     public function loadCommentCollectionByPost(Post $post)
     {
         $this->internalLoadMessagesByPost($post);
@@ -230,6 +239,7 @@ class MessageService extends MessageServiceBase
             $parameters = $struct->creator->id;
         $struct->text = TimelineTools::setText($status, $parameters);
         $this->createTimelineItem($struct);
+        $this->clearMemoryCache($post);
     }
 
 

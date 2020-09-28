@@ -4,7 +4,6 @@ namespace Opencontent\Sensor\Legacy\Listeners;
 
 use League\Event\AbstractListener;
 use League\Event\EventInterface;
-use Opencontent\QueryLanguage\Parser\Exception;
 use Opencontent\Sensor\Api\Values\Event as SensorEvent;
 use Opencontent\Sensor\Api\Values\Group;
 use Opencontent\Sensor\Api\Values\NotificationType;
@@ -17,6 +16,7 @@ use Opencontent\Sensor\Legacy\Utils\MailValidator;
 
 class MailNotificationListener extends AbstractListener
 {
+    private static $queue = [];
     protected $repository;
 
     public function __construct(Repository $repository)
@@ -35,6 +35,7 @@ class MailNotificationListener extends AbstractListener
                 $roles = $this->repository->getParticipantService()->loadParticipantRoleCollection();
                 /** @var ParticipantRole $role */
                 foreach ($roles as $role) {
+                    //$this->repository->getLogger()->debug("Build mail for {$role->name} users");
                     $mailData = $this->buildMailDataToRole($param, $notificationType, $role->identifier);
                     $addresses = [];
                     /** @var Participant $participant */
@@ -107,6 +108,8 @@ class MailNotificationListener extends AbstractListener
                     $mailParameters['content_type'] = 'text/html';
                 }
 
+                //$mailParameters['sensor_post_id'] = $event->post->id;
+
                 return [
                     'subject' => $mailSubject,
                     'body' => $mailBody,
@@ -124,17 +127,36 @@ class MailNotificationListener extends AbstractListener
         }
     }
 
+    protected function getNotificationMailTemplate($participantRole)
+    {
+        if ($participantRole == ParticipantRole::ROLE_APPROVER) {
+
+            return 'approver.tpl';
+        } else if ($participantRole == ParticipantRole::ROLE_AUTHOR) {
+
+            return 'author.tpl';
+        } else if ($participantRole == ParticipantRole::ROLE_OBSERVER) {
+
+            return 'observer.tpl';
+        } else if ($participantRole == ParticipantRole::ROLE_OWNER) {
+
+            return 'owner.tpl';
+        }
+
+        return false;
+    }
+
     protected function getAddressFromParticipant(Participant $participant, $notificationIdentifier)
     {
         $addresses = [];
-        if ($participant->type == 'user') {
+        if ($participant->type == Participant::TYPE_USER) {
             foreach ($participant->users as $user) {
                 $userNotifications = $this->repository->getNotificationService()->getUserNotifications($user);
                 if (in_array($notificationIdentifier, $userNotifications) && MailValidator::validate($user->email)) {
                     $addresses[] = $user->email;
                 }
             }
-        }elseif ($participant->type == 'group') {
+        } elseif ($participant->type == Participant::TYPE_GROUP) {
             try {
                 $group = $this->repository->getGroupService()->loadGroup($participant->id);
                 if ($group instanceof Group) {
@@ -151,7 +173,7 @@ class MailNotificationListener extends AbstractListener
                         }
                     }
                 }
-            }catch (\Exception $e){
+            } catch (\Exception $e) {
                 $this->repository->getLogger()->error($e->getMessage(), ['participant' => $participant->name, 'notification' => $notificationIdentifier]);
             }
         }
@@ -178,34 +200,85 @@ class MailNotificationListener extends AbstractListener
 
     protected function sendMail($addresses, $mailSubject, $mailBody, $mailParameters)
     {
-        /** @var \eZMailNotificationTransport $transport */
-        $transport = \eZNotificationTransport::instance('ezmail');
-        return $transport->send(
-            $addresses,
-            $mailSubject,
-            $mailBody,
-            null,
-            $mailParameters
-        );
+        self::$queue[] = $this->prepareMail($addresses, $mailSubject, $mailBody, $mailParameters);
 
+        return true;
     }
 
-    protected function getNotificationMailTemplate($participantRole)
+    /**
+     * @return \eZMail[]
+     */
+    public static function getQueue()
     {
-        if ($participantRole == ParticipantRole::ROLE_APPROVER) {
+        return self::$queue;
+    }
 
-            return 'approver.tpl';
-        } else if ($participantRole == ParticipantRole::ROLE_AUTHOR) {
+    public static function clearQueue()
+    {
+        self::$queue = [];
+    }
 
-            return 'author.tpl';
-        } else if ($participantRole == ParticipantRole::ROLE_OBSERVER) {
+    private function prepareMail($addressList, $subject, $body, $parameters = array())
+    {
+        $ini = \eZINI::instance();
+        $mail = new \eZMail();
+        $addressList = $this->prepareAddressString($addressList, $mail);
 
-            return 'observer.tpl';
-        } else if ($participantRole == ParticipantRole::ROLE_OWNER) {
-
-            return 'owner.tpl';
+        if ($addressList == false) {
+            $this->repository->getLogger()->error('Error with receiver');
+            return false;
         }
 
+        $notificationINI = \eZINI::instance('notification.ini');
+        $emailSender = $notificationINI->variable('MailSettings', 'EmailSender');
+        if (!$emailSender)
+            $emailSender = $ini->variable('MailSettings', 'EmailSender');
+        if (!$emailSender)
+            $emailSender = $ini->variable("MailSettings", "AdminEmail");
+
+        foreach ($addressList as $index => $addressItem) {
+            $mail->extractEmail($addressItem, $email, $name);
+            if ($index == 0) {
+                $mail->addReceiver($email, $name);
+            }else{
+                $mail->addCc($email, $name);
+            }
+        }
+        $mail->setSender($emailSender);
+        $mail->setSubject($subject);
+        $mail->setBody($body);
+
+//        if (isset($parameters['sensor_post_id']))
+//            $mail->addExtraHeader('X-Sensor-Post-ID', $parameters['sensor_post_id']);
+        if (isset($parameters['message_id']))
+            $mail->addExtraHeader('Message-ID', $parameters['message_id']);
+        if (isset($parameters['references']))
+            $mail->addExtraHeader('References', $parameters['references']);
+        if (isset($parameters['reply_to']))
+            $mail->addExtraHeader('In-Reply-To', $parameters['reply_to']);
+        if (isset($parameters['from']))
+            $mail->setSenderText($parameters['from']);
+        if (isset($parameters['content_type']))
+            $mail->setContentType($parameters['content_type']);
+
+        return $mail;
+    }
+
+    private function prepareAddressString($addressList, $mail)
+    {
+        if (is_array($addressList)) {
+            $validatedAddressList = array();
+            foreach ($addressList as $address) {
+                if ($mail->validate($address)) {
+                    $validatedAddressList[] = $address;
+                }
+            }
+            return $validatedAddressList;
+        } else if (strlen($addressList) > 0) {
+            if ($mail->validate($addressList)) {
+                return $addressList;
+            }
+        }
         return false;
     }
 

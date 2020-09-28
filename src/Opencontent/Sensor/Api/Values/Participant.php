@@ -13,6 +13,12 @@ use DateTime;
  */
 class Participant extends Exportable implements \IteratorAggregate
 {
+    const TYPE_USER = 'user';
+
+    const TYPE_GROUP = 'group';
+
+    const TYPE_REMOVED = 'removed';
+
     /**
      * @var integer
      */

@@ -7,6 +7,7 @@ use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
 use Opencontent\Sensor\Api\Repository;
 use Opencontent\Sensor\Api\Values\Participant;
+use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 
@@ -29,8 +30,14 @@ class RemoveObserverAction extends ActionDefinition
     {
         $participantId = (integer)$action->getParameterValue('participant_id');
         $observer = $post->observers->getById($participantId);
+        $roles = $repository->getParticipantService()->loadParticipantRoleCollection();
+        $roleStandard = $roles->getParticipantRoleById(ParticipantRole::ROLE_STANDARD);
         if ($observer instanceof Participant){
-            $repository->getParticipantService()->removePostParticipant($post, $observer->id);
+            $repository->getParticipantService()->addPostParticipant(
+                $post,
+                $observer->id,
+                $roleStandard
+            );
             $post = $repository->getPostService()->refreshPost($post);
             $this->fireEvent($repository, $post, $user);
         }

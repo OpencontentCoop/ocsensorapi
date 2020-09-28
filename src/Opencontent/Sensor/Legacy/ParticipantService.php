@@ -48,11 +48,11 @@ class ParticipantService extends ParticipantServiceBase
         if ($this->participantRoles === null) {
             $this->participantRoles = new ParticipantRoleCollection();
 
-            //$role = new ParticipantRole();
-            //$role->id = eZCollaborationItemParticipantLink::ROLE_STANDARD;
-            //$role->identifier = ParticipantRole::ROLE_STANDARD;
-            //$role->name = ezpI18n::tr('sensor/role_name', 'Standard');
-            //$this->participantRoles->addParticipantRole($role);
+            $role = new ParticipantRole();
+            $role->id = eZCollaborationItemParticipantLink::ROLE_STANDARD;
+            $role->identifier = ParticipantRole::ROLE_STANDARD;
+            $role->name = ezpI18n::tr('sensor/role_name', 'Standard');
+            $this->participantRoles->addParticipantRole($role);
 
             $role = new ParticipantRole();
             $role->id = eZCollaborationItemParticipantLink::ROLE_OBSERVER;
@@ -259,8 +259,9 @@ class ParticipantService extends ParticipantServiceBase
                         $participantLink,
                         $object
                     );
-
-                    $this->participantsByPost[$postInternalId]->addParticipant($participant);
+                    if ($participant->type != Participant::TYPE_REMOVED) {
+                        $this->participantsByPost[$postInternalId]->addParticipant($participant);
+                    }
                 }
             }
         }
@@ -281,7 +282,7 @@ class ParticipantService extends ParticipantServiceBase
         $participant->lastAccessDateTime = Utils::getDateTimeFromTimestamp(
             $participantLink->attribute('last_read')
         );
-        $participant->type = 'removed';
+        $participant->type = Participant::TYPE_REMOVED;
         $participant->name = '?';
 
         if ($contentObject instanceof eZContentObject) {
@@ -293,7 +294,7 @@ class ParticipantService extends ParticipantServiceBase
                 $user = $this->repository->getUserService()->loadUser($contentObject->attribute('id'));
                 $participant->addUser($user);
                 $participant->description = $user->description;
-                $participant->type = 'user';
+                $participant->type = Participant::TYPE_USER;
 
             } elseif ($participantLink->attribute('participant_type') == eZCollaborationItemParticipantLink::TYPE_USERGROUP) {
 
@@ -307,17 +308,20 @@ class ParticipantService extends ParticipantServiceBase
                     }
 
                 } catch (\Exception $e) {
-                    /** @var \eZContentObjectTreeNode $child */
-                    foreach ($contentObject->mainNode()->children() as $child) {
-                        $participant->addUser(
-                            $this->repository->getUserService()->loadUser(
-                                $child->attribute('contentobject_id')
-                            )
-                        );
+                    $contentNode = $contentObject->mainNode();
+                    if ($contentNode instanceof \eZContentObjectTreeNode) {
+                        /** @var \eZContentObjectTreeNode $child */
+                        foreach ($contentNode->children() as $child) {
+                            $participant->addUser(
+                                $this->repository->getUserService()->loadUser(
+                                    $child->attribute('contentobject_id')
+                                )
+                            );
+                        }
                     }
                 }
 
-                $participant->type = 'group';
+                $participant->type = Participant::TYPE_GROUP;
             }
         }
 

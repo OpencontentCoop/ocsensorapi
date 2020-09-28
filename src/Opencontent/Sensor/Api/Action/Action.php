@@ -2,8 +2,6 @@
 
 namespace Opencontent\Sensor\Api\Action;
 
-use Opencontent\Sensor\Api\Action\ActionParameter;
-
 class Action
 {
     public $identifier;

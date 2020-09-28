@@ -5,6 +5,7 @@ namespace Opencontent\Sensor\Core;
 use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\ActionService as ActionServiceInterface;
+use Opencontent\Sensor\Api\Values\Event;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Api\Exception\BaseException;
@@ -31,6 +32,8 @@ class ActionService implements ActionServiceInterface
      * @var User
      */
     protected $user;
+
+    protected $currentAction;
 
     /**
      * @param Repository $repository
@@ -77,12 +80,58 @@ class ActionService implements ActionServiceInterface
      */
     public function runAction(Action $action, Post $post)
     {
+        if ($this->currentAction === null){
+            $this->currentAction = $action->identifier;
+            $event = new Event();
+            $event->identifier = 'before_run_action';
+            $event->post = $post;
+            $event->user = $this->repository->getCurrentUser();
+            $event->parameters = [
+                'action' => $action->identifier,
+                'is_main' => true,
+            ];
+            $this->repository->getEventService()->fire($event);
+        }else{
+            $event = new Event();
+            $event->identifier = 'before_run_action';
+            $event->post = $post;
+            $event->user = $this->repository->getCurrentUser();
+            $event->parameters = [
+                'action' => $action->identifier,
+                'is_main' => false,
+            ];
+            $this->repository->getEventService()->fire($event);
+        }
+
         $this->loadActionDefinitionByIdentifier($action->identifier)->run(
             $this->repository,
             $this->dryRunAction($action, $post),
             $post,
             $this->user
         );
+
+        if ($action->identifier == $this->currentAction){
+            $this->currentAction = null;
+            $event = new Event();
+            $event->identifier = 'after_run_action';
+            $event->post = $post;
+            $event->user = $this->repository->getCurrentUser();
+            $event->parameters = [
+                'action' => $action->identifier,
+                'is_main' => true,
+            ];
+            $this->repository->getEventService()->fire($event);
+        }else{
+            $event = new Event();
+            $event->identifier = 'after_run_action';
+            $event->post = $post;
+            $event->user = $this->repository->getCurrentUser();
+            $event->parameters = [
+                'action' => $action->identifier,
+                'is_main' => false,
+            ];
+            $this->repository->getEventService()->fire($event);
+        }
     }
 
     public function setUser(User $user)

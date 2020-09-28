@@ -71,6 +71,12 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
             }
         }
 
+        if (isset($content['data'][$language]['owner_group'])) {
+            foreach ($content['data'][$language]['owner_group'] as $item) {
+                $category->ownerGroupsIdList[] = (int)$item['id'];
+            }
+        }
+
         if (isset($content['data'][$language]['observer'])) {
             foreach ($content['data'][$language]['observer'] as $item) {
                 $category->observersIdList[] = (int)$item['id'];

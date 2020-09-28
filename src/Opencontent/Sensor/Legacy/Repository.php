@@ -27,7 +27,7 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
 
     protected function __construct()
     {
-        $this->addListener('*', new Listeners\LogListener($this));
+        //$this->addListener('*', new Listeners\LogListener($this));
     }
 
     /**
@@ -275,6 +275,7 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
         foreach ($this->listeners as $event => $priorityListeners){
             foreach ($priorityListeners as $priority => $listeners) {
                 foreach ($listeners as $listener) {
+                    //$this->getLogger()->debug($event . ' ' . $priority . ' ' . get_class($listener));
                     $listenerAcceptor->addListener($event, $listener, $priority);
                 }
             }
@@ -284,6 +285,7 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
     public function addListener($event, ListenerInterface $listener, $priority = ListenerAcceptorInterface::P_NORMAL)
     {
         $this->listeners[$event][$priority][] = $listener;
+        krsort($this->listeners[$event]);
         $this->eventService = null;
     }
 

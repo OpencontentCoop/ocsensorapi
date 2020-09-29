@@ -10,7 +10,7 @@
   "require": {
     "psr/log": "*",
     "erasys/openapi-php": "*",
-    "league/event": "*"
+    "league/event": "2.*"
   },
   "repositories": [
     {

@@ -145,7 +145,7 @@ class AssignAction extends ActionDefinition
             $repository->getLogger()->debug('Found owner: make post assigned', ['post' => $post->id]);
             $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::ASSIGNED);
 
-        // se non c'è alcun utente incaricato né osservatore riporto il post in da assegnare
+        // se non c'è alcun utente in $userChanges riporto il post in da assegnare
         }elseif (!(empty($userChanges['owners']) && empty($userChanges['observers'])) && $post->workflowStatus->code == Post\WorkflowStatus::ASSIGNED){
             $repository->getLogger()->debug('No owners found: make post read', ['post' => $post->id]);
             $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::READ);
@@ -169,7 +169,7 @@ class AssignAction extends ActionDefinition
             $this->fireEvent($repository, $post, $user, array('owners' => $userChanges['owners']), 'on_assign');
         }
 
-        // se ci sono nuovi gruppi incaricati e non ci sono nuovi utenti incaricati emetto l'evento on_assign (anche per l'azione AutoAssignAction)
+        // se ci sono nuovi gruppi incaricati e non ci sono nuovi utenti incaricati emetto l'evento on_group_assign
         if (!empty($groupChanges['owners']) && empty($userChanges['owners'])) {
             $this->fireEvent($repository, $post, $user, array('owner_groups' => $groupChanges['owners']), 'on_group_assign');
         }

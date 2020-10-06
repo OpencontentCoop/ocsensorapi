@@ -15,7 +15,10 @@ class Logger extends AbstractLogger implements LoggerInterface
                 $message .= " ($key => " . $this->getStringValue($value) . ")";
             }
         }
-        eZLog::write("[$level] $message", 'sensor.log');
+        $varDir = \eZINI::instance()->variable( 'FileSettings', 'VarDir' );
+        $logDir = $varDir . '/log';
+
+        eZLog::write("[$level] $message", 'sensor.log', $logDir);
     }
 
     private function getStringValue($value)

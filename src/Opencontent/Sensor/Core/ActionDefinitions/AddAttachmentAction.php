@@ -33,6 +33,6 @@ class AddAttachmentAction extends ActionDefinition
 
         $repository->getPostService()->addAttachment($post, $files);
         $post = $repository->getPostService()->refreshPost($post);
-        $this->fireEvent($repository, $post, $user, array('files' => $files));
+        $this->fireEvent($repository, $post, $user, array('files' => array_column($files, 'filename')));
     }
 }

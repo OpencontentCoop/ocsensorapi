@@ -23,10 +23,15 @@ class SendMailListener extends AbstractListener
             if ($param->identifier == 'after_run_action' && $param->parameters['is_main']) {
                 $queue = MailNotificationListener::getQueue();
                 foreach ($queue as $mail) {
+                    $receivers = array_merge(
+                        array_column($mail->ReceiverElements, 'email'),
+                        array_column($mail->CcElements, 'email'),
+                        array_column($mail->BccElements, 'email')
+                    );
                     if (!\eZMailTransport::send($mail)) {
-                        $this->repository->getLogger()->error("Fail sending", ['subject' => $mail->Subject, 'receivers' => array_column($mail->ReceiverElements, 'email')]);
+                        $this->repository->getLogger()->error("Fail sending", ['subject' => $mail->Subject, 'receivers' => $receivers]);
                     }else{
-                        $this->repository->getLogger()->info("Sent mail", ['subject' => $mail->Subject, 'receivers' => array_column($mail->ReceiverElements, 'email')]);
+                        $this->repository->getLogger()->info("Sent mail", ['subject' => $mail->Subject, 'receivers' => $receivers]);
                     }
                 }
                 MailNotificationListener::clearQueue();

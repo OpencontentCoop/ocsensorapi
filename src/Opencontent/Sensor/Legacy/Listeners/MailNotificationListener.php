@@ -35,18 +35,22 @@ class MailNotificationListener extends AbstractListener
                 $roles = $this->repository->getParticipantService()->loadParticipantRoleCollection();
                 /** @var ParticipantRole $role */
                 foreach ($roles as $role) {
-                    //$this->repository->getLogger()->debug("Build mail for {$role->name} users");
-                    $mailData = $this->buildMailDataToRole($param, $notificationType, $role->identifier);
-                    $addresses = [];
-                    /** @var Participant $participant */
-                    foreach ($this->repository->getParticipantService()->loadPostParticipantsByRole($param->post, $role->identifier) as $participant) {
-                        $addresses = array_merge($addresses, $this->getAddressFromParticipant($participant, $param->identifier));
-                    }
-                    $addresses = array_unique($addresses);
-                    if ($mailData && !empty($addresses)) {
-                        if ($this->sendMail($addresses, $mailData['subject'], $mailData['body'], $mailData['parameters'])) {
-                            $this->repository->getLogger()->info("Sent notification mail to {$role->name} addresses: " . implode(',', $addresses));
+                    if (!empty($notificationType->targets[$role->identifier])) {
+                        //$this->repository->getLogger()->debug("Build mail for {$role->name} users");
+                        $mailData = $this->buildMailDataToRole($param, $notificationType, $role->identifier);
+                        $addresses = [];
+                        /** @var Participant $participant */
+                        foreach ($this->repository->getParticipantService()->loadPostParticipantsByRole($param->post, $role->identifier) as $participant) {
+                            $addresses = array_merge($addresses, $this->getAddressFromParticipant($participant, $param->identifier, $notificationType->targets[$role->identifier]));
                         }
+                        $addresses = array_unique($addresses);
+                        if ($mailData && !empty($addresses)) {
+                            if ($this->sendMail($addresses, $mailData['subject'], $mailData['body'], $mailData['parameters'])) {
+                                $this->repository->getLogger()->info("Prepared notification mail to {$role->name} addresses: " . implode(',', $addresses));
+                            }
+                        }
+                    }else{
+                        $this->repository->getLogger()->debug("Notification targets not found", ['role' => $role->name, 'notification' => $notificationType->name]);
                     }
                 }
             }
@@ -146,17 +150,20 @@ class MailNotificationListener extends AbstractListener
         return false;
     }
 
-    protected function getAddressFromParticipant(Participant $participant, $notificationIdentifier)
+    protected function getAddressFromParticipant(Participant $participant, $notificationIdentifier, $targets)
     {
         $addresses = [];
-        if ($participant->type == Participant::TYPE_USER) {
+        if ($participant->type == Participant::TYPE_USER && in_array(Participant::TYPE_USER, $targets)) {
             foreach ($participant->users as $user) {
+                if ($this->repository->getCurrentUser()->id == $user->id){
+                    continue;
+                }
                 $userNotifications = $this->repository->getNotificationService()->getUserNotifications($user);
                 if (in_array($notificationIdentifier, $userNotifications) && MailValidator::validate($user->email)) {
                     $addresses[] = $user->email;
                 }
             }
-        } elseif ($participant->type == Participant::TYPE_GROUP) {
+        } elseif ($participant->type == Participant::TYPE_GROUP && in_array(Participant::TYPE_GROUP, $targets)) {
             try {
                 $group = $this->repository->getGroupService()->loadGroup($participant->id);
                 if ($group instanceof Group) {
@@ -167,6 +174,9 @@ class MailNotificationListener extends AbstractListener
                     $operators = $operatorResult['items'];
                     $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
                     foreach ($operators as $operator) {
+                        if ($this->repository->getCurrentUser()->id == $operator->id){
+                            continue;
+                        }
                         $userNotifications = $this->repository->getNotificationService()->getUserNotifications($operator);
                         if (in_array($notificationIdentifier, $userNotifications) && MailValidator::validate($operator->email)) {
                             $addresses[] = $operator->email;

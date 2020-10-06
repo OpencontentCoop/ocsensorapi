@@ -23,19 +23,23 @@ class PrivateMailNotificationListener extends MailNotificationListener
                 $roles = $this->repository->getParticipantService()->loadParticipantRoleCollection();
                 /** @var ParticipantRole $role */
                 foreach ($roles as $role) {
-                    $mailData = $this->buildMailDataToRole($param, $notificationType, $role->identifier);
-                    $addresses = [];
-                    /** @var Participant $participant */
-                    foreach ($this->repository->getParticipantService()->loadPostParticipantsByRole($param->post, $role->identifier) as $participant) {
-                        if (in_array($participant->id, $receiverIdList)) {
-                            $addresses = array_merge($addresses, $this->getAddressFromParticipant($participant, $param->identifier));
+                    if (!empty($notificationType->targets[$role->identifier])) {
+                        $mailData = $this->buildMailDataToRole($param, $notificationType, $role->identifier);
+                        $addresses = [];
+                        /** @var Participant $participant */
+                        foreach ($this->repository->getParticipantService()->loadPostParticipantsByRole($param->post, $role->identifier) as $participant) {
+                            if (in_array($participant->id, $receiverIdList)) {
+                                $addresses = array_merge($addresses, $this->getAddressFromParticipant($participant, $param->identifier, $notificationType->targets[$role->identifier]));
+                            }
                         }
-                    }
-                    $addresses = array_unique($addresses);
-                    if ($mailData && !empty($addresses)) {
-                        if ($this->sendMail($addresses, $mailData['subject'], $mailData['body'], $mailData['parameters'])) {
-                            $this->repository->getLogger()->info("Sent private notification mail to addresses: " . implode(',', $addresses));
+                        $addresses = array_unique($addresses);
+                        if ($mailData && !empty($addresses)) {
+                            if ($this->sendMail($addresses, $mailData['subject'], $mailData['body'], $mailData['parameters'])) {
+                                $this->repository->getLogger()->info("Sent private notification mail to addresses: " . implode(',', $addresses));
+                            }
                         }
+                    }else{
+                        $this->repository->getLogger()->debug("Notification targets not found", ['role' => $role->name, 'notification' => $notificationType->name]);
                     }
                 }
             }

@@ -17,7 +17,10 @@ use Opencontent\Sensor\Legacy\Utils\MailValidator;
 class MailNotificationListener extends AbstractListener
 {
     private static $queue = [];
+
     protected $repository;
+
+    private $addCurrentUserAddress = true;
 
     public function __construct(Repository $repository)
     {
@@ -155,7 +158,7 @@ class MailNotificationListener extends AbstractListener
         $addresses = [];
         if ($participant->type == Participant::TYPE_USER && in_array(Participant::TYPE_USER, $targets)) {
             foreach ($participant->users as $user) {
-                if ($this->repository->getCurrentUser()->id == $user->id){
+                if ($this->repository->getCurrentUser()->id == $user->id && !$this->addCurrentUserAddress){
                     continue;
                 }
                 $userNotifications = $this->repository->getNotificationService()->getUserNotifications($user);
@@ -174,7 +177,7 @@ class MailNotificationListener extends AbstractListener
                     $operators = $operatorResult['items'];
                     $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
                     foreach ($operators as $operator) {
-                        if ($this->repository->getCurrentUser()->id == $operator->id){
+                        if ($this->repository->getCurrentUser()->id == $operator->id && !$this->addCurrentUserAddress){
                             continue;
                         }
                         $userNotifications = $this->repository->getNotificationService()->getUserNotifications($operator);

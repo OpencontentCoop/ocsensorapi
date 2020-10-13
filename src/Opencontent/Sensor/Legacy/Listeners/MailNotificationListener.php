@@ -251,11 +251,7 @@ class MailNotificationListener extends AbstractListener
 
         foreach ($addressList as $index => $addressItem) {
             $mail->extractEmail($addressItem, $email, $name);
-            if ($index == 0) {
-                $mail->addReceiver($email, $name);
-            }else{
-                $mail->addCc($email, $name);
-            }
+            $mail->addReceiver($email, $name);
         }
         $mail->setSender($emailSender);
         $mail->setSubject($subject);

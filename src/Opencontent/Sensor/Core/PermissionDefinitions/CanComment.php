@@ -3,7 +3,6 @@
 namespace Opencontent\Sensor\Core\PermissionDefinitions;
 
 use Opencontent\Sensor\Api\Permission\PermissionDefinition;
-use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 

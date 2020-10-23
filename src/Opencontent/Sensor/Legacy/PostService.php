@@ -2,28 +2,29 @@
 
 namespace Opencontent\Sensor\Legacy;
 
+use eZCollaborationItem;
+use eZContentCacheManager;
+use eZContentObject;
+use eZContentObjectState;
+use eZPersistentObject;
+use eZSearch;
+use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
+use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Exception\PermissionException;
+use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Api\Values\Message\PrivateMessageCollection;
 use Opencontent\Sensor\Api\Values\Message\TimelineItemCollection;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
-use Opencontent\Sensor\Core\PostService as PostServiceBase;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\PostCreateStruct;
 use Opencontent\Sensor\Api\Values\PostUpdateStruct;
-use Opencontent\Sensor\Api\Exception\NotFoundException;
-use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
-use eZPersistentObject;
-use eZCollaborationItem;
-use eZContentObject;
-use eZContentObjectState;
-use eZContentCacheManager;
-use eZSearch;
+use Opencontent\Sensor\Core\PermissionDefinitions\CanSendPrivateMessage;
+use Opencontent\Sensor\Core\PostService as PostServiceBase;
 use Opencontent\Sensor\Legacy\PostService\PostBuilder;
 use Opencontent\Sensor\Legacy\Utils\ExpiryTools;
 use Opencontent\Sensor\Legacy\Validators\PostCreateStructValidator;
 use Opencontent\Sensor\Legacy\Validators\PostUpdateStructValidator;
-use Opencontent\Sensor\Api\Exception\UnexpectedException;
 
 class PostService extends PostServiceBase
 {
@@ -135,6 +136,8 @@ class PostService extends PostServiceBase
 
     public function setUserPostAware(Post $post)
     {
+        $currentParticipant = $post->participants->getParticipantByUserId($this->repository->getCurrentUser()->id);
+
         foreach ($post->participants as $participant) {
             foreach ($participant as $user) {
                 $this->repository->getUserService()->setUserPostAware($user, $post);
@@ -144,19 +147,25 @@ class PostService extends PostServiceBase
             $this->repository->getCurrentUser(),
             $post
         );
-
+        $userCanSendPrivateMessage = (new CanSendPrivateMessage())->userHasPermission(
+            $this->repository->getCurrentUser(), $post
+        );
+        $useDirectPrivateMessage = $this->repository->getSensorSettings()->get('UseDirectPrivateMessage');
         $privateMessages = new PrivateMessageCollection();
         foreach ($post->privateMessages->messages as $message) {
-            if ($message->getReceiverById($this->repository->getCurrentUser()->id)
-                || $message->getReceiverByIdList($this->repository->getCurrentUser()->groups)
-                || $message->creator->id == $this->repository->getCurrentUser()->id) {
+            $userIsSender = $message->creator->id == $this->repository->getCurrentUser()->id;
+            $userIsReceiver = ($message->getReceiverById($this->repository->getCurrentUser()->id)
+                || $message->getReceiverByIdList($this->repository->getCurrentUser()->groups));
+
+            if ($userIsSender
+                || ($useDirectPrivateMessage && $userIsReceiver)
+                || (!$useDirectPrivateMessage && $userCanSendPrivateMessage)) {
                 $privateMessages->addMessage($message);
             }
         }
         $post->privateMessages = $privateMessages;
 
         if ($this->repository->getSensorSettings()->get('HideTimelineDetails')){
-            $currentParticipant = $post->participants->getParticipantByUserId($this->repository->getCurrentUser()->id);            
             if (!$currentParticipant || $currentParticipant->roleIdentifier == ParticipantRole::ROLE_AUTHOR){ 
                 $timelineMessages = new TimelineItemCollection();
                 foreach ($post->timelineItems->messages as $message){

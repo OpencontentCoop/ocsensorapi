@@ -100,6 +100,11 @@ abstract class Repository implements RepositoryInterface
      */
     protected $notificationService;
 
+    /**
+     * @var \Opencontent\Sensor\Api\PostTypeService
+     */
+    protected $typeService;
+
     public function getCurrentUser()
     {
         return $this->user;

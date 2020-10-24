@@ -14,6 +14,14 @@ class PrivateMailNotificationListener extends MailNotificationListener
         if ($param instanceof SensorEvent) {
 
             $receiverIdList = $param->parameters['receiver_ids'];
+            if (empty($receiverIdList)) {
+                $receiverIdList = [];
+                foreach($param->post->participants->getParticipantIdList() as $participantId){
+                    if ($param->post->participants->getParticipantById($participantId)->roleIdentifier != ParticipantRole::ROLE_AUTHOR){
+                        $receiverIdList[] = $participantId;
+                    }
+                }
+            }
 
             $this->repository->getLogger()->info("Notify '{$param->identifier}' on post {$param->post->id} from user {$param->user->id}", $param->parameters);
 

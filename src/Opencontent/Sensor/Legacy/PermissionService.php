@@ -6,6 +6,7 @@ use Opencontent\Sensor\Api\Values\Permission;
 use Opencontent\Sensor\Api\Values\PermissionCollection;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Core\PermissionDefinitions\SettingPermissionInterface;
 use Opencontent\Sensor\Core\PermissionService as BasePermissionService;
 
 class PermissionService extends BasePermissionService
@@ -18,7 +19,8 @@ class PermissionService extends BasePermissionService
         foreach ($this->permissionDefinitions as $permissionDefinition) {
             $permission = new Permission();
             $permission->identifier = $permissionDefinition->identifier;
-            $permission->grant = $this->isSuperAdmin($user) ? true : (bool)$permissionDefinition->userHasPermission($user, $post);
+            $permission->grant = $this->isSuperAdmin($user) && !$permissionDefinition instanceof SettingPermissionInterface ? true :
+                (bool)$permissionDefinition->userHasPermission($user, $post);
             $permissionCollection->addPermission($permission);
         }
         return $permissionCollection;

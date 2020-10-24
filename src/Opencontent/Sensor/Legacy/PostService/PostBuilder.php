@@ -244,28 +244,7 @@ class PostBuilder
         $type = null;
         if (isset($this->contentObjectDataMap['type'])) {
             $typeIdentifier = $this->contentObjectDataMap['type']->toString();
-            $type = new Post\Type();
-            $type->identifier = $typeIdentifier;
-            switch ($typeIdentifier) {
-                case 'suggerimento':
-                    $type->name = ezpI18n::tr('openpa_sensor/type', 'Suggerimento');
-                    $type->label = 'warning';
-                    break;
-
-                case 'reclamo':
-                    $type->name = ezpI18n::tr('openpa_sensor/type', 'Reclamo');
-                    $type->label = 'danger';
-                    break;
-
-                case 'segnalazione':
-                    $type->name = ezpI18n::tr('openpa_sensor/type', 'Segnalazione');
-                    $type->label = 'info';
-                    break;
-
-                default:
-                    $type->name = ucfirst($typeIdentifier);
-                    $type->label = 'info';
-            }
+            $type = $this->repository->getPostTypeService()->loadPostType($typeIdentifier);
         }
 
         return $type;

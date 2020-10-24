@@ -112,4 +112,9 @@ interface Repository
      * @return StatisticsService
      */
     public function getStatisticsService();
+
+    /**
+     * @return PostTypeService
+     */
+    public function getPostTypeService();
 }

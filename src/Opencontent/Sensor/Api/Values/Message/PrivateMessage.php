@@ -3,6 +3,7 @@
 namespace Opencontent\Sensor\Api\Values\Message;
 
 use Opencontent\Sensor\Api\Values\Message;
+use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\User;
 
 /**
@@ -19,9 +20,10 @@ class PrivateMessage extends Message
     public function getReceiverById($id)
     {
         foreach ($this->receivers as $receiver) {
-            if ($receiver->id == $id) {
+            if ($receiver instanceof Participant && $receiver->id == $id) {
                 return $receiver;
             }
+
         }
 
         return false;
@@ -30,7 +32,7 @@ class PrivateMessage extends Message
     public function getReceiverByIdList($idList)
     {
         foreach ($this->receivers as $receiver) {
-            if (in_array($receiver->id, $idList)) {
+            if ($receiver instanceof Participant && in_array($receiver->id, $idList)) {
                 return $receiver;
             }
         }

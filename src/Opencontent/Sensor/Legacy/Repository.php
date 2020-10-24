@@ -296,4 +296,15 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
         }
         return $this->permissionService;
     }
+
+    public function getPostTypeService()
+    {
+        if ($this->typeService === null) {
+            $this->typeService = new PostTypeService($this);
+        }
+
+        return $this->typeService;
+    }
+
+
 }

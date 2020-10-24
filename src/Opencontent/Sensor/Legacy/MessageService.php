@@ -7,6 +7,7 @@ use eZCollaborationSimpleMessage;
 use eZPersistentObject;
 use Opencontent\Sensor\Api\Values\Message;
 use Opencontent\Sensor\Api\Values\MessageStruct;
+use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Core\MessageService as MessageServiceBase;
@@ -170,9 +171,12 @@ class MessageService extends MessageServiceBase
                         $message->text = $simpleMessage->attribute('data_text1');
                         /** @var eZCollaborationItemMessageLink $link */
                         foreach ($messageItem['links'] as $link) {
-                            $message->receivers[] = $this->repository->getParticipantService()
+                            $participant = $this->repository->getParticipantService()
                                 ->loadPostParticipants($post)
                                 ->getParticipantById($link->attribute('message_type'));
+                            if ($participant instanceof Participant) {
+                                $message->receivers[] = $participant;
+                            }
                         }
                     }
                     $message->id = $simpleMessage->attribute('id');

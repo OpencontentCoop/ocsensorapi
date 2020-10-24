@@ -83,7 +83,7 @@ class TimelineTools
                     if (!$participant) {
                         $participant = $participants->getUserById(intval($namePart));
                     }
-                    $nameString[] = $participant->name;
+                    $nameString[] = $participant ? $participant->name : '?';
                 } else {
                     $nameString[] = $namePart;
                 }

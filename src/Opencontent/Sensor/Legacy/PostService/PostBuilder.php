@@ -419,10 +419,14 @@ class PostBuilder
                     $attachment = new Post\Field\Attachment();
                     $attachment->filename = $file->attribute('original_filename');
 
-                    $attachment->downloadUrl = $prefix . '/download/' . $this->contentObjectDataMap['attachment']->attribute('contentobject_id')
+                    $attachment->downloadUrl = $prefix . '/download/'
+                        . $this->contentObjectDataMap['attachment']->attribute('contentobject_id')
                         . '/' . $this->contentObjectDataMap['attachment']->attribute('id')
-                        . '/' . $this->contentObjectDataMap['attachment']->attribute('version')
-                        . '/' . $file->attribute('original_filename');
+                        . '/' . $this->contentObjectDataMap['attachment']->attribute('version');
+                    if ($prefix == 'ocmultibinary'){
+                        $attachment->downloadUrl .= '/' . $file->attribute('filename') . '/file';
+                    }
+                    $attachment->downloadUrl .= '/' . $file->attribute('original_filename');
 
                     $attachment->apiUrl = 'api/sensor/file/'
                         . $attribute->attribute('id') . '-' . $attribute->attribute('version') . '-' . $attribute->attribute('language_code')

@@ -22,6 +22,8 @@ class MessageService extends MessageServiceBase
 
     const RESPONSE = 2;
 
+    const WORKGROUP = 3;
+
     /**
      * @var Repository
      */
@@ -258,8 +260,13 @@ class MessageService extends MessageServiceBase
         $message = $this->createMessage($struct);
         $message->setAttribute('data_text2', implode(',', $struct->receiverIdList));
         $message->store();
-        foreach ($struct->receiverIdList as $id)
-            $this->linkMessage($message, $struct, $id);
+        if (empty($struct->receiverIdList)){
+            $this->linkMessage($message, $struct, self::WORKGROUP);
+        }else {
+            foreach ($struct->receiverIdList as $id) {
+                $this->linkMessage($message, $struct, $id);
+            }
+        }
     }
 
     public function updatePrivateMessage(Message\PrivateMessageStruct $struct)

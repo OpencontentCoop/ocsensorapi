@@ -40,15 +40,6 @@ class SendPrivateMessageAction extends ActionDefinition
         $text = $action->getParameterValue('text');
         $receiverIdList = (array)$action->getParameterValue('participant_ids');
 
-        if (empty($receiverIdList)) {
-            $receiverIdList = [];
-            foreach($post->participants->getParticipantIdList() as $participantId){
-                if ($post->participants->getParticipantById($participantId)->roleIdentifier != ParticipantRole::ROLE_AUTHOR){
-                    $receiverIdList[] = $participantId;
-                }
-            }
-        }
-
         $participantIdList = $post->participants->getParticipantIdList();
         $diff = array_diff($receiverIdList, $participantIdList);
         if (!empty($diff)) {

@@ -118,11 +118,11 @@ class SearchService extends BaseSearchService
         $ezFindQueryObject = $queryObject->convert();
 
         if (!$ezFindQueryObject instanceof \ArrayObject) {
-            throw new \RuntimeException("Query builder did not return a valid query");
+            throw new Exception\UnexpectedException("Query builder did not return a valid query");
         }
 
         if ($ezFindQueryObject->getArrayCopy() === array("_query" => null) && !empty($query)) {
-            throw new \RuntimeException("Inconsistent query");
+            throw new Exception\UnexpectedException("Inconsistent query");
         }
         $ezFindQuery = $ezFindQueryObject->getArrayCopy();
 
@@ -186,7 +186,7 @@ class SearchService extends BaseSearchService
                 if (is_array($error)) {
                     $error = (string)$error['msg'];
                 }
-                throw new \RuntimeException($error);
+                throw new Exception\UnexpectedException($error);
             }
 
             $searchExtra = SearchResultInfo::fromEzfSearchResultInfo($rawResults['SearchExtras']);

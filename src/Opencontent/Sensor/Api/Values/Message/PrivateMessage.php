@@ -15,7 +15,7 @@ class PrivateMessage extends Message
     /**
      * @var User[]
      */
-    public $receivers;
+    public $receivers = [];
 
     public function getReceiverById($id)
     {

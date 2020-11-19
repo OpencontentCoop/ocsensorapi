@@ -147,9 +147,7 @@ class PostService extends PostServiceBase
             $this->repository->getCurrentUser(),
             $post
         );
-        $userCanSendPrivateMessage = (new CanSendPrivateMessage())->userHasPermission(
-            $this->repository->getCurrentUser(), $post
-        );
+        $userCanSendPrivateMessage = $this->repository->getPermissionService()->loadCurrentUserPostPermissionCollection($post)->hasPermission('can_send_private_message');
         $useDirectPrivateMessage = $this->repository->getSensorSettings()->get('UseDirectPrivateMessage');
         $privateMessages = new PrivateMessageCollection();
         foreach ($post->privateMessages->messages as $message) {

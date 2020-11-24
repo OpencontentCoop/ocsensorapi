@@ -30,7 +30,6 @@ class AddCommentAction extends ActionDefinition
     public function run(Repository $repository, Action $action, Post $post, User $user)
     {
         $text = $action->getParameterValue('text');
-
         if (trim($text) == ''){
             throw new InvalidInputException("Text is required");
         }

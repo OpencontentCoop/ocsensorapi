@@ -17,6 +17,11 @@ class PrivateMessage extends Message
      */
     public $receivers = [];
 
+    /**
+     * @var bool
+     */
+    public $isResponseProposal = false;
+
     public function getReceiverById($id)
     {
         foreach ($this->receivers as $receiver) {

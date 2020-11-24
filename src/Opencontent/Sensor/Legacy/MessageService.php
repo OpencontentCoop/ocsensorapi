@@ -171,6 +171,9 @@ class MessageService extends MessageServiceBase
                         $message = new Message\PrivateMessage();
                         $type = 'private';
                         $message->text = $simpleMessage->attribute('data_text1');
+                        if ($simpleMessage->attribute('data_int1')){
+                            $message->isResponseProposal = true;
+                        }
                         /** @var eZCollaborationItemMessageLink $link */
                         foreach ($messageItem['links'] as $link) {
                             $participant = $this->repository->getParticipantService()
@@ -325,6 +328,9 @@ class MessageService extends MessageServiceBase
             'modified' => $time,
             'creator_id' => $struct->creator->id,
         ];
+        if ($struct instanceof Message\PrivateMessageStruct && $struct->isResponseProposal){
+            $fields['data_int1'] = 1;
+        }
 
         // avoid duplicated message in same second
         $simpleMessage = eZCollaborationSimpleMessage::fetchObject(eZCollaborationSimpleMessage::definition(), null, $fields, true);

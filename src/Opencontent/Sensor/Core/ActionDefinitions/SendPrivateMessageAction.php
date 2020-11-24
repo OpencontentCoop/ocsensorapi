@@ -33,6 +33,12 @@ class SendPrivateMessageAction extends ActionDefinition
         $parameter->isRequired = false;
         $parameter->type = 'array';
         $this->parameterDefinitions[] = $parameter;
+
+        $parameter = new ActionDefinitionParameter();
+        $parameter->identifier = 'is_response_proposal';
+        $parameter->isRequired = false;
+        $parameter->type = 'boolean';
+        $this->parameterDefinitions[] = $parameter;
     }
 
     public function run(Repository $repository, Action $action, Post $post, User $user)
@@ -43,18 +49,17 @@ class SendPrivateMessageAction extends ActionDefinition
         }
 
         $receiverIdList = (array)$action->getParameterValue('participant_ids');
-
         $participantIdList = $post->participants->getParticipantIdList();
         $diff = array_diff($receiverIdList, $participantIdList);
         if (!empty($diff)) {
             throw new InvalidInputException("Participant list contains invalid items");
         }
-
         foreach ($receiverIdList as $receiverId) {
             if ($post->participants->getParticipantById($receiverId)->roleIdentifier == ParticipantRole::ROLE_AUTHOR) {
                 throw new InvalidInputException("Can not send private message to a user which is not an operator");
             }
         }
+        $isResponseProposal = $action->getParameterValue('is_response_proposal');
 
         $messageStruct = new PrivateMessageStruct();
         $messageStruct->createdDateTime = new \DateTime();
@@ -62,6 +67,7 @@ class SendPrivateMessageAction extends ActionDefinition
         $messageStruct->post = $post;
         $messageStruct->text = $text;
         $messageStruct->receiverIdList = $receiverIdList;
+        $messageStruct->isResponseProposal = $isResponseProposal;
 
         $repository->getMessageService()->createPrivateMessage($messageStruct);
         $post = $repository->getPostService()->refreshPost($post);

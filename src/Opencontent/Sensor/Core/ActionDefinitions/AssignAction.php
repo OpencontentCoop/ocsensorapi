@@ -140,20 +140,21 @@ class AssignAction extends ActionDefinition
             $doRefresh = true;
         }
 
-        // se ci sono nuovi utenti incaricati cambio lo stato del post in assegnato
-        if (!empty($userChanges['owners'])) {
-            $repository->getLogger()->debug('Found owner: make post assigned', ['post' => $post->id]);
-            $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::ASSIGNED);
-
-        // se non c'è alcun utente in $userChanges riporto il post in da assegnare
-        }elseif (!(empty($userChanges['owners']) && empty($userChanges['observers'])) && $post->workflowStatus->code == Post\WorkflowStatus::ASSIGNED){
-            $repository->getLogger()->debug('No owners found: make post read', ['post' => $post->id]);
-            $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::READ);
-            //$repository->getMessageService()->addTimelineItemByWorkflowStatus($post, Post\WorkflowStatus::READ);
-        }
+//        // se ci sono nuovi utenti incaricati cambio lo stato del post in assegnato
+//        if (!empty($userChanges['owners'])) {
+//            $repository->getLogger()->debug('Found owner: make post assigned', ['post' => $post->id]);
+//            $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::ASSIGNED);
+//
+//        // se non c'è alcun utente in $userChanges riporto il post in da assegnare
+//        }elseif (!(empty($userChanges['owners']) && empty($userChanges['observers'])) && $post->workflowStatus->code == Post\WorkflowStatus::ASSIGNED){
+//            $repository->getLogger()->debug('No owners found: make post read', ['post' => $post->id]);
+//            $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::READ);
+//            //$repository->getMessageService()->addTimelineItemByWorkflowStatus($post, Post\WorkflowStatus::READ);
+//        }
 
         // se ci sono modifiche agli utenti aggiungo un messaggio di timeline
         if (!empty($owners)){
+            $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::ASSIGNED);
             $workflowOwners = array_merge($owners, $groupChanges['already_owners']);
             $repository->getLogger()->debug('Set workflow status', $workflowOwners);
             $repository->getMessageService()->addTimelineItemByWorkflowStatus($post, Post\WorkflowStatus::ASSIGNED, $workflowOwners);

@@ -128,6 +128,20 @@ interface PostService
      */
     public function removeAttachment(Post $post, $files);
 
+    /**
+     * @param Post $post
+     * @param array $files
+     * @throw \Exception
+     */
+    public function addImage(Post $post, $files);
+
+    /**
+     * @param Post $post
+     * @param array $files
+     * @throw \Exception
+     */
+    public function removeImage(Post $post, $files);
+
     public function setUserPostAware(Post $post);
 
     public function setCommentsIsOpen(Post $post);

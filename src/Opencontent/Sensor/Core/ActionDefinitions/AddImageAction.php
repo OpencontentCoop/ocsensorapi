@@ -6,16 +6,17 @@ use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
 use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\Message\CommentStruct;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 
-class AddAttachmentAction extends ActionDefinition
+class AddImageAction extends ActionDefinition
 {
     public function __construct()
     {
-        $this->identifier = 'add_attachment';
-        $this->permissionDefinitionIdentifiers = array('can_read', 'can_add_attachment');
-        $this->inputName = 'AddAttachment';
+        $this->identifier = 'add_image';
+        $this->permissionDefinitionIdentifiers = array('can_read', 'can_add_image');
+        $this->inputName = 'AddImage';
 
         $parameter = new ActionDefinitionParameter();
         $parameter->identifier = 'files';
@@ -30,8 +31,23 @@ class AddAttachmentAction extends ActionDefinition
         if (isset($files['filename'])) { //@todo correggere lo schema
             $files = [$files];
         }
+
         if (count($files) > 0) {
-            $repository->getPostService()->addAttachment($post, $files);
+
+            $repository->getPostService()->addImage($post, $files);
+
+            $commentStruct = new CommentStruct();
+            $commentStruct->createdDateTime = new \DateTime();
+            $commentStruct->creator = $repository->getCurrentUser();
+            $commentStruct->post = $post;
+            //@todo gestire traduzioni
+            if (count($files) == 1) {
+                $commentStruct->text = 'È stata inserita una nuova immagine (' . $files[0]['filename'] . ')';
+            }else{
+                $commentStruct->text = 'Sono stata inserite nuove immagini (' . implode(', ', array_column($files, 'filename')) . ')';
+            }
+            $repository->getMessageService()->createComment($commentStruct);
+
             $post = $repository->getPostService()->refreshPost($post);
             $this->fireEvent($repository, $post, $user, array('files' => array_column($files, 'filename')));
         }

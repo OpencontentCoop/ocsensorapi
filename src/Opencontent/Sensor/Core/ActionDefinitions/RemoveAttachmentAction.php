@@ -26,7 +26,7 @@ class RemoveAttachmentAction extends ActionDefinition
 
     public function run(Repository $repository, Action $action, Post $post, User $user)
     {
-        $files = $action->getParameterValue('files');
+        $files = (array)$action->getParameterValue('files');
 
         $repository->getPostService()->removeAttachment($post, $files);
         $post = $repository->getPostService()->refreshPost($post);

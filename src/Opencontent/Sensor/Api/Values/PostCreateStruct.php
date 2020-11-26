@@ -61,6 +61,11 @@ class PostCreateStruct
      */
     public $areas;
 
+    /**
+     * @var string
+     */
+    public $meta;
+
     public static function fromArray(array $data)
     {
         $object = new static();

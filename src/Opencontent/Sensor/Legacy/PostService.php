@@ -211,7 +211,7 @@ class PostService extends PostServiceBase
                 'privacy' => (string)$post->privacy == 'public',
                 'area' => implode('-', $post->areas),
                 'category' => implode('-', $post->categories),
-
+                'meta' => (string)$post->meta,
             ]
         ];
 
@@ -227,7 +227,7 @@ class PostService extends PostServiceBase
         $validator->validate($post);
 
         $attributes = array();
-        foreach (['subject', 'description', 'type', 'geo'] as $identifier) {
+        foreach (['subject', 'description', 'type', 'geo', 'meta'] as $identifier) {
             if (!empty((string)$post->{$identifier})) {
                 $attributes[$identifier] = (string)$post->{$identifier};
             }

@@ -11,7 +11,7 @@ use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
 use Opencontent\Sensor\Api\Values\PostCreateStruct;
 use Opencontent\Sensor\Api\Values\PostUpdateStruct;
 use Opencontent\Sensor\OpenApi;
-use SensorOpenApiController;
+use SensorOpenApiControllerInterface;
 use ezpRestMvcResult;
 use Opencontent\Sensor\Api\SearchService;
 use Opencontent\Sensor\Legacy\SearchService\QueryBuilder;
@@ -32,7 +32,7 @@ class Controller
     private $repository;
 
     /**
-     * @var SensorOpenApiController
+     * @var SensorOpenApiControllerInterface
      */
     private $restController;
 
@@ -41,7 +41,7 @@ class Controller
      */
     private $serializer;
 
-    public function __construct(OpenApi $apiSettings, SensorOpenApiController $restController)
+    public function __construct(OpenApi $apiSettings, SensorOpenApiControllerInterface $restController)
     {
         $this->apiSettings = $apiSettings;
         $this->repository = $this->apiSettings->getRepository();
@@ -1102,6 +1102,8 @@ class Controller
 
         if (isset($payload['area']) && is_array($payload['area'])) {
             $postCreateStruct->areas = [(int)$payload['area'][0]];
+        }elseif (isset($payload['areas']) && is_array($payload['areas'])) {
+            $postCreateStruct->areas = (array)$payload['areas'];
         }
 
         if (isset($payload['type'])) {
@@ -1135,6 +1137,10 @@ class Controller
             $imagePath = \eZSys::cacheDirectory() . '/' . $payload['image']['filename'];
             \eZFile::create(basename($imagePath), dirname($imagePath), base64_decode($payload['image']['file']));
             $postCreateStruct->imagePath = $imagePath;
+        }
+
+        if (isset($payload['meta'])) {
+            $postCreateStruct->meta = $payload['meta'];
         }
 
         return $postCreateStruct;

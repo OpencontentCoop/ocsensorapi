@@ -42,7 +42,7 @@ class PostUpdateStruct
     public $imagePath;
 
     /**
-     * @var string[]
+     * @var array[]
      */
     public $imagePaths = [];
 
@@ -60,6 +60,11 @@ class PostUpdateStruct
      * @var array
      */
     public $areas;
+
+    /**
+     * @var string
+     */
+    public $meta;
 
     /**
      * @return Post

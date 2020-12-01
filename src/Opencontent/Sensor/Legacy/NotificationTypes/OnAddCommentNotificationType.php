@@ -2,8 +2,8 @@
 
 namespace Opencontent\Sensor\Legacy\NotificationTypes;
 
-use Opencontent\Sensor\Api\Values\NotificationType;
 use ezpI18n;
+use Opencontent\Sensor\Api\Values\NotificationType;
 
 class OnAddCommentNotificationType extends NotificationType
 {
@@ -16,4 +16,5 @@ class OnAddCommentNotificationType extends NotificationType
         $this->description = ezpI18n::tr('sensor/notification', 'Ricevi una notifica quando viene aggiunto un commento ad una tua segnalazione');
         $this->setTemplate();
     }
+
 }

@@ -10,5 +10,8 @@ use Opencontent\Sensor\Api\Values\Message;
  */
 class Comment extends Message
 {
-
+    /**
+     * @var bool
+     */
+    public $needModeration = false;
 }

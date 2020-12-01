@@ -152,6 +152,11 @@ class MessageService extends MessageServiceBase
                         $message = new Message\Comment();
                         $type = 'comment';
                         $message->text = $simpleMessage->attribute('data_text1');
+                        if ($simpleMessage->attribute('data_int1') == 1){
+                            $message->needModeration = true;
+                        }else{
+                            $message->needModeration = false;
+                        }
 
                     } elseif ($firstLink->attribute('message_type') == self::RESPONSE) {
                         $message = new Message\Response();
@@ -171,8 +176,10 @@ class MessageService extends MessageServiceBase
                         $message = new Message\PrivateMessage();
                         $type = 'private';
                         $message->text = $simpleMessage->attribute('data_text1');
-                        if ($simpleMessage->attribute('data_int1')){
+                        if ($simpleMessage->attribute('data_int1') == 1){
                             $message->isResponseProposal = true;
+                        }else{
+                            $message->isResponseProposal = false;
                         }
                         /** @var eZCollaborationItemMessageLink $link */
                         foreach ($messageItem['links'] as $link) {
@@ -303,11 +310,30 @@ class MessageService extends MessageServiceBase
     {
         if ($struct->id !== null) {
             $simpleMessage = eZCollaborationSimpleMessage::fetch($struct->id);
+
+            $needUpdate = $struct->text != '' && $struct->text != $simpleMessage->attribute('data_text1');
+
+            if ($struct instanceof Message\PrivateMessageStruct){
+                $needUpdate = $needUpdate || (int)$struct->isResponseProposal != $simpleMessage->attribute('data_int1');
+            }
+
+            if ($struct instanceof Message\CommentStruct){
+                $needUpdate = $needUpdate || (int)$struct->needModeration != $simpleMessage->attribute('data_int1');
+            }
+
             if ($simpleMessage instanceof eZCollaborationSimpleMessage
                 && $simpleMessage->attribute('creator_id') == $struct->creator->id
-                && $struct->text != ''
-                && $struct->text != $simpleMessage->attribute('data_text1')) {
+                && $needUpdate) {
                 $simpleMessage->setAttribute('data_text1', $struct->text);
+
+                if ($struct instanceof Message\PrivateMessageStruct){
+                    $simpleMessage->setAttribute('data_int1', (int)$struct->isResponseProposal);
+                }
+
+                if ($struct instanceof Message\CommentStruct){
+                    $simpleMessage->setAttribute('data_int1', (int)$struct->needModeration);
+                }
+
                 $now = time();
                 $simpleMessage->setAttribute('modified', $now);
                 $simpleMessage->store();
@@ -328,8 +354,10 @@ class MessageService extends MessageServiceBase
             'modified' => $time,
             'creator_id' => $struct->creator->id,
         ];
-        if ($struct instanceof Message\PrivateMessageStruct && $struct->isResponseProposal){
-            $fields['data_int1'] = 1;
+        if ($struct instanceof Message\PrivateMessageStruct){
+            $fields['data_int1'] = (int)$struct->isResponseProposal;
+        }elseif ($struct instanceof Message\CommentStruct){
+            $fields['data_int1'] = (int)$struct->needModeration;
         }
 
         // avoid duplicated message in same second

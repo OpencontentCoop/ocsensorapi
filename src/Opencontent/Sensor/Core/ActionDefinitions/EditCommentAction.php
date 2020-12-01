@@ -39,13 +39,20 @@ class EditCommentAction extends ActionDefinition
         $commentStruct->id = $action->getParameterValue('id');
         $commentStruct->text = $action->getParameterValue('text');
         $commentStruct->creator = $user;
+        if ($repository->getCurrentUser()->moderationMode){
+            $commentStruct->needModeration = true;
+        }
 
         /** @var Message $comment */
         foreach ($post->comments as $comment) {
             if ($comment->id == $commentStruct->id && $comment->creator->id == $user->id) {
                 $repository->getMessageService()->updateComment($commentStruct);
                 $post = $repository->getPostService()->refreshPost($post);
-                $this->fireEvent($repository, $post, $user, array('message' => $commentStruct->text));
+                if ($commentStruct->needModeration){
+                    $this->fireEvent($repository, $post, $user, array('message' => $commentStruct->text), 'on_add_comment_to_moderate');
+                }else {
+                    $this->fireEvent($repository, $post, $user, array('message' => $commentStruct->text));
+                }
                 return;
             }
         }

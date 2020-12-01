@@ -39,10 +39,17 @@ class AddCommentAction extends ActionDefinition
         $commentStruct->creator = $repository->getCurrentUser();
         $commentStruct->post = $post;
         $commentStruct->text = $text;
+        if ($repository->getCurrentUser()->moderationMode){
+            $commentStruct->needModeration = true;
+        }
 
         $repository->getMessageService()->createComment($commentStruct);
         $post = $repository->getPostService()->refreshPost($post);
-        $this->fireEvent($repository, $post, $user, array('text' => $text));
+        if ($commentStruct->needModeration){
+            $this->fireEvent($repository, $post, $user, array('text' => $text), 'on_add_comment_to_moderate');
+        }else {
+            $this->fireEvent($repository, $post, $user, array('text' => $text));
+        }
 
         if ($post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
             && $post->author->id == $user->id

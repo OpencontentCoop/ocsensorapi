@@ -6,5 +6,8 @@ use Opencontent\Sensor\Api\Values\MessageCollection;
 
 class CommentCollection extends MessageCollection
 {
-
+    /**
+     * @var Comment[]
+     */
+    public $messages = array();
 }

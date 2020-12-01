@@ -2,16 +2,16 @@
 
 namespace Opencontent\Sensor\Core\PermissionDefinitions;
 
-use Opencontent\Sensor\Api\Permission\PermissionDefinition;
+use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 
-class CanComment extends PermissionDefinition
+class CanModerateComment extends UserIs
 {
-    public $identifier = 'can_comment';
+    public $identifier = 'can_moderate_comment';
 
     public function userHasPermission(User $user, Post $post)
     {
-        return $user->commentMode && $post->commentsIsOpen;
+        return $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post);
     }
 }

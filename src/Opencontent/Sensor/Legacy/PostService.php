@@ -13,8 +13,10 @@ use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Exception\PermissionException;
 use Opencontent\Sensor\Api\Exception\UnexpectedException;
+use Opencontent\Sensor\Api\Values\Message\CommentCollection;
 use Opencontent\Sensor\Api\Values\Message\PrivateMessageCollection;
 use Opencontent\Sensor\Api\Values\Message\TimelineItemCollection;
+use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\PostCreateStruct;
@@ -55,7 +57,6 @@ class PostService extends PostServiceBase
 
         return ['items' => $result->searchHits, 'next' => $result->nextCursor, 'current' => $result->currentCursor];
     }
-
 
     public function loadPost($postId)
     {
@@ -162,6 +163,16 @@ class PostService extends PostServiceBase
             }
         }
         $post->privateMessages = $privateMessages;
+
+        $userIsModerator = $this->repository->getPermissionService()->loadCurrentUserPostPermissionCollection($post)->hasPermission('can_moderate_comment');
+        $comments = new CommentCollection();
+        foreach ($post->comments->messages as $message){
+            $userIsCreator = $message->creator->id == $this->repository->getCurrentUser()->id;
+            if (!$message->needModeration || $userIsCreator || $userIsModerator){
+                $comments->addMessage($message);
+            }
+        }
+        $post->comments = $comments;
 
         if ($this->repository->getSensorSettings()->get('HideTimelineDetails')){
             if (!$currentParticipant || $currentParticipant->roleIdentifier == ParticipantRole::ROLE_AUTHOR){ 

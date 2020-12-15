@@ -44,7 +44,7 @@ class GroupService extends \Opencontent\Sensor\Core\GroupService
             $items[$item['metadata']['id']] = $this->internalLoadGroup($item);
         }
 
-        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor];
+        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor, 'count' => $result->totalCount];
     }
 
     public function createGroup(array $payload)

@@ -129,9 +129,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response.', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/PostCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid search limit provided.'),
                     ],
@@ -140,15 +140,19 @@ class SchemaBuilder
                     [
                         'description' => 'Returns a list of post',
                         'tags' => [self::$tags['posts']],
-                        'parameters' => $this->buildSearchParameters()
+                        'parameters' => array_merge($this->buildSearchParameters(), [
+                            new OA\Parameter('authorFiscalCode', OA\Parameter::IN_QUERY, 'Filter by author fiscal code', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true]),
+                            ])
+                        ])
                     ]
                 ),
                 'post' => new OA\Operation(
                     [
                         '201' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Post')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -167,9 +171,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Post')
-                            ]],
+                            ])],
                             null,
                             ['links' => [
                                 'approvers' => $this->buildLink(['operationId' => 'getApproversByPostId', 'parameters' => ['postId' => '$request.path.postId']]),
@@ -204,9 +208,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Post')
-                            ]],
+                            ])],
                             null,
                             ['links' => [
                                 'approvers' => $this->buildLink(['operationId' => 'getApproversByPostId', 'parameters' => ['postId' => '$request.path.postId']]),
@@ -239,9 +243,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/ParticipantCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -261,9 +265,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/ParticipantCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -279,9 +283,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['participant_ids' => $this->buildSchemaProperty(['type' => 'array', 'maximum' => 1, 'items' => $this->buildSchemaProperty(['type' => 'integer'])])]])
-                        ]], 'User id', true)
+                        ])], 'User id', true)
                     ]
                 ),
             ]),
@@ -289,9 +293,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/ParticipantCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -311,9 +315,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/ParticipantCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -329,9 +333,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['participant_ids' => $this->buildSchemaProperty(['type' => 'array', 'maximum' => 1, 'items' => $this->buildSchemaProperty(['type' => 'integer'])])]])
-                        ]], 'User id', true)
+                        ])], 'User id', true)
                     ]
                 ),
             ]),
@@ -339,9 +343,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/ParticipantCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -361,9 +365,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/ParticipantCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -379,9 +383,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['participant_ids' => $this->buildSchemaProperty(['type' => 'array', 'maximum' => 1, 'items' => $this->buildSchemaProperty(['type' => 'integer'])])]])
-                        ]], 'User id', true)
+                        ])], 'User id', true)
                     ]
                 ),
             ]),
@@ -389,9 +393,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/ParticipantCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -413,9 +417,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/UserCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -441,9 +445,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/PublicConversation')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -463,9 +467,9 @@ class SchemaBuilder
                 'post' => new OA\Operation(
                     [
                         '201' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Comment')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid format provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -481,9 +485,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
-                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Text'])]])
-                        ]], 'Comment text', true)
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text'])]])
+                        ])], 'Comment text', true)
                     ]
                 ),
             ]),
@@ -491,9 +495,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Comment')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -513,9 +517,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
-                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Text'])]])
-                        ]], 'Comment text', true)
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text'])]])
+                        ])], 'Comment text', true)
                     ]
                 ),
             ]),
@@ -523,9 +527,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/PrivateConversation')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -545,9 +549,9 @@ class SchemaBuilder
                 'post' => new OA\Operation(
                     [
                         '201' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/PrivateMessage')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -563,12 +567,12 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => [
-                                'text' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Text']),
+                                'text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text']),
                                 'receivers' => $this->buildSchemaProperty(['type' => 'array', 'items' => $this->buildSchemaProperty(['type' => 'integer'])]),
                             ]])
-                        ]], 'Message text', true)
+                        ])], 'Message text', true)
                     ]
                 ),
             ]),
@@ -576,9 +580,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/PrivateMessage')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -598,9 +602,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
-                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Text'])]])
-                        ]], 'Message text', true)
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text'])]])
+                        ])], 'Message text', true)
                     ]
                 ),
             ]),
@@ -608,9 +612,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/ResponseCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -630,9 +634,9 @@ class SchemaBuilder
                 'post' => new OA\Operation(
                     [
                         '201' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Response')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -648,9 +652,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
-                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Text'])]])
-                        ]], 'Response text', true)
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text'])]])
+                        ])], 'Response text', true)
                     ]
                 ),
             ]),
@@ -658,9 +662,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Response')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -680,9 +684,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
-                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Text'])]])
-                        ]], 'Response text', true)
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                            'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text'])]])
+                        ])], 'Response text', true)
                     ]
                 ),
             ]),
@@ -690,9 +694,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/AttachmentCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -712,9 +716,9 @@ class SchemaBuilder
                 'post' => new OA\Operation(
                     [
                         '201' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Attachment')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -730,9 +734,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['files' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['ref' => '#/components/schemas/Attachment']])]])
-                        ]], 'Attachments', true)
+                        ])], 'Attachments', true)
                     ]
                 ),
             ]),
@@ -765,9 +769,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Timeline')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -789,9 +793,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/AreaCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -811,9 +815,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/AreaCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -829,9 +833,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['area_id' => $this->buildSchemaProperty(['type' => 'array', 'maximum' => 1, 'items' => $this->buildSchemaProperty(['type' => 'integer'])])]])
-                        ]], 'Area id list', true)
+                        ])], 'Area id list', true)
                     ]
                 ),
             ]),
@@ -839,9 +843,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/CategoryCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -861,9 +865,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/CategoryCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -879,9 +883,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['category_id' => $this->buildSchemaProperty(['type' => 'array', 'maximum' => 1, 'items' => $this->buildSchemaProperty(['type' => 'integer'])])]])
-                        ]], 'User id', true)
+                        ])], 'User id', true)
                     ]
                 ),
             ]),
@@ -889,9 +893,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string'])]])
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -913,9 +917,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string'])]])
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -935,9 +939,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string'])]])
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -953,9 +957,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string', 'enum' => ['read', 'fixed', 'closed', 'reopened']])]])
-                        ]], 'Workflow status identifier', true)
+                        ])], 'Workflow status identifier', true)
                     ]
                 ),
             ]),
@@ -963,9 +967,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string'])]])
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -985,9 +989,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string'])]])
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -1003,9 +1007,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string', 'enum' => ['public', 'private']])]])
-                        ]], 'Privacy status identifier', true)
+                        ])], 'Privacy status identifier', true)
                     ]
                 ),
             ]),
@@ -1013,9 +1017,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string'])]])
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -1035,9 +1039,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string'])]])
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -1053,9 +1057,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string', 'enum' => ['waiting', 'accepted', 'refused']])]])
-                        ]], 'Moderation status identifier', true)
+                        ])], 'Moderation status identifier', true)
                     ]
                 ),
             ]),
@@ -1063,9 +1067,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response', [
-                            'application/json' => [
-                                'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['expiry_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Expiration date'])]])
-                            ]
+                            'application/json' => new OA\MediaType([
+                                'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['expiry_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Expiration date'])]])
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -1081,9 +1085,9 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\RequestBody(['application/json' => [
+                        'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'integer', 'minimum' => 1])
-                        ]], 'Expiration days since post creation date', true)
+                        ])], 'Expiration days since post creation date', true)
                     ]
                 ),
             ]),
@@ -1097,9 +1101,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response.', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/UserCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid search limit provided.'),
                     ],
@@ -1114,9 +1118,9 @@ class SchemaBuilder
                 'post' => new OA\Operation(
                     [
                         '201' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/User')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -1135,9 +1139,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/User')
-                            ]], null),
+                            ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
                     ],
@@ -1156,9 +1160,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/User')
-                            ]], null),
+                            ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
                         '404' => new OA\Response('Not found'),
@@ -1187,9 +1191,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response.', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/OperatorCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid search limit provided.'),
                     ],
@@ -1204,9 +1208,9 @@ class SchemaBuilder
                 'post' => new OA\Operation(
                     [
                         '201' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Operator')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -1225,9 +1229,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Operator')
-                            ]], null),
+                            ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
                     ],
@@ -1246,9 +1250,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Operator')
-                            ]], null),
+                            ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
                         '404' => new OA\Response('Not found'),
@@ -1277,9 +1281,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response.', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/GroupCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid search limit provided.'),
                     ],
@@ -1294,9 +1298,9 @@ class SchemaBuilder
                 'post' => new OA\Operation(
                     [
                         '201' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Group')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -1315,9 +1319,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Group')
-                            ]], null),
+                            ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
                     ],
@@ -1336,9 +1340,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Group')
-                            ]], null),
+                            ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
                         '404' => new OA\Response('Not found'),
@@ -1361,9 +1365,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Group')
-                            ]], null),
+                            ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
                     ],
@@ -1396,9 +1400,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response.', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/CategoryCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid search limit provided.'),
                     ],
@@ -1413,9 +1417,9 @@ class SchemaBuilder
                 'post' => new OA\Operation(
                     [
                         '201' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Category')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -1434,9 +1438,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Category')
-                            ]], null),
+                            ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
                     ],
@@ -1455,9 +1459,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Category')
-                            ]], null),
+                            ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
                         '404' => new OA\Response('Not found'),
@@ -1486,9 +1490,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response.', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/AreaCollection')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid search limit provided.'),
                     ],
@@ -1503,9 +1507,9 @@ class SchemaBuilder
                 'post' => new OA\Operation(
                     [
                         '201' => new OA\Response('Successful response', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Area')
-                            ]
+                            ])
                         ]),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
@@ -1524,9 +1528,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Area')
-                            ]], null),
+                            ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
                     ],
@@ -1545,9 +1549,9 @@ class SchemaBuilder
                 'put' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Area')
-                            ]], null),
+                            ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '403' => new OA\Response('Forbidden'),
                         '404' => new OA\Response('Not found'),
@@ -1576,9 +1580,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response.', [
-                            'application/json' => [
+                            'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/StatCollection')
-                            ]
+                            ])
                         ])
                     ],
                     'loadStats',
@@ -1593,9 +1597,9 @@ class SchemaBuilder
                 'get' => new OA\Operation(
                     [
                         '200' => new OA\Response('Successful response',
-                            ['application/json' => [
+                            ['application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/Stat')
-                            ]], null),
+                            ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
                     ],
@@ -1617,6 +1621,9 @@ class SchemaBuilder
                             new OA\Parameter('area', OA\Parameter::IN_QUERY, 'Area id', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
                             ]),
+                            new OA\Parameter('authorFiscalCode', OA\Parameter::IN_QUERY, 'Filter by author fiscal code', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true]),
+                            ])
                         ]
                     ]
                 )
@@ -1701,29 +1708,29 @@ class SchemaBuilder
         ];
 
         $components->requestBodies = [
-            'Post' => new OA\RequestBody(['application/json' => [
+            'Post' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewPost')
-            ]], 'Post object that needs to be added or updated', true),
+            ])], 'Post object that needs to be added or updated', true),
 
-            'User' => new OA\RequestBody(['application/json' => [
+            'User' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewUser')
-            ]], 'User object that needs to be added or updated', true),
+            ])], 'User object that needs to be added or updated', true),
 
-            'Operator' => new OA\RequestBody(['application/json' => [
+            'Operator' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewOperator')
-            ]], 'Operator object that needs to be added or updated', true),
+            ])], 'Operator object that needs to be added or updated', true),
 
-            'Group' => new OA\RequestBody(['application/json' => [
+            'Group' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewGroup')
-            ]], 'Group object that needs to be added or updated', true),
+            ])], 'Group object that needs to be added or updated', true),
 
-            'Area' => new OA\RequestBody(['application/json' => [
+            'Area' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewArea')
-            ]], 'Area object that needs to be added or updated', true),
+            ])], 'Area object that needs to be added or updated', true),
 
-            'Category' => new OA\RequestBody(['application/json' => [
+            'Category' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewCategory')
-            ]], 'Category object that needs to be added or updated', true),
+            ])], 'Category object that needs to be added or updated', true),
         ];
 
         return $components;
@@ -1742,32 +1749,32 @@ class SchemaBuilder
                 $schema->title = 'Address';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'address' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Address']),
-                    'longitude' => $this->buildSchemaProperty(['type' => 'number', 'title' => 'Longitude']),
-                    'latitude' => $this->buildSchemaProperty(['type' => 'number', 'title' => 'Latitude']),
+                    'address' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Address']),
+                    'longitude' => $this->buildSchemaProperty(['type' => 'number', 'description' => 'Longitude']),
+                    'latitude' => $this->buildSchemaProperty(['type' => 'number', 'description' => 'Latitude']),
                 ];
                 break;
             case 'Image':
                 $schema->title = 'Image';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'filename' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'File name']),
-                    'file' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'byte', 'title' => 'base64-encoded file contents']),
+                    'filename' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'File name']),
+                    'file' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'byte', 'description' => 'base64-encoded file contents']),
                 ];
                 break;
             case 'Attachment':
                 $schema->title = 'Attachment';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'filename' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'File name']),
-                    'file' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'byte', 'title' => 'base64-encoded file contents']),
+                    'filename' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'File name']),
+                    'file' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'byte', 'description' => 'base64-encoded file contents']),
                 ];
                 break;
             case 'AttachmentCollection':
                 $schema->title = 'AttachmentCollection';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'url', 'title' => 'File'])]),
+                    'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'url', 'description' => 'File'])]),
                 ];
                 break;
 
@@ -1776,8 +1783,9 @@ class SchemaBuilder
                 $schema->type = 'object';
                 $schema->properties = [
                     'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['ref' => '#/components/schemas/Post']]),
-                    'self' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Current pagination cursor']),
-                    'next' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Next pagination cursor', 'nullable' => true]),
+                    'self' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Current pagination cursor']),
+                    'next' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Next pagination cursor', 'nullable' => true]),
+                    'count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int32', 'description' => 'Total number of items available']),
                 ];
                 break;
             case 'NewPost':
@@ -1792,14 +1800,14 @@ class SchemaBuilder
                     if ($attribute->attribute('category') == 'content' || $attribute->attribute('category') == '') {
 
                         $properties = [
-                            'title' => $attribute->attribute('name'),
+                            'description' => $attribute->attribute('name'),
                             'type' => 'string'
                         ];
 
                         if ($identifier == 'geo') {
                             $identifier = 'address';
                             $properties = [
-                                'title' => $attribute->attribute('name'),
+                                'description' => $attribute->attribute('name'),
                                 'ref' => '#/components/schemas/Address'
                             ];
                         }
@@ -1822,7 +1830,7 @@ class SchemaBuilder
 
                         if ($identifier == 'image') {
                             $properties = [
-                                'title' => $attribute->attribute('name'),
+                                'description' => $attribute->attribute('name'),
                                 'ref' => '#/components/schemas/Image'
                             ];
                         }
@@ -1830,7 +1838,7 @@ class SchemaBuilder
                         if ($identifier == 'images') {
                             $properties = [
                                 'type' => 'array',
-                                'title' => $attribute->attribute('name'),
+                                'description' => $attribute->attribute('name'),
                                 'items' => ['ref' => '#/components/schemas/Image']
                             ];
                         }
@@ -1863,24 +1871,24 @@ class SchemaBuilder
                 $schema->title = 'Post';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'Post ID', 'description' => 'Unique identifier']),
-                    'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Publication date']),
-                    'modified_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Last modification date']),
-                    'expiry_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Expiration date', 'nullable' => true]),
-                    'closed_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Closing date', 'nullable' => true]),
-                    'subject' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Subject']),
-                    'description' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Description']),
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'Post ID', 'description' => 'Unique identifier']),
+                    'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Publication date']),
+                    'modified_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Last modification date']),
+                    'expiry_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Expiration date', 'nullable' => true]),
+                    'closed_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Closing date', 'nullable' => true]),
+                    'subject' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Subject']),
+                    'description' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Description']),
                     'address' => $this->buildSchemaProperty(['ref' => '#/components/schemas/Address']),
-                    'type' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Type', 'enum' => $typeEnum]),
-                    'status' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Status', 'enum' => ['pending', 'open', 'close']]),
-                    'privacy_status' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Privacy status', 'enum' => ['public', 'private']]),
-                    'moderation_status' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Moderation status', 'enum' => ['waiting', 'approved']]),
-                    'author' => $this->buildSchemaProperty(['type' => 'integer', 'title' => 'Author']),
-                    'reporter' => $this->buildSchemaProperty(['type' => 'integer', 'title' => 'Reporter']),
-                    'image' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'url', 'title' => 'Image (first post image)', 'nullable' => true]),
-                    'images' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'string', 'format' => 'url'], 'title' => 'Images']),
-                    'is_comments_allowed' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'Comments allowed']),
-                    'address_meta_info' => $this->buildSchemaProperty(['type' => 'object', 'title' => 'Key/value meta informations about geo location']),
+                    'type' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Type', 'enum' => $typeEnum]),
+                    'status' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Status', 'enum' => ['pending', 'open', 'close']]),
+                    'privacy_status' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Privacy status', 'enum' => ['public', 'private']]),
+                    'moderation_status' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Moderation status', 'enum' => ['waiting', 'approved']]),
+                    'author' => $this->buildSchemaProperty(['type' => 'integer', 'description' => 'Author']),
+                    'reporter' => $this->buildSchemaProperty(['type' => 'integer', 'description' => 'Reporter']),
+                    'image' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'url', 'description' => 'Image (first post image)', 'nullable' => true]),
+                    'images' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'string', 'format' => 'url'], 'description' => 'Images']),
+                    'is_comments_allowed' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Comments allowed']),
+                    'address_meta_info' => $this->buildSchemaProperty(['type' => 'object', 'description' => 'Key/value meta informations about geo location']),
                 ];
                 break;
 
@@ -1895,11 +1903,11 @@ class SchemaBuilder
                 $schema->title = 'Comment';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'Post ID', 'description' => 'Unique identifier']),
-                    'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Publication date']),
-                    'modified_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Last modification date']),
-                    'creator' => $this->buildSchemaProperty(['type' => 'integer', 'title' => 'Creator']),
-                    'text' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Text']),
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'Post ID', 'description' => 'Unique identifier']),
+                    'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Publication date']),
+                    'modified_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Last modification date']),
+                    'creator' => $this->buildSchemaProperty(['type' => 'integer', 'description' => 'Creator']),
+                    'text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text']),
                 ];
                 break;
 
@@ -1914,12 +1922,12 @@ class SchemaBuilder
                 $schema->title = 'PrivateMessage';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'Post ID', 'description' => 'Unique identifier']),
-                    'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Publication date']),
-                    'modified_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Last modification date']),
-                    'creator' => $this->buildSchemaProperty(['type' => 'integer', 'title' => 'Creator']),
-                    'text' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Text']),
-                    'receivers' => $this->buildSchemaProperty(['type' => 'array', 'title' => 'Receivers', 'items' => ['type' => 'integer']]),
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'Post ID', 'description' => 'Unique identifier']),
+                    'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Publication date']),
+                    'modified_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Last modification date']),
+                    'creator' => $this->buildSchemaProperty(['type' => 'integer', 'description' => 'Creator']),
+                    'text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text']),
+                    'receivers' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Receivers', 'items' => ['type' => 'integer']]),
                 ];
                 break;
 
@@ -1927,11 +1935,11 @@ class SchemaBuilder
                 $schema->title = 'Response';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'Post ID', 'description' => 'Unique identifier']),
-                    'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Publication date']),
-                    'modified_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Last modification date']),
-                    'creator' => $this->buildSchemaProperty(['type' => 'integer', 'title' => 'Creator']),
-                    'text' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Text']),
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'Post ID', 'description' => 'Unique identifier']),
+                    'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Publication date']),
+                    'modified_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Last modification date']),
+                    'creator' => $this->buildSchemaProperty(['type' => 'integer', 'description' => 'Creator']),
+                    'text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text']),
                 ];
                 break;
             case 'ResponseCollection':
@@ -1946,11 +1954,11 @@ class SchemaBuilder
                 $schema->title = 'TimelineItem';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'Post ID', 'description' => 'Unique identifier']),
-                    'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Publication date']),
-                    'modified_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Last modification date']),
-                    'creator' => $this->buildSchemaProperty(['type' => 'integer', 'title' => 'Creator']),
-                    'text' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Text']),
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'Post ID', 'description' => 'Unique identifier']),
+                    'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Publication date']),
+                    'modified_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Last modification date']),
+                    'creator' => $this->buildSchemaProperty(['type' => 'integer', 'description' => 'Creator']),
+                    'text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text']),
                 ];
                 break;
             case 'Timeline':
@@ -1966,19 +1974,20 @@ class SchemaBuilder
                 $schema->type = 'object';
                 $schema->properties = [
                     'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['ref' => '#/components/schemas/Area']]),
-                    'self' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Current pagination cursor']),
-                    'next' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Next pagination cursor', 'nullable' => true]),
+                    'self' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Current pagination cursor']),
+                    'next' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Next pagination cursor', 'nullable' => true]),
+                    'count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int32', 'description' => 'Total number of items available']),
                 ];
                 break;
             case 'Area':
                 $schema->title = 'Area';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'ID', 'description' => 'Unique identifier']),
-                    'name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Name']),
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
                     'geo' => $this->buildSchemaProperty(['ref' => '#/components/schemas/Address']),
-                    'operators' => $this->buildSchemaProperty(['type' => 'array', 'title' => 'Operators', 'items' => ['type' => 'integer']]),
-                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'title' => 'Groups', 'items' => ['type' => 'integer']]),
+                    'operators' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Operators', 'items' => ['type' => 'integer']]),
+                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Groups', 'items' => ['type' => 'integer']]),
                 ];
                 break;
             case 'NewArea':
@@ -1986,10 +1995,10 @@ class SchemaBuilder
                 $schema->type = 'object';
                 $schema->required = ['name'];
                 $schema->properties = [
-                    'name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Name']),
-                    'operators' => $this->buildSchemaProperty(['type' => 'array', 'title' => 'Operators', 'items' => ['type' => 'integer']]),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'operators' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Operators', 'items' => ['type' => 'integer']]),
                     'geo' => $this->buildSchemaProperty(['ref' => '#/components/schemas/Address']),
-                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'title' => 'Groups', 'items' => ['type' => 'integer']]),
+                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Groups', 'items' => ['type' => 'integer']]),
                 ];
                 break;
 
@@ -1998,18 +2007,19 @@ class SchemaBuilder
                 $schema->type = 'object';
                 $schema->properties = [
                     'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['ref' => '#/components/schemas/Category']]),
-                    'self' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Current pagination cursor']),
-                    'next' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Next pagination cursor', 'nullable' => true]),
+                    'self' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Current pagination cursor']),
+                    'next' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Next pagination cursor', 'nullable' => true]),
+                    'count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int32', 'description' => 'Total number of items available']),
                 ];
                 break;
             case 'Category':
                 $schema->title = 'Category';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'ID', 'description' => 'Unique identifier']),
-                    'name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Name']),
-                    'operators' => $this->buildSchemaProperty(['type' => 'array', 'title' => 'Operators', 'items' => ['type' => 'integer']]),
-                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'title' => 'Groups', 'items' => ['type' => 'integer']]),
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'operators' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Operators', 'items' => ['type' => 'integer']]),
+                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Groups', 'items' => ['type' => 'integer']]),
                 ];
                 break;
             case 'NewCategory':
@@ -2017,10 +2027,10 @@ class SchemaBuilder
                 $schema->type = 'object';
                 $schema->required = ['name'];
                 $schema->properties = [
-                    'name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Name']),
-                    'operators' => $this->buildSchemaProperty(['type' => 'array', 'title' => 'Operators', 'items' => ['type' => 'integer']]),
-                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'title' => 'Groups', 'items' => ['type' => 'integer']]),
-                    'parent' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'nullable' => true, 'title' => 'ID', 'description' => 'Parent category id']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'operators' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Operators', 'items' => ['type' => 'integer']]),
+                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Groups', 'items' => ['type' => 'integer']]),
+                    'parent' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'nullable' => true, 'description' => 'ID', 'description' => 'Parent category id']),
                 ];
                 break;
 
@@ -2035,13 +2045,13 @@ class SchemaBuilder
                 $schema->title = 'Participant';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'ID', 'description' => 'Unique identifier']),
-                    'role_id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'Role Id']),
-                    'role_name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Role name']),
-                    'name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Name']),
-                    'description' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Description']),
-                    'last_access_at' => $this->buildSchemaProperty(['type' => 'array', 'title' => 'Operators', 'items' => ['type' => 'integer']]),
-                    'type' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Type']),
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
+                    'role_id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'Role Id']),
+                    'role_name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Role name']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'description' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Description']),
+                    'last_access_at' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Operators', 'items' => ['type' => 'integer']]),
+                    'type' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Type']),
                 ];
                 break;
 
@@ -2050,25 +2060,26 @@ class SchemaBuilder
                 $schema->type = 'object';
                 $schema->properties = [
                     'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['ref' => '#/components/schemas/User']]),
-                    'self' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Current pagination cursor']),
-                    'next' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Next pagination cursor', 'nullable' => true]),
+                    'self' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Current pagination cursor']),
+                    'next' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Next pagination cursor', 'nullable' => true]),
+                    'count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int32', 'description' => 'Total number of items available']),
                 ];
                 break;
             case 'User':
                 $schema->title = 'User';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'ID', 'description' => 'Unique identifier']),
-                    'name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Name']),
-                    'description' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Description']),
-                    'email' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Email', 'format' => 'email']),
-                    'last_access_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Last access date', 'nullable' => true]),
-                    'is_moderated' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'Is moderated']),
-                    'can_comment' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'Can comment']),
-                    'can_post_on_behalf_of' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'Can post on behalf of others']),
-                    'is_enabled' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'Is enabled']),
-                    'type' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'User type']),
-                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'integer'], 'title' => 'User groups']),
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'description' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Description']),
+                    'email' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Email', 'format' => 'email']),
+                    'last_access_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Last access date', 'nullable' => true]),
+                    'is_moderated' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Is moderated']),
+                    'can_comment' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Can comment']),
+                    'can_post_on_behalf_of' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Can post on behalf of others']),
+                    'is_enabled' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Is enabled']),
+                    'type' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'User type']),
+                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'User groups']),
                 ];
                 break;
             case 'NewUser':
@@ -2076,10 +2087,10 @@ class SchemaBuilder
                 $schema->type = 'object';
                 $schema->required = ['first_name', 'last_name', 'email'];
                 $schema->properties = [
-                    'first_name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'First name']),
-                    'last_name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Last name']),
-                    'email' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Email', 'format' => 'email']),
-                    'fiscal_code' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Fiscal Code']),
+                    'first_name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'First name']),
+                    'last_name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Last name']),
+                    'email' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Email', 'format' => 'email']),
+                    'fiscal_code' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Fiscal Code']),
                 ];
                 break;
 
@@ -2088,25 +2099,26 @@ class SchemaBuilder
                 $schema->type = 'object';
                 $schema->properties = [
                     'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['ref' => '#/components/schemas/Operator']]),
-                    'self' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Current pagination cursor']),
-                    'next' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Next pagination cursor', 'nullable' => true]),
+                    'self' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Current pagination cursor']),
+                    'next' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Next pagination cursor', 'nullable' => true]),
+                    'count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int32', 'description' => 'Total number of items available']),
                 ];
                 break;
             case 'Operator':
                 $schema->title = 'Operator';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'ID', 'description' => 'Unique identifier']),
-                    'name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Name']),
-                    'description' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Description']),
-                    'email' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Email', 'format' => 'email']),
-                    'last_access_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'title' => 'Last access date', 'nullable' => true]),
-                    'is_moderated' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'Is moderated']),
-                    'can_comment' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'Can comment']),
-                    'can_post_on_behalf_of' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'Can post on behalf of others']),
-                    'is_enabled' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'Is enabled']),
-                    'type' => $this->buildSchemaProperty(['type' => 'boolean', 'title' => 'User type']),
-                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'integer'], 'title' => 'User groups']),
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'description' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Description']),
+                    'email' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Email', 'format' => 'email']),
+                    'last_access_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Last access date', 'nullable' => true]),
+                    'is_moderated' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Is moderated']),
+                    'can_comment' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Can comment']),
+                    'can_post_on_behalf_of' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Can post on behalf of others']),
+                    'is_enabled' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Is enabled']),
+                    'type' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'User type']),
+                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'User groups']),
                 ];
                 break;
             case 'NewOperator':
@@ -2114,10 +2126,10 @@ class SchemaBuilder
                 $schema->type = 'object';
                 $schema->required = ['first_name', 'last_name', 'email', 'role', 'groups'];
                 $schema->properties = [
-                    'name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Name']),
-                    'email' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Email', 'format' => 'email']),
-                    'role' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Role']),
-                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'integer'], 'title' => 'User groups']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'email' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Email', 'format' => 'email']),
+                    'role' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Role']),
+                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'User groups']),
                 ];
                 break;
 
@@ -2126,17 +2138,18 @@ class SchemaBuilder
                 $schema->type = 'object';
                 $schema->properties = [
                     'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['ref' => '#/components/schemas/Group']]),
-                    'self' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Current pagination cursor']),
-                    'next' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Next pagination cursor', 'nullable' => true]),
+                    'self' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Current pagination cursor']),
+                    'next' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Next pagination cursor', 'nullable' => true]),
+                    'count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int32', 'description' => 'Total number of items available']),
                 ];
                 break;
             case 'Group':
                 $schema->title = 'Group';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'title' => 'ID', 'description' => 'Unique identifier']),
-                    'name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Name']),
-                    'email' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Email', 'format' => 'email']),
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'email' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Email', 'format' => 'email']),
                 ];
                 break;
             case 'NewGroup':
@@ -2144,8 +2157,8 @@ class SchemaBuilder
                 $schema->type = 'object';
                 $schema->required = ['name', 'email'];
                 $schema->properties = [
-                    'name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Name']),
-                    'email' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Email', 'format' => 'email']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'email' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Email', 'format' => 'email']),
                 ];
                 break;
 
@@ -2160,9 +2173,9 @@ class SchemaBuilder
                 $schema->title = 'Stat';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'identifier' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Identifier']),
-                    'name' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Name']),
-                    'description' => $this->buildSchemaProperty(['type' => 'string', 'title' => 'Description']),
+                    'identifier' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Identifier']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'description' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Description']),
                     'data' => $this->buildSchemaProperty(['type' => 'object', 'properties' => [
                         'intervals' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'string']]),
                         'series' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'object', 'properties' => [

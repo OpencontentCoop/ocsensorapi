@@ -45,7 +45,10 @@ class PerArea extends StatisticFactory
             $intervalNameParser = $this->getIntervalNameParser();
             $categoryFilter = $this->getCategoryFilter();
             $areaFilter = $this->getAreaFilter();
-            $search = $this->repository->getStatisticsService()->searchPosts("{$categoryFilter}{$areaFilter} limit 1 facets [raw[submeta_area___id____si]|alpha|100] pivot [facet=>[submeta_area___id____si,{$byInterval}],mincount=>1]");
+            $search = $this->repository->getStatisticsService()->searchPosts(
+                "{$categoryFilter}{$areaFilter} limit 1 facets [raw[submeta_area___id____si]|alpha|100] pivot [facet=>[submeta_area___id____si,{$byInterval}],mincount=>1]",
+                ['authorFiscalCode' => $this->getAuthorFiscalCodeParameter()]
+            );
 
             $this->data = [
                 'intervals' => [],

@@ -70,7 +70,7 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
             $items[$item['metadata']['id']] = $this->internalLoadArea($item);
         }
 
-        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor];
+        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor, 'count' => $result->totalCount];
     }
 
     public function createArea($payload)

@@ -6,6 +6,7 @@ use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Exception\PermissionException;
 use Opencontent\Sensor\Api\Exception\UnauthorizedException;
+use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Core\UserService as UserServiceBase;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
@@ -74,7 +75,7 @@ class UserService extends UserServiceBase
             $items[$item['metadata']['id']] = $this->loadUser($item['metadata']['id']);
         }
 
-        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor];
+        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor, 'count' => $result->totalCount];
     }
 
     public function createUser(array $payload)

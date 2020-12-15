@@ -63,6 +63,11 @@ class Controller
         $limit = $this->getRequestParameter('limit');
         $offset = $this->getRequestParameter('offset');
         $cursor = $this->getRequestParameter('cursor');
+        $authorFiscalCode = $this->getRequestParameter('authorFiscalCode');
+        $parameters = [];
+        if ($authorFiscalCode){
+            $parameters['authorFiscalCode'] = $authorFiscalCode;
+        }
 
         if ($limit > SearchService::MAX_LIMIT) {
             throw new InvalidArgumentException('Max limit allowed is ' . SearchService::MAX_LIMIT);
@@ -78,14 +83,15 @@ class Controller
             $query .= "limit $limit cursor [$cursor] sort [id=>asc]";
         }
 
-        $searchResults = $this->repository->getSearchService()->searchPosts($query);
+        $searchResults = $this->repository->getSearchService()->searchPosts($query, $parameters);
         $postSearchResults = [
-            'self' => $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->query, $this->getRequestParameters()),
+            'self' => $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->query, $this->getRequestParameters(), $parameters),
             'next' => null,
-            'items' => $this->serializer['post']->serializeItems($searchResults->searchHits)
+            'items' => $this->serializer['post']->serializeItems($searchResults->searchHits),
+            'count' => (int)$searchResults->totalCount,
         ];
         if ($searchResults->nextPageQuery) {
-            $postSearchResults['next'] = $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->nextPageQuery, $this->getRequestParameters());
+            $postSearchResults['next'] = $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->nextPageQuery, $this->getRequestParameters(), $parameters);
         }
 
         $result = new ezpRestMvcResult();
@@ -381,7 +387,8 @@ class Controller
         $result->variables = [
             'items' => $this->serializer['area']->serializeItems($this->loadPost()->areas),
             'self' => $this->restController->getBaseUri() . "/post/{$this->restController->postId}/areas",
-            'next' => null
+            'next' => null,
+            'count' => count($this->loadPost()->areas),
         ];
 
         return $result;
@@ -406,7 +413,8 @@ class Controller
         $result->variables = [
             'items' => $this->serializer['area']->serializeItems($this->loadPost()->categories),
             'self' => $this->restController->getBaseUri() . "/post/{$this->restController->postId}/categories",
-            'next' => null
+            'next' => null,
+            'count' => count($this->loadPost()->categories),
         ];
 
 
@@ -576,7 +584,8 @@ class Controller
         $results = [
             'self' => $this->restController->getBaseUri() . "/users?limit=$limit&cursor=" . urlencode($searchResults['current']),
             'next' => null,
-            'items' => $this->serializer['user']->serializeItems($searchResults['items'])
+            'items' => $this->serializer['user']->serializeItems($searchResults['items']),
+            'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
             $results['next'] = $this->restController->getBaseUri() . "/users?limit=$limit&cursor=" . urlencode($searchResults['next']);
@@ -665,7 +674,8 @@ class Controller
         $results = [
             'self' => $this->restController->getBaseUri() . "/operators?limit=$limit&cursor=" . urlencode($searchResults['current']),
             'next' => null,
-            'items' => $this->serializer['operator']->serializeItems($searchResults['items'])
+            'items' => $this->serializer['operator']->serializeItems($searchResults['items']),
+            'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
             $results['next'] = $this->restController->getBaseUri() . "/operators?limit=$limit&cursor=" . urlencode($searchResults['next']);
@@ -761,7 +771,8 @@ class Controller
         $results = [
             'self' => $this->restController->getBaseUri() . "//groups?limit=$limit&cursor=" . urlencode($searchResults['current']),
             'next' => null,
-            'items' => $searchResults['items']
+            'items' => $searchResults['items'],
+            'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
             $results['next'] = $this->restController->getBaseUri() . "//groups?limit=$limit&cursor=" . urlencode($searchResults['next']);
@@ -811,7 +822,8 @@ class Controller
         $results = [
             'self' => $this->restController->getBaseUri() . "/groups/{$this->restController->groupId}/operators?limit=$limit&cursor=" . urlencode($searchResults['current']),
             'next' => null,
-            'items' => $searchResults['items']
+            'items' => $searchResults['items'],
+            'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
             $results['next'] = $this->restController->getBaseUri() . "/groups/{$this->restController->groupId}/operators?limit=$limit&cursor=" . urlencode($searchResults['next']);
@@ -857,7 +869,8 @@ class Controller
         $results = [
             'self' => $this->restController->getBaseUri() . "/categories?limit=$limit&cursor=" . urlencode($searchResults['current']),
             'next' => null,
-            'items' => $this->serializer['area']->serializeItems($searchResults['items'])
+            'items' => $this->serializer['area']->serializeItems($searchResults['items']),
+            'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
             $results['next'] = $this->restController->getBaseUri() . "/categories?limit=$limit&cursor=" . urlencode($searchResults['next']);
@@ -947,7 +960,8 @@ class Controller
         $results = [
             'self' => $this->restController->getBaseUri() . "/areas?limit=$limit&cursor=" . urlencode($searchResults['current']),
             'next' => null,
-            'items' => $this->serializer['area']->serializeItems($searchResults['items'])
+            'items' => $this->serializer['area']->serializeItems($searchResults['items']),
+            'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
             $results['next'] = $this->restController->getBaseUri() . "/areas?limit=$limit&cursor=" . urlencode($searchResults['next']);
@@ -1032,6 +1046,7 @@ class Controller
         $factory->setParameter('interval', $this->getRequestParameter('interval'));
         $factory->setParameter('category', $this->getRequestParameter('category'));
         $factory->setParameter('area', $this->getRequestParameter('area'));
+        $factory->setParameter('authorFiscalCode', $this->getRequestParameter('authorFiscalCode'));
         $factoryItem = [
             'identifier' => $factory->getIdentifier(),
             'name' => $factory->getName(),
@@ -1160,7 +1175,7 @@ class Controller
         return isset($parameters[$name]) ? $parameters[$name] : null;
     }
 
-    private function convertQueryInQueryParameters($query, $parameters = array())
+    private function convertQueryInQueryParameters($query, $parameters = array(), $extraParameters = array())
     {
         try {
             $queryBuilder = new QueryBuilder($this->repository->getPostContentClassIdentifier());
@@ -1182,6 +1197,10 @@ class Controller
                 if (isset($convertedQuery[$key])) {
                     $data[$key] = is_array($convertedQuery[$key]) ? $convertedQuery[$key][0] : $convertedQuery[$key];
                 }
+            }
+
+            foreach ($extraParameters as $key => $value){
+                $data[$key] = $value;
             }
 
             return http_build_query($data);

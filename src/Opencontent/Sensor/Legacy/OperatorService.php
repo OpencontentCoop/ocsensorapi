@@ -3,6 +3,8 @@
 namespace Opencontent\Sensor\Legacy;
 
 use Opencontent\Sensor\Api\Exception\NotFoundException;
+use Opencontent\Sensor\Api\Exception\UnauthorizedException;
+use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Api\Values\Group;
 use Opencontent\Sensor\Api\Values\Operator;
 use Opencontent\Sensor\Api\Values\User;
@@ -66,7 +68,7 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
             $items[$item['metadata']['id']] = $this->internalLoadOperator($item);
         }
 
-        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor];
+        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor, 'count' => $result->totalCount];
     }
 
     public function loadOperatorsByGroup(Group $group, $limit, $cursor)
@@ -82,7 +84,7 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
             $items[$item['metadata']['id']] = $this->internalLoadOperator($item);
         }
 
-        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor];
+        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor, 'count' => $result->totalCount];
     }
 
     public function createOperator(array $payload)

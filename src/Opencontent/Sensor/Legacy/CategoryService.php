@@ -107,7 +107,7 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
             $items[$item['metadata']['id']] = $this->internalLoadCategory($item);
         }
 
-        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor];
+        return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor, 'count' => $result->totalCount];
     }
 
     /**

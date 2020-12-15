@@ -2,21 +2,19 @@
 
 namespace Opencontent\Sensor\Legacy;
 
+use Opencontent\Opendata\Api\ContentSearch;
+use Opencontent\Opendata\Api\QueryLanguage;
+use Opencontent\Opendata\Api\QueryLanguage\EzFind\SearchResultInfo;
+use Opencontent\Opendata\Api\SearchResultDecoratorInterface;
+use Opencontent\Opendata\Api\SearchResultDecoratorQueryBuilderAware;
+use Opencontent\Opendata\Api\Values\SearchResults;
 use Opencontent\Opendata\GeoJson\Feature;
 use Opencontent\Opendata\GeoJson\FeatureCollection;
 use Opencontent\Opendata\GeoJson\Geometry;
 use Opencontent\Opendata\GeoJson\Properties;
-use Opencontent\Sensor\Core\SearchService as BaseSearchService;
-use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Exception;
-use Opencontent\Opendata\Api\ContentSearch;
-use Opencontent\Opendata\Api\EnvironmentSettings;
-use Opencontent\Opendata\Api\Values\SearchResults;
-use Opencontent\Sensor\Api\Exception\NotFoundException;
-use Opencontent\Opendata\Api\SearchResultDecoratorInterface;
-use Opencontent\Opendata\Api\SearchResultDecoratorQueryBuilderAware;
-use Opencontent\Opendata\Api\QueryLanguage\EzFind\SearchResultInfo;
-use Opencontent\Opendata\Api\QueryLanguage;
+use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Core\SearchService as BaseSearchService;
 use Opencontent\Sensor\Legacy\SearchService\SolrMapper;
 
 class SearchService extends BaseSearchService
@@ -101,7 +99,8 @@ class SearchService extends BaseSearchService
             'readingStatuses' => false,
             'currentUserInParticipants' => false,
             'capabilities' => false,
-            'format' => 'json'
+            'format' => 'json',
+            'authorFiscalCode' => false
         ], $parameters);
 
         // bootst perfomance if geojson
@@ -109,6 +108,18 @@ class SearchService extends BaseSearchService
             $parameters['executionTimes'] = false;
             $parameters['readingStatuses'] = false;
             $parameters['capabilities'] = false;
+        }
+
+        if (!empty($parameters['authorFiscalCode'])) {
+            $authorIdList = $this->getUserIdListByFiscalCode($parameters['authorFiscalCode']);
+            if (empty($authorIdList)) {
+                $searchResults = new SearchResults();
+                $searchResults->totalCount = 0;
+
+                return $searchResults;
+            } else {
+                $query .= ' and author_id in [' . implode(',', $authorIdList) . ']';
+            }
         }
 
         $solrStorageTools = new \ezfSolrStorage();
@@ -300,6 +311,20 @@ class SearchService extends BaseSearchService
         }
 
         throw new Exception\UnexpectedException("Invalid format " . $parameters['format']);
+    }
+
+    private function getUserIdListByFiscalCode($fiscalCode)
+    {
+        $query = "select-fields [metadata.id => data.fiscal_code] and fiscal_code = '\"{$fiscalCode}\"'";
+        $currentEnvironment = new \DefaultEnvironmentSettings();
+        $parser = new \ezpRestHttpRequestParser();
+        $request = $parser->createRequest();
+        $currentEnvironment->__set('request', $request);
+        $contentSearch = new ContentSearch();
+        $contentSearch->setEnvironment($currentEnvironment);
+        $data = (array)$contentSearch->search($query, array());
+
+        return array_keys($data);
     }
 
     private function getReadingStatusesForUser($readingStatuses, $userId)

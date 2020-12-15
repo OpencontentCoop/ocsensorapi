@@ -119,4 +119,9 @@ trait FiltersTrait
 
         return $intervalNameParser;
     }
+
+    protected function getAuthorFiscalCodeParameter()
+    {
+        return $this->hasParameter('authorFiscalCode') ? $this->getParameter('authorFiscalCode') : false;
+    }
 }

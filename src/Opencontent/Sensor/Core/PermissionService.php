@@ -23,6 +23,8 @@ class PermissionService implements PermissionServiceInterface
      */
     protected $permissionDefinitions;
 
+    private $userPermissions = [];
+
     /**
      * @param Repository $repository
      * @param PermissionDefinition[] $permissionDefinitions
@@ -44,14 +46,18 @@ class PermissionService implements PermissionServiceInterface
 
     public function loadUserPostPermissionCollection(User $user, Post $post)
     {        
-        $permissionCollection = new PermissionCollection();
-        foreach ($this->permissionDefinitions as $permissionDefinition) {
-            $permission = new Permission();
-            $permission->identifier = $permissionDefinition->identifier;
-            $permission->grant = (bool)$permissionDefinition->userHasPermission($user, $post);
-            $permissionCollection->addPermission($permission);
+        if (!isset($this->userPermissions[$user->id][$post->id])) {
+            $permissionCollection = new PermissionCollection();
+            foreach ($this->permissionDefinitions as $permissionDefinition) {
+                $permission = new Permission();
+                $permission->identifier = $permissionDefinition->identifier;
+                $permission->grant = (bool)$permissionDefinition->userHasPermission($user, $post);
+                $permissionCollection->addPermission($permission);
+            }
+            $this->userPermissions[$user->id][$post->id] = $permissionCollection;
         }
-        return $permissionCollection;
+
+        return $this->userPermissions[$user->id][$post->id];
     }
 
     public function loadCurrentUserPostPermissionCollection(Post $post)

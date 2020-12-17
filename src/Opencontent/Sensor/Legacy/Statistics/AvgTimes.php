@@ -9,6 +9,7 @@ use Opencontent\Sensor\Legacy\Repository;
 class AvgTimes extends StatisticFactory
 {
     use FiltersTrait;
+    use AccessControlTrait;
 
     protected $repository;
 
@@ -47,7 +48,7 @@ class AvgTimes extends StatisticFactory
             $areaFilter = $this->getAreaFilter();
             $search = $this->repository->getStatisticsService()->searchPosts(
                 "{$categoryFilter}{$areaFilter} workflow_status in [closed] and stats [field=>[sensor_fix_close_time_i,sensor_assign_fix_time_i,sensor_read_assign_time_i,sensor_open_read_time_i],facet=>{$byInterval}] limit 1",
-                ['authorFiscalCode' => $this->getAuthorFiscalCodeParameter()]
+                ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
             $this->data = [
                 'intervals' => [],

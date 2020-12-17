@@ -8,6 +8,8 @@ abstract class StatisticFactory
 
     protected $parameters;
 
+    protected $authorFiscalCode;
+
     abstract public function getIdentifier();
 
     abstract public function getName();
@@ -73,4 +75,21 @@ abstract class StatisticFactory
 
         return null;
     }
+
+    /**
+     * @return string
+     */
+    public function getAuthorFiscalCode()
+    {
+        return $this->authorFiscalCode;
+    }
+
+    /**
+     * @param string $authorFiscalCode
+     */
+    public function setAuthorFiscalCode($authorFiscalCode)
+    {
+        $this->authorFiscalCode = $authorFiscalCode;
+    }
+
 }

@@ -1621,9 +1621,43 @@ class SchemaBuilder
                             new OA\Parameter('area', OA\Parameter::IN_QUERY, 'Area id', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
                             ]),
-                            new OA\Parameter('authorFiscalCode', OA\Parameter::IN_QUERY, 'Filter by author fiscal code', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true]),
-                            ])
+                        ]
+                    ]
+                )
+            ]),
+            '/stats/{statIdentifier}/user/{authorFiscalCode}' => new OA\PathItem([
+                'get' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response',
+                            ['application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/Stat')
+                            ])], null),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '403' => new OA\Response('Forbidden'),
+                        '404' => new OA\Response('Not found'),
+                    ],
+                    'getUserStatByIdentifier',
+                    'Get single stat data filtered by author fiscal code',
+                    [
+                        'tags' => [self::$tags['stat']],
+                        'parameters' => [
+                            new OA\Parameter('statIdentifier', OA\Parameter::IN_PATH, 'ID of stat', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'string']),
+                                'required' => true,
+                            ]),
+                            new OA\Parameter('authorFiscalCode', OA\Parameter::IN_PATH, 'Author fiscal code', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'string']),
+                                'required' => true,
+                            ]),
+                            new OA\Parameter('interval', OA\Parameter::IN_QUERY, 'Time interval of stat data', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'string', 'default' => StatisticFactory::DEFAULT_INTERVAL, 'enum' => ['monthly', 'quarterly', 'half-yearly', 'yearly']]),
+                            ]),
+                            new OA\Parameter('category', OA\Parameter::IN_QUERY, 'Category id', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                            ]),
+                            new OA\Parameter('area', OA\Parameter::IN_QUERY, 'Area id', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                            ]),
                         ]
                     ]
                 )

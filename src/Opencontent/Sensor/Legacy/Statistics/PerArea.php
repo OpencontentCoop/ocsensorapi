@@ -9,6 +9,7 @@ use Opencontent\Sensor\Legacy\Repository;
 class PerArea extends StatisticFactory
 {
     use FiltersTrait;
+    use AccessControlTrait;
 
     protected $repository;
 
@@ -47,7 +48,7 @@ class PerArea extends StatisticFactory
             $areaFilter = $this->getAreaFilter();
             $search = $this->repository->getStatisticsService()->searchPosts(
                 "{$categoryFilter}{$areaFilter} limit 1 facets [raw[submeta_area___id____si]|alpha|100] pivot [facet=>[submeta_area___id____si,{$byInterval}],mincount=>1]",
-                ['authorFiscalCode' => $this->getAuthorFiscalCodeParameter()]
+                ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
 
             $this->data = [

@@ -9,6 +9,7 @@ use Opencontent\Sensor\Legacy\Repository;
 class StatusPercentage extends StatisticFactory
 {
     use FiltersTrait;
+    use AccessControlTrait;
 
     protected $repository;
 
@@ -45,7 +46,7 @@ class StatusPercentage extends StatisticFactory
             $areaFilter = $this->getAreaFilter();
             $search = $this->repository->getStatisticsService()->searchPosts(
                 "{$categoryFilter}{$areaFilter} facets [status] limit 1",
-                ['authorFiscalCode' => $this->getAuthorFiscalCodeParameter()]
+                ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
             $data = [];
             $total = $search->totalCount;

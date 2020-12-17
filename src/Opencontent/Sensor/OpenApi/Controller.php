@@ -1046,7 +1046,24 @@ class Controller
         $factory->setParameter('interval', $this->getRequestParameter('interval'));
         $factory->setParameter('category', $this->getRequestParameter('category'));
         $factory->setParameter('area', $this->getRequestParameter('area'));
-        $factory->setParameter('authorFiscalCode', $this->getRequestParameter('authorFiscalCode'));
+        $factoryItem = [
+            'identifier' => $factory->getIdentifier(),
+            'name' => $factory->getName(),
+            'description' => $factory->getDescription(),
+            'data' => $factory->getData()
+        ];
+        $result->variables = $factoryItem;
+        return $result;
+    }
+
+    public function getUserStatByIdentifier()
+    {
+        $result = new ezpRestMvcResult();
+        $factory = $this->repository->getStatisticsService()->getStatisticFactoryByIdentifier($this->restController->statIdentifier);
+        $factory->setAuthorFiscalCode($this->restController->authorFiscalCode);
+        $factory->setParameter('interval', $this->getRequestParameter('interval'));
+        $factory->setParameter('category', $this->getRequestParameter('category'));
+        $factory->setParameter('area', $this->getRequestParameter('area'));
         $factoryItem = [
             'identifier' => $factory->getIdentifier(),
             'name' => $factory->getName(),

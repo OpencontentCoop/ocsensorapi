@@ -52,7 +52,7 @@ class TreeNode
     {
         $languages = eZContentLanguage::fetchLocaleList();
         if (!empty($languages)) {
-            $commonPath = eZDir::path(array(eZSys::cacheDirectory(), 'sensor'));
+            $commonPath = eZDir::path(array(eZSys::cacheDirectory(), 'content', 'sensor'));
             $fileHandler = eZClusterFileHandler::instance();
             $commonSuffix = "tree/" . eZDir::filenamePath($treeId);
             $fileHandler->fileDeleteByDirList($languages, $commonPath, $commonSuffix);

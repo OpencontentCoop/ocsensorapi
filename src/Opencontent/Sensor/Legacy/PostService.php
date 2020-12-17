@@ -159,10 +159,10 @@ class PostService extends PostServiceBase
         $post->moderation = $this->getPostModerationCurrentStatus();
         $post->workflowStatus = $this->getPostWorkflowStatus();
 
-        $post->subject = $this->contentObject->name(
+        $post->subject = htmlspecialchars($this->contentObject->name(
             false,
             $this->repository->getCurrentLanguage()
-        );
+        ));
         $post->description = $this->getPostDescription();
         $post->type = $this->getPostType();
         $post->images = $this->getPostImages();
@@ -561,7 +561,7 @@ class PostService extends PostServiceBase
             $content = $this->contentObjectDataMap['geo']->content();
             $geo->latitude = $content->attribute( 'latitude' );
             $geo->longitude = $content->attribute( 'longitude' );
-            $geo->address = $content->attribute( 'address' );
+            $geo->address = htmlspecialchars($content->attribute( 'address' ));
         }
 
         return $geo;
@@ -571,7 +571,7 @@ class PostService extends PostServiceBase
     {
         if ( isset( $this->contentObjectDataMap['description'] ) )
         {
-            return $this->contentObjectDataMap['description']->toString();
+            return htmlspecialchars($this->contentObjectDataMap['description']->toString());
         }
 
         return false;

@@ -186,6 +186,7 @@ class MessageService extends MessageServiceBase
                                                                      ->getUserById( $link->attribute( 'message_type' ) );
                         }
                     }
+                    $message->text = htmlspecialchars($message->text);
                     $message->id = $simpleMessage->attribute( 'id' );
                     $creator = new User();
                     $creator->id = $simpleMessage->attribute( 'id' );

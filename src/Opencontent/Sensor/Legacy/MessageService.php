@@ -182,6 +182,7 @@ class MessageService extends MessageServiceBase
                     $message->published = Utils::getDateTimeFromTimestamp($simpleMessage->attribute('created'));
                     $message->modified = Utils::getDateTimeFromTimestamp($simpleMessage->attribute('modified'));
 
+                    $message->text = htmlspecialchars($message->text);
                     $message->richText = $this->formatText($message->text);
 
                     if ($type == 'response')

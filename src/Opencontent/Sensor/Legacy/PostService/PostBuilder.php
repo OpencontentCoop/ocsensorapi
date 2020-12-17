@@ -67,10 +67,10 @@ class PostBuilder
         $post->moderation = $this->loadPostModerationCurrentStatus();
         $post->workflowStatus = $this->loadPostWorkflowStatus();
 
-        $post->subject = $this->contentObject->name(
+        $post->subject = htmlspecialchars($this->contentObject->name(
             false,
             $this->repository->getCurrentLanguage()
-        );
+        ));
         $post->description = $this->loadPostDescription();
         $post->type = $this->loadPostType();
         $post->images = $this->loadPostImages();
@@ -508,7 +508,7 @@ class PostBuilder
             $content = $this->contentObjectDataMap['geo']->content();
             $geo->latitude = $content->attribute('latitude');
             $geo->longitude = $content->attribute('longitude');
-            $geo->address = html_entity_decode($content->attribute('address'));
+            $geo->address = htmlspecialchars(html_entity_decode($content->attribute('address')));
         }
 
         return $geo;
@@ -517,7 +517,7 @@ class PostBuilder
     protected function loadPostDescription()
     {
         if (isset($this->contentObjectDataMap['description'])) {
-            return $this->contentObjectDataMap['description']->toString();
+            return htmlspecialchars($this->contentObjectDataMap['description']->toString());
         }
 
         return false;

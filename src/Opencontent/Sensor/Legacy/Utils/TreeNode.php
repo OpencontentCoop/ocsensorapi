@@ -27,6 +27,10 @@ class TreeNode
         return self::getCacheManager($treeId)->processCache(
             function ($file, $mtime, $args) {
                 $tree = include($file);
+//                if ($tree instanceof \eZClusterFileFailure){
+//                    list($node, $parameters) = $args;
+//                    $tree = TreeNodeItem::walk($node, $parameters);
+//                }
                 return $tree;
             },
             function ($file, $args) {
@@ -57,11 +61,12 @@ class TreeNode
 
     public static function getCacheManager($treeId)
     {
-        $userRoleIdList = \eZUser::currentUser()->roleIDList();
-        $cacheFile = $treeId . '_' . md5(implode('_', $userRoleIdList)) . '.cache';
+        //$userRoleIdList = \eZUser::currentUser()->roleIDList();
+        //$cacheFile = $treeId . '_' . md5(implode('_', $userRoleIdList)) . '.cache';
+        $cacheFile = 'tree_' . $treeId . '.cache';
         $language = eZLocale::currentLocaleCode();
         $extraPath = eZDir::filenamePath($treeId);
-        $cacheFilePath = eZDir::path(array(eZSys::cacheDirectory(), 'sensor', $language, 'tree', $extraPath, $cacheFile));
+        $cacheFilePath = eZDir::path(array(eZSys::cacheDirectory(), 'content', 'sensor', $language, 'tree', $extraPath, $cacheFile));
         return eZClusterFileHandler::instance($cacheFilePath);
     }
 

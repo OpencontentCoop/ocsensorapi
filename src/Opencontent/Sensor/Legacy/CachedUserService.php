@@ -46,7 +46,7 @@ class CachedUserService extends UserService
     {
         $languages = eZContentLanguage::fetchLocaleList();
         if (!empty($languages)) {
-            $commonPath = eZDir::path(array(eZSys::cacheDirectory(), 'content', 'sensor'));
+            $commonPath = eZDir::path(array(eZSys::cacheDirectory(), 'ocopendata', 'sensor'));
             $fileHandler = eZClusterFileHandler::instance();
             $commonSuffix = "user-object/" . eZDir::filenamePath($userId);
             $fileHandler->fileDeleteByDirList($languages, $commonPath, $commonSuffix);
@@ -58,7 +58,7 @@ class CachedUserService extends UserService
         $cacheFile = $userId . '.cache';
         $language = $this->repository->getCurrentLanguage();
         $extraPath = eZDir::filenamePath($userId);
-        $cacheFilePath = eZDir::path(array(eZSys::cacheDirectory(), 'content', 'sensor', $language, 'user-object', $extraPath, $cacheFile));
+        $cacheFilePath = eZDir::path(array(eZSys::cacheDirectory(), 'ocopendata', 'sensor', $language, 'user-object', $extraPath, $cacheFile));
         return eZClusterFileHandler::instance($cacheFilePath);
     }
 }

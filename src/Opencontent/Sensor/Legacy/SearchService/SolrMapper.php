@@ -232,12 +232,14 @@ class SolrMapper
             $data['sensor_owner_id_list_lk'] = implode(',', $this->post->owners->getUserIdList());
             $data['sensor_owner_name_list_lk'] = [];
             $participantNameList = array();
+            $participantIdList = [];
             foreach ($this->post->owners->participants as $participant) {
                 $participantNameList[] = $participant->name;
                 if ($participant->type == Participant::TYPE_USER) {
-                    $data['sensor_owner_user_id_list_lk'][] = $participant->id;
+                    $participantIdList[] = $participant->id;
                 }
             }
+            $data['sensor_owner_user_id_list_lk'] = implode(',', $participantIdList);
             $data['sensor_owner_name_list_lk'] = implode(',', $participantNameList);
         }
 

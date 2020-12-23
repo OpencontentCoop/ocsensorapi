@@ -50,29 +50,37 @@ trait FiltersTrait
         return $areaFilter;
     }
 
-    protected function getIntervalFilter()
+    protected function getIntervalFilter($prefix = 'sensor')
     {
         $interval = $this->hasParameter('interval') ? $this->getParameter('interval') : StatisticFactory::DEFAULT_INTERVAL;
         $intervalNameParser = false;
         switch ($interval) {
+            case 'daily':
+                $byInterval = $prefix . '_day_i';
+                break;
+
+            case 'weekly':
+                $byInterval = $prefix . '_week_i';
+                break;
+
             case 'monthly':
-                $byInterval = 'sensor_month_i';
+                $byInterval = $prefix . '_month_i';
                 break;
 
             case 'quarterly':
-                $byInterval = 'sensor_quarter_i';
+                $byInterval = $prefix . '_quarter_i';
                 break;
 
             case 'half-yearly':
-                $byInterval = 'sensor_semester_i';
+                $byInterval = $prefix . '_semester_i';
                 break;
 
             case 'yearly':
-                $byInterval = 'sensor_year_i';
+                $byInterval = $prefix . '_year_i';
                 break;
 
             default:
-                $byInterval = 'sensor_year_i';
+                $byInterval = $prefix . '_year_i';
         }
 
         return $byInterval;
@@ -83,11 +91,26 @@ trait FiltersTrait
         $interval = $this->hasParameter('interval') ? $this->getParameter('interval') : 'yearly';
         $intervalNameParser = false;
         switch ($interval) {
+            case 'daily':
+                $intervalNameParser = function ($value) {
+                    $dateTime = date_create_from_format('Yz', $value);
+                    return $dateTime instanceof \DateTime ? $dateTime->format('d/m/Y') : $value;
+                };
+                break;
+
+            case 'weekly':
+                $intervalNameParser = function ($value) {
+                    $year = substr($value, 0, 4);
+                    $week = substr($value, 4);
+                    return "{$week}/{$year}";
+                };
+                break;
+
             case 'monthly':
                 $intervalNameParser = function ($value) {
                     $year = substr($value, 0, 4);
                     $month = substr($value, -2);
-                    return "{$year} {$month}";
+                    return "{$month}/{$year}";
                 };
                 break;
 
@@ -96,7 +119,7 @@ trait FiltersTrait
                     $year = substr($value, 0, 4);
                     $part = substr($value, -1);
 
-                    return "{$year} {$part}°";
+                    return "{$part}° trimestre {$year}";
                 };
                 break;
 
@@ -105,7 +128,7 @@ trait FiltersTrait
                     $year = substr($value, 0, 4);
                     $part = substr($value, -1);
 
-                    return "{$year} {$part}°";
+                    return "{$part}° semestre {$year}";
                 };
                 break;
 

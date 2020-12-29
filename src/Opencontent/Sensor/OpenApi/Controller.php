@@ -34,7 +34,7 @@ class Controller
     /**
      * @var SensorOpenApiControllerInterface
      */
-    private $restController;
+    protected $restController;
 
     /**
      * @var AbstractSerializer[]
@@ -152,7 +152,7 @@ class Controller
     {
         $action = new Action();
         $action->identifier = 'add_approver';
-        $action->setParameter('participant_ids', $this->restController->getPayload()['participant_ids']);
+        $action->setParameter('participant_ids', $this->getPayload()['participant_ids']);
         $this->repository->getActionService()->runAction($action, $this->loadPost());
 
         $result = new ezpRestMvcResult();
@@ -173,7 +173,7 @@ class Controller
     {
         $action = new Action();
         $action->identifier = 'assign';
-        $action->setParameter('participant_ids', $this->restController->getPayload()['participant_ids']);
+        $action->setParameter('participant_ids', $this->getPayload()['participant_ids']);
         $this->repository->getActionService()->runAction($action, $this->loadPost());
 
         $result = new ezpRestMvcResult();
@@ -194,7 +194,7 @@ class Controller
     {
         $action = new Action();
         $action->identifier = 'add_observer';
-        $action->setParameter('participant_ids', $this->restController->getPayload()['participant_ids']);
+        $action->setParameter('participant_ids', $this->getPayload()['participant_ids']);
         $this->repository->getActionService()->runAction($action, $this->loadPost());
 
         $result = new ezpRestMvcResult();
@@ -232,7 +232,7 @@ class Controller
         $post = $this->loadPost();
         $action = new Action();
         $action->identifier = 'add_comment';
-        $action->setParameter('text', $this->restController->getPayload()['text']);
+        $action->setParameter('text', $this->getPayload()['text']);
         $this->repository->getActionService()->runAction($action, $post);
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
@@ -248,7 +248,7 @@ class Controller
         $action = new Action();
         $action->identifier = 'edit_comment';
         $action->setParameter('id', $this->restController->commentId);
-        $action->setParameter('text', $this->restController->getPayload()['text']);
+        $action->setParameter('text', $this->getPayload()['text']);
         $this->repository->getActionService()->runAction($action, $post);
 
         $result = new ezpRestMvcResult();
@@ -270,9 +270,9 @@ class Controller
         $post = $this->loadPost();
         $action = new Action();
         $action->identifier = 'send_private_message';
-        $action->setParameter('text', $this->restController->getPayload()['text']);
-        if (isset($this->restController->getPayload()['text'])) {
-            $action->setParameter('participant_ids', $this->restController->getPayload()['receivers']);
+        $action->setParameter('text', $this->getPayload()['text']);
+        if (isset($this->getPayload()['text'])) {
+            $action->setParameter('participant_ids', $this->getPayload()['receivers']);
         }
         $this->repository->getActionService()->runAction($action, $post);
 
@@ -289,7 +289,7 @@ class Controller
         $action = new Action();
         $action->identifier = 'edit_message';
         $action->setParameter('id', $this->restController->privateMessageId);
-        $action->setParameter('text', $this->restController->getPayload()['text']);
+        $action->setParameter('text', $this->getPayload()['text']);
         $this->repository->getActionService()->runAction($action, $post);
 
         $result = new ezpRestMvcResult();
@@ -311,7 +311,7 @@ class Controller
         $post = $this->loadPost();
         $action = new Action();
         $action->identifier = 'add_response';
-        $action->setParameter('text', $this->restController->getPayload()['text']);
+        $action->setParameter('text', $this->getPayload()['text']);
         $this->repository->getActionService()->runAction($action, $post);
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
@@ -327,7 +327,7 @@ class Controller
         $action = new Action();
         $action->identifier = 'edit_response';
         $action->setParameter('id', $this->restController->responseId);
-        $action->setParameter('text', $this->restController->getPayload()['text']);
+        $action->setParameter('text', $this->getPayload()['text']);
         $this->repository->getActionService()->runAction($action, $post);
 
         $result = new ezpRestMvcResult();
@@ -349,7 +349,7 @@ class Controller
         $post = $this->loadPost();
         $action = new Action();
         $action->identifier = 'add_attachment';
-        $action->setParameter('files', $this->restController->getPayload()['files']);
+        $action->setParameter('files', $this->getPayload()['files']);
         $this->repository->getActionService()->runAction($action, $post);
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
@@ -399,7 +399,7 @@ class Controller
         $post = $this->loadPost();
         $action = new Action();
         $action->identifier = 'add_area';
-        $action->setParameter('area_id', $this->restController->getPayload()['area_id']);
+        $action->setParameter('area_id', $this->getPayload()['area_id']);
         $this->repository->getActionService()->runAction($action, $post);
         $result = new ezpRestMvcResult();
         $result->variables = ['items' => $this->serializer['area']->serializeItems($this->loadPost()->areas)];
@@ -426,7 +426,7 @@ class Controller
         $post = $this->loadPost();
         $action = new Action();
         $action->identifier = 'add_category';
-        $payload = $this->restController->getPayload();
+        $payload = $this->getPayload();
         $action->setParameter('category_id', $payload['category_id']);
         $this->repository->getActionService()->runAction($action, $post);
         $result = new ezpRestMvcResult();
@@ -456,7 +456,7 @@ class Controller
         $result = new ezpRestMvcResult();
         $post = $this->loadPost();
         $newStatus = WorkflowStatus::instanceByIdentifier(
-            $this->restController->getPayload()['identifier']
+            $this->getPayload()['identifier']
         );
 
         if ($newStatus->code === WorkflowStatus::CLOSED) {
@@ -505,7 +505,7 @@ class Controller
     {
         $result = new ezpRestMvcResult();
         $post = $this->loadPost();
-        $newStatus = $this->restController->getPayload()['identifier'];
+        $newStatus = $this->getPayload()['identifier'];
 
         if ($newStatus === 'public') {
             $action = new Action();
@@ -536,7 +536,7 @@ class Controller
     {
         $result = new ezpRestMvcResult();
         $post = $this->loadPost();
-        $newStatus = $this->restController->getPayload()['identifier'];
+        $newStatus = $this->getPayload()['identifier'];
 
         $availableStatuses = [
             'waiting',
@@ -561,7 +561,7 @@ class Controller
     {
         $action = new Action();
         $action->identifier = 'set_expiry';
-        $action->setParameter('expiry_days', (int)$this->restController->getPayload());
+        $action->setParameter('expiry_days', (int)$this->getPayload());
         $this->repository->getActionService()->runAction($action, $this->loadPost());
 
         $result = new ezpRestMvcResult();
@@ -605,7 +605,7 @@ class Controller
 
     public function createUser()
     {
-        $payload = $this->restController->getPayload();
+        $payload = $this->getPayload();
         if (empty($payload['first_name'])) {
             throw new InvalidInputException("Field first_name is required");
         }
@@ -643,7 +643,7 @@ class Controller
         $userData = $this->repository->getUserService()->searchOne('id = ' . $this->restController->userId);
         $user = $this->repository->getUserService()->loadUser($userData['metadata']['id']);
 
-        $payload = $this->restController->getPayload();
+        $payload = $this->getPayload();
         if (empty($payload['first_name'])) {
             throw new InvalidInputException("Field first_name is required");
         }
@@ -701,7 +701,7 @@ class Controller
 
     public function createOperator()
     {
-        $payload = $this->restController->getPayload();
+        $payload = $this->getPayload();
 
         if (empty($payload['name'])) {
             throw new InvalidInputException("Field name is required");
@@ -741,7 +741,7 @@ class Controller
     {
         $operator = $this->repository->getOperatorService()->loadOperator($this->restController->operatorId);
 
-        $payload = $this->restController->getPayload();
+        $payload = $this->getPayload();
         if (empty($payload['name'])) {
             throw new InvalidInputException("Field name is required");
         }
@@ -804,7 +804,7 @@ class Controller
 
     public function createGroup()
     {
-        $payload = $this->restController->getPayload();
+        $payload = $this->getPayload();
 
         if (empty($payload['name'])) {
             throw new InvalidInputException("Field name is required");
@@ -855,7 +855,7 @@ class Controller
     {
         $group = $this->repository->getGroupService()->loadGroup($this->restController->groupId);
 
-        $payload = $this->restController->getPayload();
+        $payload = $this->getPayload();
         if (empty($payload['name'])) {
             throw new InvalidInputException("Field name is required");
         }
@@ -908,7 +908,7 @@ class Controller
 
     public function createCategory()
     {
-        $payload = $this->restController->getPayload();
+        $payload = $this->getPayload();
 
         if (empty($payload['name'])) {
             throw new InvalidInputException("Field name is required");
@@ -945,7 +945,7 @@ class Controller
     {
         $category = $this->repository->getCategoryService()->loadCategory($this->restController->categoryId);
 
-        $payload = $this->restController->getPayload();
+        $payload = $this->getPayload();
         if (empty($payload['name'])) {
             throw new InvalidInputException("Field name is required");
         }
@@ -1005,7 +1005,7 @@ class Controller
 
     public function createArea()
     {
-        $payload = $this->restController->getPayload();
+        $payload = $this->getPayload();
 
         if (empty($payload['name'])) {
             throw new InvalidInputException("Field name is required");
@@ -1038,7 +1038,7 @@ class Controller
     {
         $area = $this->repository->getAreaService()->loadArea($this->restController->areaId);
 
-        $payload = $this->restController->getPayload();
+        $payload = $this->getPayload();
         if (empty($payload['name'])) {
             throw new InvalidInputException("Field name is required");
         }
@@ -1139,7 +1139,7 @@ class Controller
      */
     private function loadPostStruct($postCreateStruct)
     {
-        $payload = $this->restController->getPayload();
+        $payload = $this->getPayload();
 
         if (empty($payload['subject'])) {
             throw new InvalidInputException("Field subject is required");
@@ -1220,6 +1220,11 @@ class Controller
             $this->restController->getRequest()->get
         );
         return isset($parameters[$name]) ? $parameters[$name] : null;
+    }
+
+    protected function getPayload()
+    {
+        return $this->restController->getPayload();
     }
 
     private function convertQueryInQueryParameters($query, $parameters = array(), $extraParameters = array())

@@ -581,14 +581,20 @@ class Controller
         }
 
         $searchResults = $this->repository->getUserService()->loadUsers($q, $limit, $cursor);
+        $parameters = [
+            'limit' => $limit,
+            'cursor' => $searchResults['current'],
+            'q' => $q
+        ];
         $results = [
-            'self' => $this->restController->getBaseUri() . "/users?limit=$limit&cursor=" . urlencode($searchResults['current']),
+            'self' => $this->restController->getBaseUri() . "/users?" . http_build_query($parameters),
             'next' => null,
             'items' => $this->serializer['user']->serializeItems($searchResults['items']),
             'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
-            $results['next'] = $this->restController->getBaseUri() . "/users?limit=$limit&cursor=" . urlencode($searchResults['next']);
+            $parameters['cursor'] = $searchResults['next'];
+            $results['next'] = $this->restController->getBaseUri() . "/users?" . http_build_query($parameters);
         }
 
         $result = new ezpRestMvcResult();
@@ -671,14 +677,20 @@ class Controller
         }
 
         $searchResults = $this->repository->getOperatorService()->loadOperators($q, $limit, $cursor);
+        $parameters = [
+            'limit' => $limit,
+            'cursor' => $searchResults['current'],
+            'q' => $q
+        ];
         $results = [
-            'self' => $this->restController->getBaseUri() . "/operators?limit=$limit&cursor=" . urlencode($searchResults['current']),
+            'self' => $this->restController->getBaseUri() . "/operators?" . http_build_query($parameters),
             'next' => null,
             'items' => $this->serializer['operator']->serializeItems($searchResults['items']),
             'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
-            $results['next'] = $this->restController->getBaseUri() . "/operators?limit=$limit&cursor=" . urlencode($searchResults['next']);
+            $parameters['cursor'] = $searchResults['next'];
+            $results['next'] = $this->restController->getBaseUri() . "/operators?" . http_build_query($parameters);
         }
 
         $result = new ezpRestMvcResult();
@@ -768,14 +780,20 @@ class Controller
         }
 
         $searchResults = $this->repository->getGroupService()->loadGroups($q, $limit, $cursor);
+        $parameters = [
+            'limit' => $limit,
+            'cursor' => $searchResults['current'],
+            'q' => $q
+        ];
         $results = [
-            'self' => $this->restController->getBaseUri() . "//groups?limit=$limit&cursor=" . urlencode($searchResults['current']),
+            'self' => $this->restController->getBaseUri() . "/groups?" . http_build_query($parameters),
             'next' => null,
             'items' => $searchResults['items'],
             'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
-            $results['next'] = $this->restController->getBaseUri() . "//groups?limit=$limit&cursor=" . urlencode($searchResults['next']);
+            $parameters['cursor'] = $searchResults['next'];
+            $results['next'] = $this->restController->getBaseUri() . "/groups?" . http_build_query($parameters);
         }
 
         $result = new ezpRestMvcResult();
@@ -866,14 +884,20 @@ class Controller
         }
 
         $searchResults = $this->repository->getCategoryService()->loadCategories($q, $limit, $cursor);
+        $parameters = [
+            'limit' => $limit,
+            'cursor' => $searchResults['current'],
+            'q' => $q
+        ];
         $results = [
-            'self' => $this->restController->getBaseUri() . "/categories?limit=$limit&cursor=" . urlencode($searchResults['current']),
+            'self' => $this->restController->getBaseUri() . "/categories?" . http_build_query($parameters),
             'next' => null,
             'items' => $this->serializer['area']->serializeItems($searchResults['items']),
             'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
-            $results['next'] = $this->restController->getBaseUri() . "/categories?limit=$limit&cursor=" . urlencode($searchResults['next']);
+            $parameters['cursor'] = $searchResults['next'];
+            $results['next'] = $this->restController->getBaseUri() . "/categories?" . http_build_query($parameters);
         }
 
         $result = new ezpRestMvcResult();
@@ -957,14 +981,20 @@ class Controller
         }
 
         $searchResults = $this->repository->getAreaService()->loadAreas($q, $limit, $cursor);
+        $parameters = [
+            'limit' => $limit,
+            'cursor' => $searchResults['current'],
+            'q' => $q
+        ];
         $results = [
-            'self' => $this->restController->getBaseUri() . "/areas?limit=$limit&cursor=" . urlencode($searchResults['current']),
+            'self' => $this->restController->getBaseUri() . "/areas?" . http_build_query($parameters),
             'next' => null,
             'items' => $this->serializer['area']->serializeItems($searchResults['items']),
             'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
-            $results['next'] = $this->restController->getBaseUri() . "/areas?limit=$limit&cursor=" . urlencode($searchResults['next']);
+            $parameters['cursor'] = $searchResults['next'];
+            $results['next'] = $this->restController->getBaseUri() . "/areas?" . http_build_query($parameters);
         }
 
         $result = new ezpRestMvcResult();

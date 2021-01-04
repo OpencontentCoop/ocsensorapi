@@ -68,8 +68,9 @@ class UserService extends UserServiceBase
             throw new InvalidInputException('Max limit allowed is ' . \Opencontent\Sensor\Api\SearchService::MAX_LIMIT);
         }
 
-        $searchQuery = $query ? 'raw[meta_name_t] = ' . $query : '';
-        $result = $this->search("$searchQuery sort [name=>asc] limit $limit cursor [$cursor]");
+        $searchQuery = $query ? 'q = \'' . addcslashes($query, "')([]") . '\' and ': '';
+        $limitations = $this->repository->getCurrentUser()->behalfOfMode ? [] : null;
+        $result = $this->search("$searchQuery sort [name=>asc] limit $limit cursor [$cursor]", $limitations);
         $items = [];
         foreach ($result->searchHits as $item) {
             $items[$item['metadata']['id']] = $this->loadUser($item['metadata']['id']);

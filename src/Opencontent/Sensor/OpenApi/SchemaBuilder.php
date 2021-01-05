@@ -2,11 +2,11 @@
 
 namespace Opencontent\Sensor\OpenApi;
 
-use Opencontent\Sensor\Api\StatisticFactory;
-use Opencontent\Sensor\OpenApi;
 use erasys\OpenApi as OpenApiBase;
 use erasys\OpenApi\Spec\v3 as OA;
+use Opencontent\Sensor\Api\StatisticFactory;
 use Opencontent\Sensor\Legacy\SearchService;
+use Opencontent\Sensor\OpenApi;
 
 class SchemaBuilder
 {
@@ -1598,7 +1598,13 @@ class SchemaBuilder
                     [
                         '200' => new OA\Response('Successful response',
                             ['application/json' => new OA\MediaType([
-                                'schema' => new OA\Reference('#/components/schemas/Stat')
+                                'schema' => [
+                                    'oneOf' => [
+                                        new OA\Reference('#/components/schemas/Stat'),
+                                        new OA\Reference('#/components/schemas/StatusStat'),
+                                        new OA\Reference('#/components/schemas/AvgStat'),
+                                    ]
+                                ]
                             ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -1739,6 +1745,8 @@ class SchemaBuilder
 
             'StatCollection' => $this->buildSchema('StatCollection'),
             'Stat' => $this->buildSchema('Stat'),
+            'StatusStat' => $this->buildSchema('StatusStat'),
+            'AvgStat' => $this->buildSchema('AvgStat'),
         ];
 
         $components->requestBodies = [
@@ -1776,6 +1784,10 @@ class SchemaBuilder
 
         $typeEnum = isset($this->postClassDataMap['type']) && $this->postClassDataMap['type']->attribute('data_type_string') == \eZSelectionType::DATA_TYPE_STRING ?
             array_column($this->postClassDataMap['type']->content()['options'], 'name') :
+            [];
+
+        $channelEnum = isset($this->postClassDataMap['on_behalf_of_mode']) && $this->postClassDataMap['on_behalf_of_mode']->attribute('data_type_string') == \eZSelectionType::DATA_TYPE_STRING ?
+            array_column($this->postClassDataMap['on_behalf_of_mode']->content()['options'], 'name') :
             [];
 
         switch ($schemaName) {
@@ -1923,6 +1935,7 @@ class SchemaBuilder
                     'images' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'string', 'format' => 'url'], 'description' => 'Images']),
                     'is_comments_allowed' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Comments allowed']),
                     'address_meta_info' => $this->buildSchemaProperty(['type' => 'object', 'description' => 'Key/value meta informations about geo location']),
+                    'channel' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Channel', 'enum' => $channelEnum]),
                 ];
                 break;
 
@@ -2197,7 +2210,7 @@ class SchemaBuilder
                 break;
 
             case 'StatCollection':
-                $schema->title = 'GroupCollection';
+                $schema->title = 'StatCollection';
                 $schema->type = 'object';
                 $schema->properties = [
                     'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'string']]),
@@ -2214,7 +2227,49 @@ class SchemaBuilder
                         'intervals' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'string']]),
                         'series' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'object', 'properties' => [
                             'name' => $this->buildSchemaProperty(['type' => 'string']),
-                            'data' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'object']]),
+                            'data' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'object', 'properties' => [
+                                'interval' => $this->buildSchemaProperty(['type' => 'string']),
+                                'count' => $this->buildSchemaProperty(['type' => 'number']),
+                            ]]]),
+                        ]]]),
+                    ]]),
+
+                ];
+                break;
+            case 'AvgStat':
+                $schema->title = 'AvgStat';
+                $schema->type = 'object';
+                $schema->properties = [
+                    'identifier' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Identifier']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'description' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Description']),
+                    'data' => $this->buildSchemaProperty(['type' => 'object', 'properties' => [
+                        'intervals' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'string']]),
+                        'series' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'object', 'properties' => [
+                            'name' => $this->buildSchemaProperty(['type' => 'string']),
+                            'data' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'object', 'properties' => [
+                                'interval' => $this->buildSchemaProperty(['type' => 'string']),
+                                'count' => $this->buildSchemaProperty(['type' => 'number']),
+                                'avg' => $this->buildSchemaProperty(['type' => 'number']),
+                            ]]]),
+                        ]]]),
+                    ]]),
+
+                ];
+                break;
+            case 'StatusStat':
+                $schema->title = 'StatusStat';
+                $schema->type = 'object';
+                $schema->properties = [
+                    'identifier' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Identifier']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'description' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Description']),
+                    'data' => $this->buildSchemaProperty(['type' => 'object', 'properties' => [
+                        'intervals' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'string']]),
+                        'series' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'object', 'properties' => [
+                            'status' => $this->buildSchemaProperty(['type' => 'string']),
+                            'percentage' => $this->buildSchemaProperty(['type' => 'number']),
+                            'count' => $this->buildSchemaProperty(['type' => 'number']),
                         ]]]),
                     ]]),
 

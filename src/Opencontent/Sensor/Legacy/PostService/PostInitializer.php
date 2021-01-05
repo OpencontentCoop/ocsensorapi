@@ -114,6 +114,17 @@ class PostInitializer
                 $roles->getParticipantRoleById(ParticipantRole::ROLE_OBSERVER)
             );
         }
+        if ($post->reporter instanceof User
+            && !in_array($post->reporter->id, $scenario->getApprovers())
+            && !in_array($post->reporter->id, $scenario->getOwners())
+            && !in_array($post->reporter->id, $scenario->getObservers())
+        ){
+            $this->repository->getParticipantService()->addPostParticipant(
+                $post,
+                $post->reporter->id,
+                $roles->getParticipantRoleById(ParticipantRole::ROLE_OBSERVER)
+            );
+        }
 
         $event = new Event();
         $event->identifier = 'on_create';

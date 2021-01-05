@@ -12,6 +12,7 @@ use Opencontent\Sensor\Api\PermissionService;
 use Opencontent\Sensor\Api\ActionService;
 use Opencontent\Sensor\Api\UserService;
 use Opencontent\Sensor\Api\EventService;
+use Opencontent\Sensor\Api\ChannelService;
 use Opencontent\Sensor\Api\Values\Settings;
 use Psr\Log\LoggerInterface;
 
@@ -117,4 +118,9 @@ interface Repository
      * @return PostTypeService
      */
     public function getPostTypeService();
+
+    /**
+     * @return ChannelService
+     */
+    public function getChannelService();
 }

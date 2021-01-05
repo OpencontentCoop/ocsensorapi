@@ -166,6 +166,11 @@ class Post extends Exportable
      */
     public $relatedItems = [];
 
+    /**
+     * @var Post\Channel
+     */
+    public $channel;
+
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);

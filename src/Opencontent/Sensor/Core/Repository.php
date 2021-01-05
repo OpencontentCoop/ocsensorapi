@@ -105,6 +105,11 @@ abstract class Repository implements RepositoryInterface
      */
     protected $typeService;
 
+    /**
+     * @var \Opencontent\Sensor\Api\ChannelService
+     */
+    protected $channelService;
+
     public function getCurrentUser()
     {
         return $this->user;

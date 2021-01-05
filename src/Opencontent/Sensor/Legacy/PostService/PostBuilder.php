@@ -117,6 +117,8 @@ class PostBuilder
 
         $post->relatedItems = $this->loadPostRelatedItems();
 
+        $post->channel = $this->loadPostChannel();
+
         $this->checkApproversConsistency($post);
 
         return $post;
@@ -522,5 +524,17 @@ class PostBuilder
         }
 
         return array_unique($list);
+    }
+
+    protected function loadPostChannel()
+    {
+        if (isset($this->contentObjectDataMap['on_behalf_of_mode'])
+            && $this->contentObjectDataMap['on_behalf_of_mode']->hasContent()
+        ) {
+            $channel = $this->contentObjectDataMap['on_behalf_of_mode']->toString();
+            return $this->repository->getChannelService()->loadPostChannel($channel);
+        }
+
+        return $this->repository->getChannelService()->loadPostDefaultChannel();
     }
 }

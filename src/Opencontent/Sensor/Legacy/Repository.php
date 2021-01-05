@@ -306,5 +306,13 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
         return $this->typeService;
     }
 
+    public function getChannelService()
+    {
+        if ($this->channelService === null) {
+            $this->channelService = new ChannelService($this);
+        }
+
+        return $this->channelService;
+    }
 
 }

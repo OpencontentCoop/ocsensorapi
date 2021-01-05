@@ -56,6 +56,18 @@ class ParticipantCollection extends Collection
         return $list;
     }
 
+    public function getParticipantNameListByType($type)
+    {
+        $list = [];
+        foreach ($this->participants as $participant){
+            if ($participant->type == $type){
+                $list[] = $participant->name;
+            }
+        }
+
+        return $list;
+    }
+
     public function getUserIdList()
     {
         $list = [];

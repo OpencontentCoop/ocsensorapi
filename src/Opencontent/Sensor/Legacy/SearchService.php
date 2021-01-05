@@ -218,6 +218,7 @@ class SearchService extends BaseSearchService
             try {
                 if (isset($resultItem['data_map'][SolrMapper::SOLR_STORAGE_POST])) {
                     $postSerialized = $resultItem['data_map'][SolrMapper::SOLR_STORAGE_POST];
+                    /** @var Post $post */
                     $post = unserialize($postSerialized);
                     if ($parameters['executionTimes']) {
                         $post->executionTimes = $resultItem['data_map'][SolrMapper::SOLR_STORAGE_EXECUTION_TIMES];
@@ -237,6 +238,7 @@ class SearchService extends BaseSearchService
                     if ($parameters['capabilities']) {
                         $post->capabilities = $this->repository->getPermissionService()->loadCurrentUserPostPermissionCollection($post)->getArrayCopy();
                     }
+                    $post->commentsToModerate = $post->comments->commentsToModerate();
                     $searchResults->searchHits[] = $post;
                 }
             } catch (\Exception $e) {

@@ -115,6 +115,7 @@ class PostInitializer
             );
         }
         if ($post->reporter instanceof User
+            && $post->reporter->id != $post->author->id
             && !in_array($post->reporter->id, $scenario->getApprovers())
             && !in_array($post->reporter->id, $scenario->getOwners())
             && !in_array($post->reporter->id, $scenario->getObservers())

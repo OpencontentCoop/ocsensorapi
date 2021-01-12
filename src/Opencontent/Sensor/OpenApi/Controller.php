@@ -29,7 +29,7 @@ class Controller
     /**
      * @var \Opencontent\Sensor\Legacy\Repository
      */
-    private $repository;
+    protected $repository;
 
     /**
      * @var SensorOpenApiControllerInterface
@@ -39,7 +39,7 @@ class Controller
     /**
      * @var AbstractSerializer[]
      */
-    private $serializer;
+    protected $serializer;
 
     public function __construct(OpenApi $apiSettings, SensorOpenApiControllerInterface $restController)
     {

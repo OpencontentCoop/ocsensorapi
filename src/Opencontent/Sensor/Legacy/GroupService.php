@@ -20,10 +20,10 @@ class GroupService extends \Opencontent\Sensor\Core\GroupService
      */
     protected $repository;
 
-    public function loadGroup($groupId)
+    public function loadGroup($groupId, $limitations = null)
     {
         try {
-            $content = $this->searchOne("id = '$groupId'");
+            $content = $this->searchOne("id = '$groupId'", $limitations);
 
             return $this->internalLoadGroup($content);
         } catch (\Exception $e) {
@@ -31,14 +31,14 @@ class GroupService extends \Opencontent\Sensor\Core\GroupService
         }
     }
 
-    public function loadGroups($query, $limit, $cursor)
+    public function loadGroups($query, $limit, $cursor, $limitations = null)
     {
         if ($limit > \Opencontent\Sensor\Api\SearchService::MAX_LIMIT) {
             throw new InvalidInputException('Max limit allowed is ' . \Opencontent\Sensor\Api\SearchService::MAX_LIMIT);
         }
 
         $searchQuery = $query ? 'raw[meta_name_t] = ' . $query : '';
-        $result = $this->search("$searchQuery sort [name=>asc] limit $limit cursor [$cursor]");
+        $result = $this->search("$searchQuery sort [name=>asc] limit $limit cursor [$cursor]", $limitations);
         $items = [];
         foreach ($result->searchHits as $item) {
             $items[$item['metadata']['id']] = $this->internalLoadGroup($item);

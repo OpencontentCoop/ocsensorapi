@@ -299,8 +299,8 @@ class ParticipantService extends ParticipantServiceBase
             } elseif ($participantLink->attribute('participant_type') == eZCollaborationItemParticipantLink::TYPE_USERGROUP) {
 
                 try {
-                    $group = $this->repository->getGroupService()->loadGroup($contentObject->attribute('id'));
-                    $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*');
+                    $group = $this->repository->getGroupService()->loadGroup($contentObject->attribute('id'), []);
+                    $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*', []);
                     $operators = $operatorResult['items'];
                     $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
                     foreach ($operators as $operator) {
@@ -331,7 +331,7 @@ class ParticipantService extends ParticipantServiceBase
     private function recursiveLoadOperatorsByGroup(Group $group, $operatorResult, &$operators)
     {
         if ($operatorResult['next']) {
-            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next']);
+            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next'], []);
             $operators = array_merge($operatorResult['items'], $operators);
             $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
         }

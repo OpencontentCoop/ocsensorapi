@@ -10,7 +10,7 @@ interface OperatorService
      * @param $id
      * @return Operator
      */
-    public function loadOperator($id);
+    public function loadOperator($id, $limitations = null);
 
-    public function loadOperators($query, $limit, $offset);
+    public function loadOperators($query, $limit, $offset, $limitations = null);
 }

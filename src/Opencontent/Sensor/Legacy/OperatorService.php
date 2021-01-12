@@ -24,10 +24,10 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
      */
     protected $repository;
 
-    public function loadOperator($id)
+    public function loadOperator($id, $limitations = null)
     {
         try {
-            $content = $this->searchOne("id = '$id'");
+            $content = $this->searchOne("id = '$id'", $limitations);
 
             return $this->internalLoadOperator($content);
         } catch (\Exception $e) {
@@ -55,14 +55,14 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
         return self::fromUser($repository->getUserService()->loadUser($content['metadata']['id']));
     }
 
-    public function loadOperators($query, $limit, $cursor)
+    public function loadOperators($query, $limit, $cursor, $limitations = null)
     {
         if ($limit > \Opencontent\Sensor\Api\SearchService::MAX_LIMIT) {
             throw new InvalidInputException('Max limit allowed is ' . \Opencontent\Sensor\Api\SearchService::MAX_LIMIT);
         }
 
         $searchQuery = $query ? 'raw[meta_name_t] = ' . $query : '';
-        $result = $this->search("$searchQuery sort [name=>asc] limit $limit cursor [$cursor]");
+        $result = $this->search("$searchQuery sort [name=>asc] limit $limit cursor [$cursor]", $limitations);
         $items = [];
         foreach ($result->searchHits as $item) {
             $items[$item['metadata']['id']] = $this->internalLoadOperator($item);
@@ -71,14 +71,14 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
         return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor, 'count' => $result->totalCount];
     }
 
-    public function loadOperatorsByGroup(Group $group, $limit, $cursor)
+    public function loadOperatorsByGroup(Group $group, $limit, $cursor, $limitations = null)
     {
         if ($limit > \Opencontent\Sensor\Api\SearchService::MAX_LIMIT) {
             throw new InvalidInputException('Max limit allowed is ' . \Opencontent\Sensor\Api\SearchService::MAX_LIMIT);
         }
 
         $groupQuery = self::GROUP_ATTRIBUTE_IDENTIFIER . '.id = ' . $group->id;
-        $result = $this->search("$groupQuery sort [name=>desc] limit $limit cursor [$cursor]");
+        $result = $this->search("$groupQuery sort [name=>desc] limit $limit cursor [$cursor]", $limitations);
         $items = [];
         foreach ($result->searchHits as $item) {
             $items[$item['metadata']['id']] = $this->internalLoadOperator($item);

@@ -19,14 +19,15 @@ class PermissionService extends BasePermissionService
         foreach ($this->permissionDefinitions as $permissionDefinition) {
             $permission = new Permission();
             $permission->identifier = $permissionDefinition->identifier;
-            $permission->grant = $this->isSuperAdmin($user) && !$permissionDefinition instanceof SettingPermissionInterface ? true :
+            $permission->grant = self::isSuperAdmin($user) && !$permissionDefinition instanceof SettingPermissionInterface ? true :
                 (bool)$permissionDefinition->userHasPermission($user, $post);
             $permissionCollection->addPermission($permission);
         }
         return $permissionCollection;
     }
 
-    private function isSuperAdmin(User $user)
+    //@todo move to user property
+    public static function isSuperAdmin(User $user)
     {
         if (!isset(self::$superUsers[$user->id])) {
             self::$superUsers[$user->id] = false;

@@ -187,7 +187,11 @@ class PostService extends PostServiceBase
             }
         }
 
-        if ($this->repository->getSensorSettings()->get('HideOperatorNames') && $this->repository->getCurrentUser()->type == 'user'){
+        if (
+            $this->repository->getSensorSettings()->get('HideOperatorNames')
+            && $this->repository->getCurrentUser()->type == 'user'
+            && !PermissionService::isSuperAdmin($this->repository->getCurrentUser())
+        ){
             $hiddenOperatorName = $this->repository->getSensorSettings()->get('HiddenOperatorName');
             $hiddenOperatorEmail = $this->repository->getSensorSettings()->get('HiddenOperatorEmail');
             $hiddenOperators = [];

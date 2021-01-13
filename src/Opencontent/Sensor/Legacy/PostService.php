@@ -187,11 +187,16 @@ class PostService extends PostServiceBase
             }
         }
 
-        if ($this->repository->getSensorSettings()->get('HideOperatorNames') && $this->repository->getCurrentUser()->type == 'user'){
+        if (
+            $this->repository->getSensorSettings()->get('HideOperatorNames')
+            && $this->repository->getCurrentUser()->type == 'user'
+            && !PermissionService::isSuperAdmin($this->repository->getCurrentUser())
+        ){
             $hiddenOperatorName = $this->repository->getSensorSettings()->get('HiddenOperatorName');
             $hiddenOperatorEmail = $this->repository->getSensorSettings()->get('HiddenOperatorEmail');
             $hiddenOperators = [];
-            $hiddenParticipants = new ParticipantCollection();
+            $hiddenParticipantsByRole = [];
+            $hiddenParticipants = [];
             foreach ($post->participants as $participant){
                 if (in_array($participant->roleIdentifier, [ParticipantRole::ROLE_OWNER, ParticipantRole::ROLE_OBSERVER])
                     && $participant->type == Participant::TYPE_USER){
@@ -199,26 +204,23 @@ class PostService extends PostServiceBase
                     $hiddenParticipant = clone $participant;
                     $hiddenParticipant->name = $hiddenOperatorName;
                     $hiddenParticipant->id = 1;
-                    $hiddenParticipants->addParticipant($hiddenParticipant);
+                    $hiddenParticipantsByRole[$participant->roleIdentifier][$hiddenParticipant->id] = $hiddenParticipant;
+                    $hiddenParticipants[] = $hiddenParticipant;
                 }else{
-                    $hiddenParticipants->addParticipant($participant);
+                    $hiddenParticipantsByRole[$participant->roleIdentifier][$participant->id] = $participant;
+                    $hiddenParticipants[] = $participant;
                 }
             }
-            $post->participants = $hiddenParticipants;
-            $post->approvers = Participant\ApproverCollection::fromCollection(
-                $hiddenParticipants->getParticipantsByRole(ParticipantRole::ROLE_APPROVER)
-            );
-            $post->owners = Participant\OwnerCollection::fromCollection(
-                $hiddenParticipants->getParticipantsByRole(ParticipantRole::ROLE_OWNER)
-            );
-            $post->observers = Participant\ObserverCollection::fromCollection(
-                $hiddenParticipants->getParticipantsByRole(ParticipantRole::ROLE_OBSERVER)
-            );
+            $post->participants = new ParticipantCollection($hiddenParticipants);
+            $post->approvers = new Participant\ApproverCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_APPROVER]);
+            $post->owners = new Participant\OwnerCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_OWNER]);
+            $post->observers = new Participant\ObserverCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_OBSERVER]);
 
             $timelineMessages = new TimelineItemCollection();
             foreach ($post->timelineItems->messages as $message){
                 $hiddenMessage = clone $message;
                 if (isset($hiddenOperators[$message->creator->id])) {
+                    $hiddenMessage->creator = clone $message->creator;
                     $hiddenMessage->creator->id = 1;
                     $hiddenMessage->creator->name = $hiddenOperatorName;
                     $hiddenMessage->creator->email = $hiddenOperatorEmail;

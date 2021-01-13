@@ -4,6 +4,13 @@ namespace Opencontent\Sensor\Api;
 
 abstract class Collection extends Exportable implements \ArrayAccess, \IteratorAggregate
 {
+    public function __construct(array $array = null)
+    {
+        if (!empty($array)) {
+            $this->fromArray($array);
+        }
+    }
+
     public function offsetExists($offset)
     {
         $data = $this->toArray();

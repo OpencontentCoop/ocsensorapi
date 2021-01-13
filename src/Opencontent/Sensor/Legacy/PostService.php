@@ -215,6 +215,10 @@ class PostService extends PostServiceBase
             $post->approvers = new Participant\ApproverCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_APPROVER]);
             $post->owners = new Participant\OwnerCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_OWNER]);
             $post->observers = new Participant\ObserverCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_OBSERVER]);
+            $observerGroups = $post->observers->getParticipantsByType(Participant::TYPE_GROUP);
+            if ($observerGroups->count() > 0){
+                $post->observers = $observerGroups;
+            }
 
             $timelineMessages = new TimelineItemCollection();
             foreach ($post->timelineItems->messages as $message){

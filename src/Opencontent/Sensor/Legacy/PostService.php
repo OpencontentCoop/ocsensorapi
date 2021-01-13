@@ -253,6 +253,7 @@ class PostService extends PostServiceBase
         $validator->validate($post);
 
         $author = $post->author ? (int)$post->author : (int)$this->repository->getCurrentUser()->id;
+        $reporter = $author != (int)$this->repository->getCurrentUser()->id ? (int)$this->repository->getCurrentUser()->id : null;
         $params = [
             'creator_id' => $author,
             'class_identifier' => $this->repository->getPostContentClass()->attribute('identifier'),
@@ -268,6 +269,9 @@ class PostService extends PostServiceBase
                 'area' => implode('-', $post->areas),
                 'category' => implode('-', $post->categories),
                 'meta' => (string)$post->meta,
+                'on_behalf_of_mode' => (string)$post->channel,
+                'reporter' => $reporter,
+                'on_behalf_of' => $reporter ? $author : '',
             ]
         ];
 

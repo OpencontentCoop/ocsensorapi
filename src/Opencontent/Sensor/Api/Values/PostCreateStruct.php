@@ -66,6 +66,11 @@ class PostCreateStruct
      */
     public $meta;
 
+    /**
+     * @var string
+     */
+    public $channel;
+
     public static function fromArray(array $data)
     {
         $object = new static();

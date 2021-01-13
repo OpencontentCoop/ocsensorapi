@@ -1205,6 +1205,14 @@ class Controller
             $postCreateStruct->meta = $payload['meta'];
         }
 
+        if (isset($payload['author'])) {
+            $postCreateStruct->author = (int)$payload['author'];
+        }
+
+        if (isset($payload['channel'])) {
+            $postCreateStruct->channel = (string)$payload['channel'];
+        }
+
         return $postCreateStruct;
     }
 

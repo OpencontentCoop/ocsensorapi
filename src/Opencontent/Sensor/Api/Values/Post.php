@@ -7,7 +7,10 @@ use Opencontent\Sensor\Api\Exportable;
 /**
  * Class Post
  * @package Opencontent\Sensor\Api\Values
- *
+ * @property array $executionTimes
+ * @property array $readingStatuses
+ * @property array $capabilities
+ * @property array $commentsToModerate
  */
 class Post extends Exportable
 {

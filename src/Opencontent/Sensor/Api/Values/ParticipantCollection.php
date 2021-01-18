@@ -61,7 +61,7 @@ class ParticipantCollection extends Collection
         $list = [];
         foreach ($this->participants as $id => $participant){
             if ($participant->type == $type){
-                $list[] = $participant->id;
+                $list[] = (int)$participant->id;
             }
         }
 

@@ -86,12 +86,16 @@ class SolrMapper
             'category_name_list' => 'sensor_category_name_list_lk',
             'category_id_list' => 'sensor_category_id_list_lk',
 
+            'unmoderated_comments' =>'sensor_unmoderated_comments_comments_i',
+
             'user_*_has_read' => 'sensor_user_*_has_read_b',
+            'user_*_last_access_timestamp' => 'sensor_user_*_last_access_timestamp_i',
             'user_*_unread_timelines' => 'sensor_user_*_unread_timelines_i',
             'user_*_timelines' => 'sensor_user_*_timelines_i',
             'user_*_unread_comments' => 'sensor_user_*_unread_comments_i',
             'user_*_comments' => 'sensor_user_*_comments_i',
             'user_*_unread_private_messages' => 'sensor_user_*_unread_private_messages_i',
+            'user_*_unread_private_messages_as_receiver' => 'sensor_user_*_unread_private_messages_as_receiver_i',
             'user_*_private_messages' => 'sensor_user_*_private_messages_i',
             'user_*_unread_responses' => 'sensor_user_*_unread_responses_i',
             'user_*_responses' => 'sensor_user_*_responses_i',
@@ -142,7 +146,7 @@ class SolrMapper
         }
 
         if ($this->post->author && $this->post->reporter)
-            $data['sensor_behalf_b'] = ($this->post->author->name != $this->post->reporter->name) ? 'true' : 'false';
+            $data['sensor_behalf_b'] = ($this->post->author->id != $this->post->reporter->id) ? 'true' : 'false';
 
         if ($this->post->published instanceof \DateTime) {
             $data['sensor_open_dt'] = strftime('%Y-%m-%dT%H:%M:%SZ', $this->post->published->format('U'));
@@ -307,10 +311,15 @@ class SolrMapper
                     $this->repository->getPostService()->setUserPostAware($post);
 
                     $data['sensor_user_' . $user->id . '_has_read_b'] = $user->hasRead ? 'true' : 'false';
+                    if ($user->lastAccessDateTime instanceof \DateTime ) {
+                        $data['sensor_user_' . $user->id . '_last_access_timestamp_i'] = (int)$user->lastAccessDateTime->format('U');
+                    }else{
+                        $data['sensor_user_' . $user->id . '_last_access_timestamp_i'] = 0;
+                    }
 
                     $unreadTimeLines = 0;
                     foreach ($post->timelineItems->messages as $message) {
-                        if ($message->modified > $user->lastAccessDateTime) {
+                        if ($message->creator->id != $user->id && $message->modified > $user->lastAccessDateTime) {
                             $unreadTimeLines++;
                         }
                     }
@@ -318,17 +327,22 @@ class SolrMapper
                     $data['sensor_user_' . $user->id . '_timelines_i'] = $post->timelineItems->count();
 
                     $unreadComments = 0;
+                    $unmoderatedComments = 0;
                     foreach ($post->comments->messages as $message) {
-                        if ($message->modified > $user->lastAccessDateTime) {
+                        if ($message->creator->id != $user->id && $message->modified > $user->lastAccessDateTime) {
                             $unreadComments++;
+                        }
+                        if ($message->needModeration){
+                            $unmoderatedComments++;
                         }
                     }
                     $data['sensor_user_' . $user->id . '_unread_comments_i'] = $unreadComments;
+                    $data['sensor_unmoderated_comments_comments_i'] = $unmoderatedComments;
                     $data['sensor_user_' . $user->id . '_comments_i'] = $post->comments->count();
 
                     $unreadResponses = 0;
                     foreach ($post->responses->messages as $message) {
-                        if ($message->modified > $user->lastAccessDateTime) {
+                        if ($message->creator->id != $user->id && $message->modified > $user->lastAccessDateTime) {
                             $unreadResponses++;
                         }
                     }
@@ -336,12 +350,19 @@ class SolrMapper
                     $data['sensor_user_' . $user->id . '_responses_i'] = $post->responses->count();
 
                     $unreadPrivates = 0;
+                    $unreadPrivatesAsReceiver = 0;
                     foreach ($post->privateMessages->messages as $message) {
-                        if ($message->modified > $user->lastAccessDateTime) {
-                            $unreadPrivates++;
+                        if ($message->creator->id != $user->id) {
+                            if ($message->modified > $user->lastAccessDateTime) {
+                                $unreadPrivates++;
+                                if ($message->getReceiverById($user->id)){
+                                    $unreadPrivatesAsReceiver++;
+                                }
+                            }
                         }
                     }
                     $data['sensor_user_' . $user->id . '_unread_private_messages_i'] = $unreadPrivates;
+                    $data['sensor_user_' . $user->id . '_unread_private_messages_as_receiver_i'] = $unreadPrivatesAsReceiver;
                     $data['sensor_user_' . $user->id . '_private_messages_i'] = $post->privateMessages->count();
                 }
             }
@@ -402,11 +423,13 @@ class SolrMapper
     {
         return array(
             'user_*_has_read' => 'sensor_user_*_has_read_b',
+            'user_*_last_access_timestamp' => 'sensor_user_*_last_access_timestamp_i',
             'user_*_unread_timelines' => 'sensor_user_*_unread_timelines_i',
             'user_*_timelines' => 'sensor_user_*_timelines_i',
             'user_*_unread_comments' => 'sensor_user_*_unread_comments_i',
             'user_*_comments' => 'sensor_user_*_comments_i',
             'user_*_unread_private_messages' => 'sensor_user_*_unread_private_messages_i',
+            'user_*_unread_private_messages_as_receiver' => 'sensor_user_*_unread_private_messages_as_receiver_i',
             'user_*_private_messages' => 'sensor_user_*_private_messages_i',
             'user_*_unread_responses' => 'sensor_user_*_unread_responses_i',
             'user_*_responses' => 'sensor_user_*_responses_i',
@@ -419,7 +442,7 @@ class SolrMapper
         foreach ($data as $solrKey => $value) {
             if (strpos($solrKey, 'sensor_user_') !== false) {
                 $key = str_replace(['sensor_', '_b', '_i'], '', $solrKey);
-                $statData[$key] = strpos($solrKey, '_b') !== false ? (int)$data[$solrKey] : $data[$solrKey];
+                $statData[$key] = strpos($solrKey, '_b') !== false ? (int)($data[$solrKey] === 'true') : (int)$data[$solrKey];
             }
         }
 

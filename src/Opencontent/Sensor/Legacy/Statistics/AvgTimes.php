@@ -46,8 +46,10 @@ class AvgTimes extends StatisticFactory
             $intervalNameParser = $this->getIntervalNameParser();
             $categoryFilter = $this->getCategoryFilter();
             $areaFilter = $this->getAreaFilter();
+            $rangeFilter = $this->getRangeFilter();
+
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter} workflow_status in [closed] and stats [field=>[sensor_fix_close_time_i,sensor_assign_fix_time_i,sensor_read_assign_time_i,sensor_open_read_time_i],facet=>{$byInterval}] limit 1",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter} workflow_status in [closed] and stats [field=>[sensor_fix_close_time_i,sensor_assign_fix_time_i,sensor_read_assign_time_i,sensor_open_read_time_i],facet=>{$byInterval}] limit 1",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
             $this->data = [

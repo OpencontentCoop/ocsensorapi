@@ -212,9 +212,16 @@ class PostService extends PostServiceBase
                 }
             }
             $post->participants = new ParticipantCollection($hiddenParticipants);
-            $post->approvers = new Participant\ApproverCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_APPROVER]);
-            $post->owners = new Participant\OwnerCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_OWNER]);
-            $post->observers = new Participant\ObserverCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_OBSERVER]);
+
+            if (isset($hiddenParticipantsByRole[ParticipantRole::ROLE_APPROVER]))
+                $post->approvers = new Participant\ApproverCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_APPROVER]);
+
+            if (isset($hiddenParticipantsByRole[ParticipantRole::ROLE_OWNER]))
+                $post->owners = new Participant\OwnerCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_OWNER]);
+
+            if (isset($hiddenParticipantsByRole[ParticipantRole::ROLE_OBSERVER]))
+                $post->observers = new Participant\ObserverCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_OBSERVER]);
+
             $observerGroups = $post->observers->getParticipantsByType(Participant::TYPE_GROUP);
             if ($observerGroups->count() > 0){
                 $post->observers = $observerGroups;

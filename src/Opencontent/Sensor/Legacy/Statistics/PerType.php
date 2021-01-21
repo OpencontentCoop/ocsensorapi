@@ -46,8 +46,10 @@ class PerType extends StatisticFactory
             $intervalNameParser = $this->getIntervalNameParser();
             $categoryFilter = $this->getCategoryFilter();
             $areaFilter = $this->getAreaFilter();
+            $rangeFilter = $this->getRangeFilter();
+
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter} limit 1 facets [raw[attr_type_s]|alpha|100] pivot [facet=>[attr_type_s,{$byInterval}],mincount=>1]",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter} limit 1 facets [raw[attr_type_s]|alpha|100] pivot [facet=>[attr_type_s,{$byInterval}],mincount=>1]",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
 

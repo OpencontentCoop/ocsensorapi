@@ -44,10 +44,13 @@ class StatusPercentage extends StatisticFactory
         if ($this->data === null) {
             $categoryFilter = $this->getCategoryFilter();
             $areaFilter = $this->getAreaFilter();
+            $rangeFilter = $this->getRangeFilter();
+
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter} facets [status] limit 1",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter} facets [status] limit 1",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
+
             $data = [];
             $total = $search->totalCount;
             foreach ($search->facets[0]['data'] as $status => $count) {

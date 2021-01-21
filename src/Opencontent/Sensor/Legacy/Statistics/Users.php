@@ -39,60 +39,6 @@ class Users extends StatisticFactory
         return ezpI18n::tr('sensor/chart', 'Andamento nuove adesioni');
     }
 
-    protected function getIntervalNameParser()
-    {
-        $interval = $this->hasParameter('interval') ? $this->getParameter('interval') : 'yearly';
-        $intervalNameParser = false;
-        $format = 'U';
-        switch ($interval) {
-            case 'daily':
-                $intervalNameParser = function ($value) use ($format) {
-                    $dateTime = date_create_from_format('Yz', $value);
-                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
-                };
-                break;
-
-            case 'monthly':
-                $intervalNameParser = function ($value) use ($format) {
-                    $year = substr($value, 0, 4);
-                    $month = substr($value, -2);
-                    $dateTime = \DateTime::createFromFormat('d m Y', "01 $month $year");
-                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
-                };
-                break;
-
-            case 'quarterly':
-                $intervalNameParser = function ($value) use ($format) {
-                    $year = substr($value, 0, 4);
-                    $part = substr($value, -1);
-                    $month = $part == 1 ? '01' : $part == 2 ? '04' : $part == 3 ? '07' : '10';
-                    $dateTime = date_create_from_format('d/m/Y', "01/$month/$year");
-                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
-                };
-                break;
-
-            case 'half-yearly':
-                $intervalNameParser = function ($value) use ($format) {
-                    $year = substr($value, 0, 4);
-                    $part = substr($value, -1);
-                    $month = $part == 2 ? '07' : '01';
-                    $dateTime = date_create_from_format('d/m/Y', "01/$month/$year");
-                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
-                };
-                break;
-
-            case 'yearly':
-                $intervalNameParser = function ($value) use ($format) {
-                    $dateTime = date_create_from_format('d/m/Y', "01/01/$value");
-                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
-                };
-                break;
-
-        }
-
-        return $intervalNameParser;
-    }
-
     public function getData()
     {
         if ($this->data === null) {
@@ -102,10 +48,12 @@ class Users extends StatisticFactory
             ];
 
             $byInterval = $this->getIntervalFilter('creation');
+            $rangeFilter = $this->getRangeFilter('published');
+
             $intervalNameParser = $this->getIntervalNameParser();
             $userSubtreeString = $this->repository->getUserService()->getSubtreeAsString();
             $search = $this->search(
-                "classes [user] and subtree [{$userSubtreeString}] limit 1 facets [raw[{$byInterval}]|alpha|100] pivot [facet=>[{$byInterval}],mincount=>1]"
+                "{$rangeFilter} classes [user] and subtree [{$userSubtreeString}] limit 1 facets [raw[{$byInterval}]|alpha|100] pivot [facet=>[{$byInterval}],mincount=>1]"
             );
 
             $series = [];

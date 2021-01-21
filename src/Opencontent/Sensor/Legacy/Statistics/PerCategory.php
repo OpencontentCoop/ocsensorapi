@@ -15,6 +15,8 @@ class PerCategory extends StatisticFactory
 
     private $data;
 
+    protected $minCount = 1;
+
     /**
      * StatusPercentage constructor.
      * @param Repository $repository
@@ -45,10 +47,10 @@ class PerCategory extends StatisticFactory
             $byInterval = $this->getIntervalFilter();
             $intervalNameParser = $this->getIntervalNameParser();
             $categoryFilter = $this->getCategoryFilter();
-
+            $rangeFilter = $this->getRangeFilter();
             $areaFilter = $this->getAreaFilter();
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter} limit 1 facets [raw[submeta_category___id____si]|alpha|100] pivot [facet=>[submeta_category___id____si,{$byInterval}],mincount=>1]",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter} limit 1 facets [raw[submeta_category___id____si]|alpha|100] pivot [facet=>[submeta_category___id____si,{$byInterval}],mincount=>{$this->minCount}}]",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
             $this->data = [

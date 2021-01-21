@@ -100,6 +100,8 @@ class SolrMapper
             'user_*_unread_responses' => 'sensor_user_*_unread_responses_i',
             'user_*_responses' => 'sensor_user_*_responses_i',
 
+            'day' => 'sensor_day_i',
+            'month' => 'sensor_week_i',
             'month' => 'sensor_month_i',
             'quarter' => 'sensor_quarter_i',
             'semester' => 'sensor_semester_i',
@@ -289,6 +291,10 @@ class SolrMapper
         if ($month >= 6) $semester = 2;
         else $semester = 1;
 
+        $data['sensor_day_i'] = $this->post->published->format('Yz');
+        $weekNum = $this->post->published->format('W');
+        $weekNum = $weekNum == 53 ? 52 : $weekNum;
+        $data['sensor_week_i'] = $this->post->published->format('Y') . $weekNum;
         $data['sensor_month_i'] = $this->post->published->format('Ym');
         $data['sensor_quarter_i'] = $this->post->published->format('Y') . $quarter;
         $data['sensor_semester_i'] = $this->post->published->format('Y') . $semester;

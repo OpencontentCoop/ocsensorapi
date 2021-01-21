@@ -86,55 +86,78 @@ trait FiltersTrait
         return $byInterval;
     }
 
+    protected function getRangeFilter($field = null)
+    {
+        if (!$field){
+            $field = $this->hasParameter('event') ? $this->getParameter('event') : 'open';
+        }
+        $start = $this->hasParameter('start') ? $this->getParameter('start') : null;
+        $end = $this->hasParameter('end') ? $this->getParameter('end') : null;
+        if ($start && $end && $field){
+            return " $field range [$start,$end] and ";
+        }
+        return '';
+    }
+
     protected function getIntervalNameParser()
     {
         $interval = $this->hasParameter('interval') ? $this->getParameter('interval') : 'yearly';
         $intervalNameParser = false;
+        $format = 'U';
         switch ($interval) {
             case 'daily':
-                $intervalNameParser = function ($value) {
+                $intervalNameParser = function ($value) use ($format) {
                     $dateTime = date_create_from_format('Yz', $value);
-                    return $dateTime instanceof \DateTime ? $dateTime->format('d/m/Y') : $value;
+                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 
             case 'weekly':
-                $intervalNameParser = function ($value) {
+                $intervalNameParser = function ($value) use ($format) {
                     $year = substr($value, 0, 4);
                     $week = substr($value, 4);
-                    return "{$week}/{$year}";
+                    $dateTime = new \DateTime();
+                    $dateTime->setISODate($year,$week);
+                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 
             case 'monthly':
-                $intervalNameParser = function ($value) {
+                $intervalNameParser = function ($value) use ($format) {
                     $year = substr($value, 0, 4);
                     $month = substr($value, -2);
-                    return "{$month}/{$year}";
+                    $dateTime = \DateTime::createFromFormat('d m Y', "01 $month $year");
+                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 
             case 'quarterly':
-                $intervalNameParser = function ($value) {
+                $intervalNameParser = function ($value) use ($format) {
                     $year = substr($value, 0, 4);
                     $part = substr($value, -1);
-
-                    return "{$part}° trimestre {$year}";
+                    if ($part == 1) $month = '01';
+                    elseif ($part == 2) $month = '04';
+                    elseif ($part == 3) $month = '07';
+                    else $month = '10';
+                    $dateTime = date_create_from_format('d/m/Y', "01/$month/$year");
+                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 
             case 'half-yearly':
-                $intervalNameParser = function ($value) {
+                $intervalNameParser = function ($value) use ($format) {
                     $year = substr($value, 0, 4);
                     $part = substr($value, -1);
-
-                    return "{$part}° semestre {$year}";
+                    $month = $part == 2 ? '07' : '01';
+                    $dateTime = date_create_from_format('d/m/Y', "01/$month/$year");
+                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 
             case 'yearly':
-                $intervalNameParser = function ($value) {
-                    return $value;
+                $intervalNameParser = function ($value) use ($format) {
+                    $dateTime = date_create_from_format('d/m/Y', "01/01/$value");
+                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 

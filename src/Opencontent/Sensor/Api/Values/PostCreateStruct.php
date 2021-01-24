@@ -49,7 +49,7 @@ class PostCreateStruct
     /**
      * @var array
      */
-    public $categories;
+    public $categories = [];
 
     /**
      * @var GeoLocation
@@ -59,7 +59,7 @@ class PostCreateStruct
     /**
      * @var array
      */
-    public $areas;
+    public $areas = [];
 
     /**
      * @var string

@@ -55,9 +55,22 @@ class PostCreateStructValidator extends BasePostCreateStructValidator
             }
         }
 
-        if ((int)$createStruct->author > 0) {
+        if (!empty($createStruct->author)) {
             if ($this->repository->getCurrentUser()->behalfOfMode !== true) {
                 throw new InvalidInputException("The current user can not post on behalf of others");
+            }
+            if (\eZMail::validate($createStruct->author)){
+                $user = \eZUser::fetchByEmail($createStruct->author);
+                if ($user instanceof \eZUser){
+                    $createStruct->author = $user->id();
+                }else{
+                    $createStruct->author = $this->repository->getUserService()->createUser([
+                        'first_name' => $createStruct->author,
+                        'last_name' => '',
+                        'email' => $createStruct->author,
+                        'fiscal_code' => '',
+                    ], true)->id;
+                }
             }
             if (!$this->repository->getUserService()->loadUser($createStruct->author)) {
                 throw new InvalidInputException("Author {$createStruct->author} is invalid");

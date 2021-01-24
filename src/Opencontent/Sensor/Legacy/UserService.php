@@ -79,12 +79,12 @@ class UserService extends UserServiceBase
         return ['items' => array_values($items), 'next' => $result->nextCursor, 'current' => $result->currentCursor, 'count' => $result->totalCount];
     }
 
-    public function createUser(array $payload)
+    public function createUser(array $payload, $ignorePolicies = false)
     {
         $ini = \eZINI::instance();
         $parentNodeId = (int)$ini->variable( "UserSettings", "DefaultUserPlacement" );
         $parentNode = \eZContentObjectTreeNode::fetch($parentNodeId);
-        if (!$parentNode instanceof \eZContentObjectTreeNode || !$parentNode->canCreate()){
+        if (!$parentNode instanceof \eZContentObjectTreeNode || (!$parentNode->canCreate() && $ignorePolicies === false)){
             throw new UnauthorizedException("Current user can not create user");
         }
         $params = [

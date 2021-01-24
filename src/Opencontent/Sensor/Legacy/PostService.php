@@ -212,16 +212,15 @@ class PostService extends PostServiceBase
                 }
             }
             $post->participants = new ParticipantCollection($hiddenParticipants);
-
-            if (isset($hiddenParticipantsByRole[ParticipantRole::ROLE_APPROVER]))
+            if (isset($hiddenParticipantsByRole[ParticipantRole::ROLE_APPROVER])) {
                 $post->approvers = new Participant\ApproverCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_APPROVER]);
-
-            if (isset($hiddenParticipantsByRole[ParticipantRole::ROLE_OWNER]))
+            }
+            if (isset($hiddenParticipantsByRole[ParticipantRole::ROLE_OWNER])) {
                 $post->owners = new Participant\OwnerCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_OWNER]);
-
-            if (isset($hiddenParticipantsByRole[ParticipantRole::ROLE_OBSERVER]))
+            }
+            if (isset($hiddenParticipantsByRole[ParticipantRole::ROLE_OBSERVER])) {
                 $post->observers = new Participant\ObserverCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_OBSERVER]);
-
+            }
             $observerGroups = $post->observers->getParticipantsByType(Participant::TYPE_GROUP);
             if ($observerGroups->count() > 0){
                 $post->observers = $observerGroups;
@@ -267,27 +266,43 @@ class PostService extends PostServiceBase
 
         $author = $post->author ? (int)$post->author : (int)$this->repository->getCurrentUser()->id;
         $reporter = $author != (int)$this->repository->getCurrentUser()->id ? (int)$this->repository->getCurrentUser()->id : null;
+        $class = $this->repository->getPostContentClass();
+
+        $privacyAttributeType = isset($class->dataMap()['privacy']) ? $class->dataMap()['privacy']->attribute('data_type_string') : \eZBooleanType::DATA_TYPE_STRING;
+        if ($privacyAttributeType == \eZSelectionType::DATA_TYPE_STRING) {
+            $privacy = $post->privacy === 'public' ? 'Si' : 'No';
+        }else{
+            $privacy = $post->privacy === 'public' ? '1' : '0';
+        }
+
         $params = [
             'creator_id' => $author,
-            'class_identifier' => $this->repository->getPostContentClass()->attribute('identifier'),
+            'class_identifier' => $class->attribute('identifier'),
             'parent_node_id' => (int)$this->repository->getPostRootNode()->attribute('node_id'),
             'attributes' => [
                 'subject' => (string)$post->subject,
                 'description' => (string)$post->description,
                 'type' => (string)$post->type,
                 'geo' => (string)$post->geoLocation,
-                'image' => $post->imagePath,
-                'images' => implode('|', $post->imagePaths),
-                'privacy' => (string)$post->privacy == 'public',
-                'area' => implode('-', $post->areas),
-                'category' => implode('-', $post->categories),
+                'privacy' => $privacy,
                 'meta' => (string)$post->meta,
-                'on_behalf_of_mode' => (string)$post->channel,
                 'reporter' => $reporter,
                 'on_behalf_of' => $reporter ? $author : '',
+                'on_behalf_of_mode' => (string)$post->channel,
             ]
         ];
-
+        if (!empty($post->imagePath)){
+            $params['attributes']['image'] = $post->imagePath;
+        }
+        if (count($post->imagePaths) > 0){
+            $params['attributes']['images'] = implode('|', $post->imagePaths);
+        }
+        if (count($post->areas) > 0){
+            $params['attributes']['area'] = implode('|', $post->areas);
+        }
+        if (count($post->categories) > 0){
+            $params['attributes']['category'] = implode('|', $post->categories);
+        }
         $object = \eZContentFunctions::createAndPublishObject($params);
 
         return $this->loadPost($object->attribute('id'));

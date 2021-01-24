@@ -38,6 +38,15 @@ class GeoLocation extends Field
         return $object;
     }
 
+    public function jsonSerialize()
+    {
+        if ($this->latitude === null && $this->longitude === null && $this->address === null){
+            return null;
+        }
+
+        return parent::jsonSerialize();
+    }
+
     public function __toString()
     {
         if ($this->latitude && $this->longitude)

@@ -106,8 +106,10 @@ class Controller
 
         $post = $this->repository->getPostService()->createPost($postCreateStruct);
         if ($postCreateStruct->imagePath) @unlink($postCreateStruct->imagePath);
-        foreach ($postCreateStruct->imagePaths as $imagePath){
-            @unlink($imagePath);
+        if (count($postCreateStruct->imagePaths) > 0) {
+            foreach ($postCreateStruct->imagePaths as $imagePath) {
+                @unlink($imagePath);
+            }
         }
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
@@ -232,7 +234,7 @@ class Controller
         $post = $this->loadPost();
         $action = new Action();
         $action->identifier = 'add_comment';
-        $action->setParameter('text', $this->restController->getPayload()['text']);
+        $action->setParameter('text', $this->cleanMessageText($this->restController->getPayload()['text']));
         $this->repository->getActionService()->runAction($action, $post);
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
@@ -248,7 +250,7 @@ class Controller
         $action = new Action();
         $action->identifier = 'edit_comment';
         $action->setParameter('id', $this->restController->commentId);
-        $action->setParameter('text', $this->restController->getPayload()['text']);
+        $action->setParameter('text', $this->cleanMessageText($this->restController->getPayload()['text']));
         $this->repository->getActionService()->runAction($action, $post);
 
         $result = new ezpRestMvcResult();
@@ -270,8 +272,8 @@ class Controller
         $post = $this->loadPost();
         $action = new Action();
         $action->identifier = 'send_private_message';
-        $action->setParameter('text', $this->restController->getPayload()['text']);
-        if (isset($this->restController->getPayload()['text'])) {
+        $action->setParameter('text', $this->cleanMessageText($this->restController->getPayload()['text']));
+        if (isset($this->restController->getPayload()['receivers'])) {
             $action->setParameter('participant_ids', $this->restController->getPayload()['receivers']);
         }
         $this->repository->getActionService()->runAction($action, $post);
@@ -289,7 +291,7 @@ class Controller
         $action = new Action();
         $action->identifier = 'edit_message';
         $action->setParameter('id', $this->restController->privateMessageId);
-        $action->setParameter('text', $this->restController->getPayload()['text']);
+        $action->setParameter('text', $this->cleanMessageText($this->restController->getPayload()['text']));
         $this->repository->getActionService()->runAction($action, $post);
 
         $result = new ezpRestMvcResult();
@@ -311,7 +313,7 @@ class Controller
         $post = $this->loadPost();
         $action = new Action();
         $action->identifier = 'add_response';
-        $action->setParameter('text', $this->restController->getPayload()['text']);
+        $action->setParameter('text', $this->cleanMessageText($this->restController->getPayload()['text']));
         $this->repository->getActionService()->runAction($action, $post);
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
@@ -327,7 +329,7 @@ class Controller
         $action = new Action();
         $action->identifier = 'edit_response';
         $action->setParameter('id', $this->restController->responseId);
-        $action->setParameter('text', $this->restController->getPayload()['text']);
+        $action->setParameter('text', $this->cleanMessageText($this->restController->getPayload()['text']));
         $this->repository->getActionService()->runAction($action, $post);
 
         $result = new ezpRestMvcResult();
@@ -1151,7 +1153,7 @@ class Controller
         }
         $postCreateStruct->description = $payload['description'];
 
-        if (isset($payload['address'])) {
+        if (isset($payload['address']) && is_array($payload['address'])) {
             if (empty($payload['address']['address']) || empty($payload['address']['latitude']) || empty($payload['address']['longitude'])) {
                 throw new InvalidInputException("Field address has wrong format");
             }
@@ -1180,33 +1182,25 @@ class Controller
 
         if (isset($payload['images'])) {
             foreach ($payload['images'] as $image) {
-                if (empty($image['filename']) || empty($image['file'])) {
-                    throw new InvalidInputException("Field images has wrong format");
-                }
+                $this->isValidImage($image);
             }
-            $imagePaths = [];
             foreach ($payload['images'] as $image) {
-                $imagePath = \eZSys::cacheDirectory() . '/' . $image['filename'];
-                \eZFile::create(basename($imagePath), dirname($imagePath), base64_decode($image['file']));
-                $imagePaths[] = $imagePath;
+                $imagePaths[] = $this->downloadImage($image);
             }
             $postCreateStruct->imagePaths = $imagePaths;
 
         }elseif (isset($payload['image'])) {
-            if (empty($payload['image']['filename']) || empty($payload['image']['file'])) {
-                throw new InvalidInputException("Field image has wrong format");
-            }
-            $imagePath = \eZSys::cacheDirectory() . '/' . $payload['image']['filename'];
-            \eZFile::create(basename($imagePath), dirname($imagePath), base64_decode($payload['image']['file']));
-            $postCreateStruct->imagePath = $imagePath;
+            $this->isValidImage($payload['image']);
+            $postCreateStruct->imagePath = $this->downloadImage($payload['image']);
         }
 
         if (isset($payload['meta'])) {
-            $postCreateStruct->meta = $payload['meta'];
+            $meta = $payload['meta'];
+            $postCreateStruct->meta = is_string($meta) ? $meta : json_encode($meta);
         }
 
         if (isset($payload['author'])) {
-            $postCreateStruct->author = (int)$payload['author'];
+            $postCreateStruct->author = $payload['author'];
         }
 
         if (isset($payload['channel'])) {
@@ -1214,6 +1208,27 @@ class Controller
         }
 
         return $postCreateStruct;
+    }
+
+    private function isValidImage($image)
+    {
+        if (!filter_var($image, FILTER_VALIDATE_URL) && (empty($image['filename']) || empty($image['file']))) {
+            throw new InvalidInputException("Field images has wrong format");
+        }
+
+        return true;
+    }
+
+    private function downloadImage($image)
+    {
+        if (filter_var($image, FILTER_VALIDATE_URL)){
+            $imagePath = \eZSys::cacheDirectory() . '/' . basename($image);
+            \eZFile::create(basename($imagePath), dirname($imagePath), file_get_contents($image));
+        }else {
+            $imagePath = \eZSys::cacheDirectory() . '/' . $image['filename'];
+            \eZFile::create(basename($imagePath), dirname($imagePath), base64_decode($image['file']));
+        }
+        return $imagePath;
     }
 
     private function getRequestParameters()
@@ -1297,6 +1312,11 @@ class Controller
         } else {
             return trim($value, "'");
         }
+    }
+
+    private function cleanMessageText($text)
+    {
+        return strip_tags(html_entity_decode($text));
     }
 
 }

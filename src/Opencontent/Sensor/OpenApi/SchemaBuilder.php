@@ -1854,6 +1854,7 @@ class SchemaBuilder
                             $identifier = 'address';
                             $properties = [
                                 'description' => $attribute->attribute('name'),
+                                'nullable' => true,
                                 'ref' => '#/components/schemas/Address'
                             ];
                         }
@@ -1912,6 +1913,16 @@ class SchemaBuilder
                         }
                     }
                 }
+
+                $schema->properties['channel'] = $this->buildSchemaProperty([
+                    'enum' => $channelEnum,
+                    'default' => $channelEnum[0],
+                ]);
+                $schema->properties['author'] = $this->buildSchemaProperty([
+                    'type' => 'integer',
+                    'maximum' => 1
+                ]);
+
                 break;
             case 'Post':
                 $schema->title = 'Post';

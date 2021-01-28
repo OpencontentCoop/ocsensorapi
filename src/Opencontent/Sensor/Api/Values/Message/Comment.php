@@ -14,4 +14,9 @@ class Comment extends Message
      * @var bool
      */
     public $needModeration = false;
+
+    /**
+     * @var bool
+     */
+    public $isRejected = false;
 }

@@ -7,4 +7,6 @@ use Opencontent\Sensor\Api\Values\MessageStruct;
 class CommentStruct extends MessageStruct
 {
     public $needModeration = false;
+
+    public $isRejected = false;
 }

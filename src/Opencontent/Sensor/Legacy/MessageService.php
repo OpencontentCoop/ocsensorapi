@@ -152,11 +152,8 @@ class MessageService extends MessageServiceBase
                         $message = new Message\Comment();
                         $type = 'comment';
                         $message->text = $simpleMessage->attribute('data_text1');
-                        if ($simpleMessage->attribute('data_int1') == 1){
-                            $message->needModeration = true;
-                        }else{
-                            $message->needModeration = false;
-                        }
+                        $message->needModeration = $simpleMessage->attribute('data_int1') == 1;
+                        $message->isRejected = $simpleMessage->attribute('data_int2') == 1;
 
                     } elseif ($firstLink->attribute('message_type') == self::RESPONSE) {
                         $message = new Message\Response();
@@ -176,11 +173,7 @@ class MessageService extends MessageServiceBase
                         $message = new Message\PrivateMessage();
                         $type = 'private';
                         $message->text = $simpleMessage->attribute('data_text1');
-                        if ($simpleMessage->attribute('data_int1') == 1){
-                            $message->isResponseProposal = true;
-                        }else{
-                            $message->isResponseProposal = false;
-                        }
+                        $message->isResponseProposal = $simpleMessage->attribute('data_int1') == 1;
                         /** @var eZCollaborationItemMessageLink $link */
                         foreach ($messageItem['links'] as $link) {
                             $participant = $this->repository->getParticipantService()
@@ -333,6 +326,7 @@ class MessageService extends MessageServiceBase
 
                 if ($struct instanceof Message\CommentStruct){
                     $simpleMessage->setAttribute('data_int1', (int)$struct->needModeration);
+                    $simpleMessage->setAttribute('data_int2', (int)$struct->isRejected);
                 }
 
                 $now = time();
@@ -359,6 +353,7 @@ class MessageService extends MessageServiceBase
             $fields['data_int1'] = (int)$struct->isResponseProposal;
         }elseif ($struct instanceof Message\CommentStruct){
             $fields['data_int1'] = (int)$struct->needModeration;
+            $fields['data_int2'] = (int)$struct->isRejected;
         }
 
         // avoid duplicated message in same second

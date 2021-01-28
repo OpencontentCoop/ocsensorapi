@@ -183,16 +183,16 @@ class PostInitializer
         /** @var \eZContentObjectAttribute[] $dataMap */
         $dataMap = $this->contentObjectVersion->attribute('data_map');
         if (isset($dataMap['privacy'])) {
-            if (($dataMap['privacy']->attribute('data_type_string') == 'ezboolean' && $dataMap['privacy']->attribute('data_int') == 0)
-                || ($dataMap['privacy']->attribute('data_type_string') == 'ezselection' && strtolower($dataMap['privacy']->attribute('data_text')) == 'no')) {
+            if (
+                ($dataMap['privacy']->attribute('data_type_string') == 'ezboolean' && $dataMap['privacy']->attribute('data_int') == 0)
+                || ($dataMap['privacy']->attribute('data_type_string') == 'ezselection' && strtolower($dataMap['privacy']->toString()) == 'no')
+            ) {
                 $this->repository->getPostService()->setPostStatus($post, 'privacy.private');
-
                 return false;
             }
         }
 
         $this->repository->getPostService()->setPostStatus($post, 'privacy.public');
-
         return true;
     }
 

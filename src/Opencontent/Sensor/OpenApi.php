@@ -64,7 +64,7 @@ class OpenApi
             $decode = true;
         }
 
-        $data = str_replace('_site_url_', $this->siteUrl, $data);
+        $data = str_replace('_site_url_', rtrim($this->siteUrl, '/'), $data);
         $data = str_replace('_email_support_', $this->emailSupport, $data);
         $data = str_replace('_endpoint_url_', $this->endpointUrl, $data);
         $data = str_replace('_docs_url_', $this->docsUrl, $data);

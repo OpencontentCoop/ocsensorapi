@@ -1915,12 +1915,17 @@ class SchemaBuilder
                 }
 
                 $schema->properties['channel'] = $this->buildSchemaProperty([
-                    'enum' => $channelEnum,
-                    'default' => $channelEnum[0],
+                    'enum' => $channelEnum
                 ]);
                 $schema->properties['author'] = $this->buildSchemaProperty([
                     'type' => 'integer',
+                    'description' => 'Author id',
                     'maximum' => 1
+                ]);
+                $schema->properties['author_email'] = $this->buildSchemaProperty([
+                    'type' => 'string',
+                    'description' => 'Author email address (create a new user if mail address is not registered)',
+                    'format' => 'email'
                 ]);
 
                 break;

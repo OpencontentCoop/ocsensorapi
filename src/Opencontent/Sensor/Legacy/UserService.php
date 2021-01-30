@@ -7,6 +7,7 @@ use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Exception\PermissionException;
 use Opencontent\Sensor\Api\Exception\UnauthorizedException;
 use Opencontent\Sensor\Api\Exception\UnexpectedException;
+use Opencontent\Sensor\Api\Values\Event;
 use Opencontent\Sensor\Core\UserService as UserServiceBase;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
@@ -101,7 +102,17 @@ class UserService extends UserServiceBase
 
         $object = \eZContentFunctions::createAndPublishObject($params);
 
-        return $this->loadUser($object->attribute('id'));
+        $user = $this->loadUser($object->attribute('id'));
+        if (!$user instanceof User){
+            throw new \RuntimeException("Error creating new user");
+        }
+
+        $event = new Event();
+        $event->identifier = 'on_create_user';
+        $event->user = $user;
+        $this->repository->getEventService()->fire($event);
+
+        return $user;
     }
 
     public function updateUser(User $user, $payload)

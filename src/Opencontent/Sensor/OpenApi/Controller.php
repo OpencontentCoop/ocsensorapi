@@ -1201,6 +1201,8 @@ class Controller
 
         if (isset($payload['author'])) {
             $postCreateStruct->author = $payload['author'];
+        }elseif (isset($payload['author_email'])) {
+            $postCreateStruct->author = $payload['author_email'];
         }
 
         if (isset($payload['channel'])) {

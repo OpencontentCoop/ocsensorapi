@@ -72,6 +72,19 @@ class PostUpdateStructValidator extends BasePostUpdateStructValidator
             if ($this->repository->getCurrentUser()->behalfOfMode !== true) {
                 throw new InvalidInputException("The current user can not post on behalf of others");
             }
+            if (\eZMail::validate($updateStruct->author)){
+                $user = \eZUser::fetchByEmail($updateStruct->author);
+                if ($user instanceof \eZUser){
+                    $updateStruct->author = $user->id();
+                }else{
+                    $updateStruct->author = $this->repository->getUserService()->createUser([
+                        'first_name' => $updateStruct->author,
+                        'last_name' => '',
+                        'email' => $updateStruct->author,
+                        'fiscal_code' => '',
+                    ], true)->id;
+                }
+            }
             if (!$this->repository->getUserService()->loadUser($updateStruct->author)) {
                 throw new InvalidInputException("Author {$updateStruct->author} is invalid");
             }

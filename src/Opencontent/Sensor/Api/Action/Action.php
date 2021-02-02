@@ -11,6 +11,18 @@ class Action
      */
     public $parameters = array();
 
+    public function __construct($identifier = null, array $parameters = null)
+    {
+        if ($identifier){
+            $this->identifier = $identifier;
+        }
+        if (is_array($parameters)){
+            foreach ($parameters as $key => $value){
+                $this->setParameter($key, $value);
+            }
+        }
+    }
+
     public function hasParameter($name)
     {
         foreach ($this->parameters as $parameter) {

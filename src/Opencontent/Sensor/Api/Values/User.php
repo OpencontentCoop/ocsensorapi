@@ -81,6 +81,11 @@ class User extends Exportable
      */
     public $groups;
 
+    /**
+     * @var string
+     */
+    public $phone;
+
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);

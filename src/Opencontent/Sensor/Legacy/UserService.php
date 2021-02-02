@@ -2,20 +2,18 @@
 
 namespace Opencontent\Sensor\Legacy;
 
+use eZCollaborationItemParticipantLink;
+use eZCollaborationItemStatus;
+use eZContentObject;
+use eZUser;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
-use Opencontent\Sensor\Api\Exception\NotFoundException;
-use Opencontent\Sensor\Api\Exception\PermissionException;
 use Opencontent\Sensor\Api\Exception\UnauthorizedException;
 use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Api\Values\Event;
-use Opencontent\Sensor\Core\UserService as UserServiceBase;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
-use eZUser;
-use eZCollaborationItemStatus;
+use Opencontent\Sensor\Core\UserService as UserServiceBase;
 use SocialUser;
-use eZCollaborationItemParticipantLink;
-use eZContentObject;
 
 class UserService extends UserServiceBase
 {
@@ -49,7 +47,12 @@ class UserService extends UserServiceBase
                     $user->name = $userObject->name(false, $this->repository->getCurrentLanguage());
                     $user->description = $this->loadUserDescription($userObject);
                     $user->fiscalCode = $this->loadUserFiscalCode($userObject);
+                    $user->phone = $this->loadUserPhone($userObject);
                     $user->isEnabled = $ezUser->isEnabled();
+                    $userVisitArray = \eZDB::instance()->arrayQuery("SELECT last_visit_timestamp FROM ezuservisit WHERE user_id=$ezUser->ContentObjectID");
+                    if (isset($userVisitArray[0])) {
+                        $user->lastAccessDateTime = Utils::getDateTimeFromTimestamp($userVisitArray[0]['last_visit_timestamp']);
+                    }
                     $socialUser = \SensorUserInfo::instance($ezUser);
                     $user->behalfOfMode = $socialUser->hasCanBehalfOfMode();
                     $user->commentMode = !$socialUser->hasDenyCommentMode();
@@ -96,7 +99,8 @@ class UserService extends UserServiceBase
                 'first_name' => (string)$payload['first_name'],
                 'last_name' => (string)$payload['last_name'],
                 'user_account' => $payload['email'].'|'.$payload['email'] .'||md5_password|1', // foo|foo@ez.no|1234|md5_password|0
-                'fiscal_code' => (string)$payload['fiscal_code'],
+                'fiscal_code' => isset($payload['fiscal_code']) ? (string)$payload['fiscal_code'] : '',
+                'phone' => isset($payload['phone']) ? (string)$payload['phone'] : '',
             ]
         ];
 
@@ -185,6 +189,17 @@ class UserService extends UserServiceBase
     {
         $dataMap = $contentObject->dataMap();
         $attributeIdentifier = 'fiscal_code';
+        if (isset($dataMap[$attributeIdentifier]) && $dataMap[$attributeIdentifier]->hasContent()) {
+            return $dataMap[$attributeIdentifier]->content();
+        }
+
+        return '';
+    }
+
+    private function loadUserPhone(eZContentObject $contentObject)
+    {
+        $dataMap = $contentObject->dataMap();
+        $attributeIdentifier = 'phone';
         if (isset($dataMap[$attributeIdentifier]) && $dataMap[$attributeIdentifier]->hasContent()) {
             return $dataMap[$attributeIdentifier]->content();
         }

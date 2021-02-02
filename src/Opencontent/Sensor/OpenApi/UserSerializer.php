@@ -27,6 +27,7 @@ class UserSerializer extends AbstractSerializer
             'is_enabled' => (boolean)$item->isEnabled,
             'type' => $item->type,
             'groups' => $item->groups,
+            'phone' => $item->phone,
         ];
 
         return $user;

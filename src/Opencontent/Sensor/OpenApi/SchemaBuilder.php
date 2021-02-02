@@ -2141,8 +2141,9 @@ class SchemaBuilder
                     'can_comment' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Can comment']),
                     'can_post_on_behalf_of' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Can post on behalf of others']),
                     'is_enabled' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Is enabled']),
-                    'type' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'User type']),
+                    'type' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'User type']),
                     'groups' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'User groups']),
+                    'phone' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'User phone']),
                 ];
                 break;
             case 'NewUser':
@@ -2154,6 +2155,7 @@ class SchemaBuilder
                     'last_name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Last name']),
                     'email' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Email', 'format' => 'email']),
                     'fiscal_code' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Fiscal Code']),
+                    'phone' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Phone']),
                 ];
                 break;
 

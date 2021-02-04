@@ -5,12 +5,14 @@ namespace Opencontent\Sensor\Legacy\PostService;
 use eZImageAliasHandler;
 use DateInterval;
 use ezpI18n;
+use Opencontent\Sensor\Api\ScenarioService;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use eZContentObject;
 use eZContentObjectAttribute;
 use eZCollaborationItem;
+use Opencontent\Sensor\Api\Values\Scenario\SearchScenarioParameters;
 use Opencontent\Sensor\Legacy\PostService;
 use Opencontent\Sensor\Legacy\Repository;
 use Opencontent\Sensor\Legacy\Utils;
@@ -138,8 +140,9 @@ class PostBuilder
             if ($approversCount === 0) {
                 $this->repository->getLogger()->warning("Reset post approvers in post $post->id");
 
-                $scenarioLoader = new ScenarioLoader($this->repository, $post, $post->author);
-                $scenario = $scenarioLoader->getScenario();
+                $scenario = $this->repository
+                    ->getScenarioService()
+                    ->getFirstScenariosByTrigger($post, ScenarioService::INIT_POST, new SearchScenarioParameters(true));
                 $roles = $this->repository->getParticipantService()->loadParticipantRoleCollection();
                 foreach ($scenario->getApprovers() as $participantId) {
                     $this->repository->getParticipantService()->addPostParticipant(

@@ -22,6 +22,7 @@ class CategoryAutomaticAssignListener extends AbstractListener
 
     public function handle(EventInterface $event, $param = null)
     {
+        return false;
         if ($param instanceof SensorEvent) {
             $user = $param->user;
             $post = $param->post;

@@ -6,12 +6,14 @@ class Action
 {
     public $identifier;
 
+    private $ignorePermissions = false;
+
     /**
      * @var ActionParameter[]
      */
     public $parameters = array();
 
-    public function __construct($identifier = null, array $parameters = null)
+    public function __construct($identifier = null, array $parameters = null, $ignorePermissions = false)
     {
         if ($identifier){
             $this->identifier = $identifier;
@@ -21,6 +23,7 @@ class Action
                 $this->setParameter($key, $value);
             }
         }
+        $this->ignorePermissions = $ignorePermissions;
     }
 
     public function hasParameter($name)
@@ -54,5 +57,10 @@ class Action
         $newParameter->identifier = $identifier;
         $newParameter->value = $value;
         $this->parameters[] = $newParameter;
+    }
+
+    public function isIgnorePermissionEnabled()
+    {
+        return $this->ignorePermissions === true;
     }
 }

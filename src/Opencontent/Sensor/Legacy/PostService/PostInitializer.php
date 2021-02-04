@@ -2,9 +2,11 @@
 
 namespace Opencontent\Sensor\Legacy\PostService;
 
+use Opencontent\Sensor\Api\ScenarioService;
 use Opencontent\Sensor\Api\Values\Event;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
+use Opencontent\Sensor\Api\Values\Scenario\SearchScenarioParameters;
 use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Legacy\Repository;
 use eZContentObject;
@@ -90,42 +92,11 @@ class PostInitializer
             $roles->getParticipantRoleById(ParticipantRole::ROLE_AUTHOR)
         );
 
-        $scenarioLoader = new ScenarioLoader($this->repository, $post, $user);
-        $scenario = $scenarioLoader->getScenario();
+        $scenario = $this->repository
+            ->getScenarioService()
+            ->getFirstScenariosByTrigger($post, ScenarioService::INIT_POST, new SearchScenarioParameters(true));
 
-        foreach ($scenario->getApprovers() as $participantId) {
-            $this->repository->getParticipantService()->addPostParticipant(
-                $post,
-                $participantId,
-                $roles->getParticipantRoleById(ParticipantRole::ROLE_APPROVER)
-            );
-        }
-        foreach ($scenario->getOwners() as $participantId) {
-            $this->repository->getParticipantService()->addPostParticipant(
-                $post,
-                $participantId,
-                $roles->getParticipantRoleById(ParticipantRole::ROLE_OWNER)
-            );
-        }
-        foreach ($scenario->getObservers() as $participantId) {
-            $this->repository->getParticipantService()->addPostParticipant(
-                $post,
-                $participantId,
-                $roles->getParticipantRoleById(ParticipantRole::ROLE_OBSERVER)
-            );
-        }
-        if ($post->reporter instanceof User
-            && $post->reporter->id != $post->author->id
-            && !in_array($post->reporter->id, $scenario->getApprovers())
-            && !in_array($post->reporter->id, $scenario->getOwners())
-            && !in_array($post->reporter->id, $scenario->getObservers())
-        ){
-            $this->repository->getParticipantService()->addPostParticipant(
-                $post,
-                $post->reporter->id,
-                $roles->getParticipantRoleById(ParticipantRole::ROLE_OBSERVER)
-            );
-        }
+        $this->repository->getScenarioService()->applyScenario($scenario, $post, ScenarioService::INIT_POST);
 
         $event = new Event();
         $event->identifier = 'on_create';

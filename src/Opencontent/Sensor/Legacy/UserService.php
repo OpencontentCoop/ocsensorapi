@@ -13,6 +13,7 @@ use Opencontent\Sensor\Api\Values\Event;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Core\UserService as UserServiceBase;
+use Opencontent\Sensor\Legacy\Utils\MailValidator;
 use SocialUser;
 
 class UserService extends UserServiceBase
@@ -91,9 +92,51 @@ class UserService extends UserServiceBase
         if (!$parentNode instanceof \eZContentObjectTreeNode || (!$parentNode->canCreate() && $ignorePolicies === false)){
             throw new UnauthorizedException("Current user can not create user");
         }
+
+        $contentClass = \eZContentClass::fetch($ini->variable("UserSettings", "UserClassID"));
+
+        if (empty($payload['first_name'])) {
+            throw new InvalidInputException("Field first_name is required");
+        }
+        if (empty($payload['last_name'])) {
+            throw new InvalidInputException("Field last_name is required");
+        }
+        if (empty($payload['email'])) {
+            throw new InvalidInputException("Field email is required");
+        }
+        if (!MailValidator::validate($payload['email'])) {
+            throw new InvalidInputException("Invalid email address");
+        }
+        if (\eZUser::fetchByEmail($payload['email'])) {
+            throw new InvalidInputException("Email address already exists");
+        }
+        if (isset($payload['fiscal_code'])){
+            $payload['fiscal_code'] = strtoupper($payload['fiscal_code']);
+            foreach ($contentClass->dataMap() as $identifier => $classAttribute){
+                /** @var \eZContentClassAttribute $classAttribute */
+                if ($identifier == 'fiscal_code'){
+                    $dataType = $classAttribute->dataType();
+                    if ($dataType instanceof \OCCodiceFiscaleType){
+                        $fakeObjectAttribute = new \eZContentObjectAttribute([
+                            'contentobject_id' => 0,
+                            'contentclassattribute_id' => $classAttribute->attribute('id')
+                        ]);
+                        if ($dataType->validateStringHTTPInput(
+                            $payload['fiscal_code'],
+                            $fakeObjectAttribute,
+                            $classAttribute
+                            ) === \eZInputValidator::STATE_INVALID){
+                            throw new InvalidInputException("Invalid fiscal code: " . $fakeObjectAttribute->validationError());
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
         $params = [
             'creator_id' => (int)$this->repository->getCurrentUser()->id,
-            'class_identifier' => \eZContentClass::classIdentifierByID($ini->variable("UserSettings", "UserClassID")),
+            'class_identifier' => $contentClass->attribute('identifier'),
             'parent_node_id' => $parentNodeId,
             'attributes' => [
                 'first_name' => (string)$payload['first_name'],

@@ -38,7 +38,9 @@ abstract class ActionDefinition
      */
     public function dryRun(Repository $repository, Action $action, Post $post, User $user)
     {
-        $this->checkPermission($post, $user);
+        if (!$action->isIgnorePermissionEnabled()) {
+            $this->checkPermission($post, $user);
+        }
         return $this->checkParameters($action);
     }
 

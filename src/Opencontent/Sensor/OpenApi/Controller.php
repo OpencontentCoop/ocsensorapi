@@ -608,22 +608,6 @@ class Controller
     public function createUser()
     {
         $payload = $this->restController->getPayload();
-        if (empty($payload['first_name'])) {
-            throw new InvalidInputException("Field first_name is required");
-        }
-        if (empty($payload['last_name'])) {
-            throw new InvalidInputException("Field last_name is required");
-        }
-        if (empty($payload['email'])) {
-            throw new InvalidInputException("Field email is required");
-        }
-        if (!MailValidator::validate($payload['email'])) {
-            throw new InvalidInputException("Invalid email address");
-        }
-        if (\eZUser::fetchByEmail($payload['email'])) {
-            throw new InvalidInputException("Email address already exists");
-        }
-
         $result = new ezpRestMvcResult();
         $result->variables = $this->serializer['user']->serializeItem($this->repository->getUserService()->createUser($payload));
         return $result;

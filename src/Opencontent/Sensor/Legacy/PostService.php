@@ -423,9 +423,13 @@ class PostService extends PostServiceBase
             $contentObject->setAttribute('modified', $timestamp);
             $contentObject->store();
         }
-        eZContentCacheManager::clearContentCacheIfNeeded($contentObject->attribute('id'));
-        eZSearch::addObject($contentObject, true);
-        return $this->loadPost($post->id);
+        if ($contentObject->mainNodeID()) {
+            eZContentCacheManager::clearContentCacheIfNeeded($contentObject->attribute('id'));
+            eZSearch::addObject($contentObject, true);
+            return $this->loadPost($post->id);
+        }
+
+        return $post;
     }
 
     public function setPostStatus(Post $post, $status)

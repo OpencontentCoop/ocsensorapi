@@ -91,6 +91,11 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
     abstract public function getGroupsRootNode();
 
     /**
+     * @return eZContentObjectTreeNode
+     */
+    abstract public function getScenariosRootNode();
+
+    /**
      * @param $identifier
      *
      * @return eZContentObjectState[]
@@ -254,22 +259,6 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
         return new Logger();
     }
 
-    /**
-     * @return ScenarioInterface[]
-     */
-    public function getScenarios()
-    {
-        return $this->scenarios;
-    }
-
-    /**
-     * @param ScenarioInterface[] $scenarios
-     */
-    public function setScenarios($scenarios)
-    {
-        $this->scenarios = $scenarios;
-    }
-
     public function provideListeners(ListenerAcceptorInterface $listenerAcceptor)
     {
         foreach ($this->listeners as $event => $priorityListeners){
@@ -313,6 +302,15 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
         }
 
         return $this->channelService;
+    }
+
+    public function getScenarioService()
+    {
+        if ($this->scenarioService === null) {
+            $this->scenarioService = new ScenarioService($this);
+        }
+
+        return $this->scenarioService;
     }
 
 }

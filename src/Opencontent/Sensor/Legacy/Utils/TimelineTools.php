@@ -69,7 +69,7 @@ class TimelineTools
 
     public static function getText($text, ParticipantCollection $participants)
     {
-        $result = '';
+        $result = $text;
         $parts = explode(' by ', $text);
         if (!isset($parts[1])) {
             $parts = explode(' to ', $text);

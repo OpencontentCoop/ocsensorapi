@@ -6,7 +6,7 @@ use Opencontent\Sensor\Api\Values\MessageStruct;
 
 class PrivateMessageStruct extends MessageStruct
 {
-    public $receiverIdList;
+    public $receiverIdList = [];
 
     public $isResponseProposal = false;
 }

@@ -1,24 +1,22 @@
 <?php
 
-namespace Opencontent\Sensor\Legacy\PostService\Scenarios;
+namespace Opencontent\Sensor\Legacy\Scenarios;
 
-use Opencontent\Sensor\Legacy\PostService\ScenarioInterface;
+use Opencontent\Sensor\Api\ScenarioService;
 use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\Scenario;
 use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Legacy\Repository;
 use eZContentObject;
 
-class FirstAreaApproverScenario implements ScenarioInterface
+class FirstAreaApproverScenario extends Scenario
 {
-    /**
-     * @var Repository
-     */
-    private $repository;
-
-    private $approvers;
-
-    public function __construct($repository)
+    public function __construct(Repository $repository)
     {
+        $this->id = 1;
+        
+        $this->triggers = [ScenarioService::INIT_POST];
+
         $this->repository = $repository;
         if ($this->repository->getAreasRootNode() instanceof \eZContentObjectTreeNode) {
             $areas = $this->repository->getAreasTree()->attribute('children');
@@ -28,32 +26,11 @@ class FirstAreaApproverScenario implements ScenarioInterface
                 if ($firstAreaObject instanceof eZContentObject) {
                     $dataMap = $firstAreaObject->dataMap();
                     if (isset($dataMap['approver']) && $dataMap['approver']->hasContent()) {
-                        $this->approvers = explode('-', $dataMap['approver']->toString());
+                        $approvers = explode('-', $dataMap['approver']->toString());
+                        $this->approversIdList = array_map('intval', $approvers);
                     }
                 }
             }
         }
     }
-
-    public function match(Post $post, User $user)
-    {
-        return count($this->approvers) > 0;
-    }
-
-    public function getApprovers()
-    {
-        return $this->approvers;
-    }
-
-    public function getOwners()
-    {
-        return [];
-    }
-
-    public function getObservers()
-    {
-        return [];
-    }
-
-
 }

@@ -5,10 +5,11 @@ namespace Opencontent\Sensor\Core\ActionDefinitions;
 use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\ScenarioService;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\Scenario\SearchScenarioParameters;
 use Opencontent\Sensor\Api\Values\User;
-use Opencontent\Sensor\Legacy\PostService\ScenarioLoader;
 
 class FixAction extends ActionDefinition
 {
@@ -46,9 +47,10 @@ class FixAction extends ActionDefinition
         $post = $repository->getPostService()->refreshPost($post);
         $this->fireEvent($repository, $post, $user);
 
-        if ($repository->getSensorSettings()->get('ForceUrpApproverOnFix')) {            
-            $scenarioLoader = new ScenarioLoader($repository, $post, $user);
-            $scenario = $scenarioLoader->getScenario();            
+        if ($repository->getSensorSettings()->get('ForceUrpApproverOnFix')) {
+            $scenario = $repository
+                ->getScenarioService()
+                ->getFirstScenariosByTrigger($post, ScenarioService::INIT_POST, new SearchScenarioParameters(true));
             $approverIdList = $scenario->getApprovers();            
             $currentApproverIds = $post->approvers->getParticipantIdList();
             if (!$this->arrayIsEqual($currentApproverIds, $approverIdList)){

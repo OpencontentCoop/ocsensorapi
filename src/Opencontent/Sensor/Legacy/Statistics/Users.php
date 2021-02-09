@@ -77,6 +77,16 @@ class Users extends StatisticFactory
             ];
         }
 
+        sort($this->data['intervals']);
+        foreach ($this->data['series'] as $index => $serie){
+            usort($this->data['series'][$index]['data'], function ($a, $b){
+                if ($a['interval'] == $b['interval']) {
+                    return 0;
+                }
+                return ($a['interval'] < $b['interval']) ? -1 : 1;
+            });
+        }
+
         return $this->data;
     }
 

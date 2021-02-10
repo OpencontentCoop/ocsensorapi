@@ -44,17 +44,17 @@ class AddCategoryAction extends ActionDefinition
             }
         }
 
-        $isChanged = true;
         if ($repository->getSensorSettings()->get('UniqueCategoryCount')) {
             $categoryIdList = array(array_shift($categoryIdList));
-
-            foreach ($post->categories as $category) {
-                if (in_array($category->id, $categoryIdList)) {
-                    $isChanged = false; //da questo dipende l'applicazione di eventuali scenari!
-                    break;
-                }
-            }
         }
+
+        $isChanged = true;
+//        foreach ($post->categories as $category) {
+//            if (in_array($category->id, $categoryIdList)) {
+//                //$isChanged = false; //da questo dipende l'applicazione di eventuali scenari!
+//                break;
+//            }
+//        }
 
         if ($isChanged) {
             $repository->getPostService()->setPostCategory($post, implode('-', $categoryIdList));

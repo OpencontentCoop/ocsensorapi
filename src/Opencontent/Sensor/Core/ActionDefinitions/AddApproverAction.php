@@ -6,6 +6,7 @@ use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
 use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
@@ -71,6 +72,20 @@ class AddApproverAction extends ActionDefinition
         }
 
         if ($isChanged) {
+
+            $approverList = [];
+            foreach ($selectedParticipantIds as $id) {
+                $approver = $repository->getParticipantService()->loadPostParticipantById($post, $id);
+                $approverList[] = "#{$id} ({$approver->name})";
+            }
+
+            $auditStruct = new AuditStruct();
+            $auditStruct->createdDateTime = new \DateTime();
+            $auditStruct->creator = $user;
+            $auditStruct->post = $post;
+            $auditStruct->text = "Modificato riferimento in " . implode(', ', $approverList);
+            $repository->getMessageService()->createAudit($auditStruct);
+
             $post = $repository->getPostService()->refreshPost($post);
             $this->fireEvent($repository, $post, $user, array(
                 'approvers' => $selectedParticipantIds,

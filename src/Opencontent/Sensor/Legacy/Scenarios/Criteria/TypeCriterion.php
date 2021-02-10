@@ -28,7 +28,7 @@ class TypeCriterion extends Exportable implements ScenarioCriterion
     {
         $descriptions = [];
         if (!empty($this->typeList)){
-            foreach ($this->idList as $id){
+            foreach ($this->typeList as $id){
                 $descriptions[] = $this->repository->getPostTypeService()->loadPostType($id)->name;
             }
             if (!empty($descriptions)){

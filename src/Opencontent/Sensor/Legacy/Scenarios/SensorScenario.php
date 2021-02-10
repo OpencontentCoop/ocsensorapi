@@ -235,11 +235,11 @@ class SensorScenario extends Scenario
     public static function getAvailableEvents()
     {
         return [
-            'on_create' => 'Creazione della segnazione',
-            'on_add_category' => 'Assegnazione di categoria alla segnazione',
-            'on_add_area' => 'Assegnazione di zona alla segnazione',
-            'on_fix' => 'Fine lavorazione della segnazione',
-            'on_close' => 'Chiusura della segnazione',
+            'on_create' => 'Creazione della segnalazione',
+            'on_add_category' => 'Assegnazione di categoria alla segnalazione',
+            'on_add_area' => 'Assegnazione di zona alla segnalazione',
+            'on_fix' => 'Fine lavorazione della segnalazione',
+            'on_close' => 'Chiusura della segnalazione',
         ];
     }
 
@@ -301,6 +301,6 @@ class SensorScenario extends Scenario
 
         $this->currentPost = $currentPost;
 
-        return "In seguito alla {$eventMessage} {$criteriaMessage}, viene eseguita l'assegnazione automatica di:\n" . implode("\n", $details) . "\n\n(Codice #{$this->id})";
+        return "In seguito alla {$eventMessage} {$criteriaMessage}, viene eseguita l'assegnazione automatica #{$this->id}: " . implode(" ", $details);
     }
 }

@@ -68,4 +68,13 @@ interface MessageService
      */
     public function updateResponse(Message\ResponseStruct $struct);
 
+    /**
+     * @param Post $post
+     *
+     * @return Message\AuditCollection
+     */
+    public function loadAuditCollectionByPost(Post $post);
+
+    public function createAudit(Message\AuditStruct $struct);
+
 }

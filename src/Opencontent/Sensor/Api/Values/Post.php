@@ -130,6 +130,11 @@ class Post extends Exportable
     public $responses;
 
     /**
+     * @var Message\AuditCollection
+     */
+    public $audits;
+
+    /**
      * @var bool
      */
     public $commentsIsOpen;

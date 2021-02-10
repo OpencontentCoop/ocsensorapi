@@ -7,6 +7,7 @@ use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
 use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\Message\CommentStruct;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
@@ -51,6 +52,14 @@ class ModerateCommentAction extends ActionDefinition
                 $commentStruct->isRejected = $moderation == 'reject';
 
                 $repository->getMessageService()->updateComment($commentStruct);
+
+                $auditStruct = new AuditStruct();
+                $auditStruct->createdDateTime = new \DateTime();
+                $auditStruct->creator = $user;
+                $auditStruct->post = $post;
+                $auditStruct->text = "Impostata moderazione commento #{$message->id} a {$moderation}";
+                $repository->getMessageService()->createAudit($auditStruct);
+
                 $post = $repository->getPostService()->refreshPost($post);
                 $this->fireEvent($repository, $post, $user, array('text' => $message->text), 'on_add_comment');
             }

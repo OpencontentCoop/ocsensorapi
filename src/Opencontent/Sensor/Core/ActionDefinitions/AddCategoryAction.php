@@ -9,6 +9,7 @@ use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Repository;
 use Opencontent\Sensor\Api\Values\Group;
+use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\Operator;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\Participant\ApproverCollection;
@@ -36,9 +37,11 @@ class AddCategoryAction extends ActionDefinition
     {
 
         $categoryIdList = (array)$action->getParameterValue('category_id');
+        $categoryNameList = [];
         foreach ($categoryIdList as $categoryId) {
             try {
-                $repository->getCategoryService()->loadCategory($categoryId);
+                $category = $repository->getCategoryService()->loadCategory($categoryId);
+                $categoryNameList[] = "#{$categoryId} ({$category->name})";
             } catch (NotFoundException $e) {
                 throw new InvalidInputException("Item $categoryId is not a valid category");
             }
@@ -58,6 +61,14 @@ class AddCategoryAction extends ActionDefinition
 
         if ($isChanged) {
             $repository->getPostService()->setPostCategory($post, implode('-', $categoryIdList));
+
+            $auditStruct = new AuditStruct();
+            $auditStruct->createdDateTime = new \DateTime();
+            $auditStruct->creator = $user;
+            $auditStruct->post = $post;
+            $auditStruct->text = "Impostata categoria " . implode(', ', $categoryNameList);
+            $repository->getMessageService()->createAudit($auditStruct);
+
             $post = $repository->getPostService()->refreshPost($post);
             $this->fireEvent($repository, $post, $user, array('categories' => $categoryIdList));
 

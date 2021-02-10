@@ -114,6 +114,7 @@ class PostBuilder
         $post->privateMessages = $this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post);
         $post->timelineItems = $this->repository->getMessageService()->loadTimelineItemCollectionByPost($post);
         $post->responses = $this->repository->getMessageService()->loadResponseCollectionByPost($post);
+        $post->audits = $this->repository->getMessageService()->loadAuditCollectionByPost($post);
 
         $post->meta = $this->loadPostMeta();
 

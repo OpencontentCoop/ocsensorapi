@@ -24,6 +24,8 @@ class MessageService extends MessageServiceBase
 
     const WORKGROUP = 3;
 
+    const AUDIT = 4;
+
     /**
      * @var Repository
      */
@@ -53,6 +55,11 @@ class MessageService extends MessageServiceBase
      * @var Message\ResponseCollection[]
      */
     protected $responsesByPost = array();
+
+    /**
+     * @var Message\AuditCollection[]
+     */
+    protected $auditByPost = array();
 
     private function clearMemoryCache($post)
     {
@@ -96,6 +103,7 @@ class MessageService extends MessageServiceBase
             $this->privateMessagesByPost[$postInternalId] = new Message\PrivateMessageCollection();
             $this->timelineItemsByPost[$postInternalId] = new Message\TimelineItemCollection();
             $this->responsesByPost[$postInternalId] = new Message\ResponseCollection();
+            $this->auditByPost[$postInternalId] = new Message\AuditCollection();
 
 
             /** @var eZCollaborationItemMessageLink[] $messageLinks */
@@ -169,6 +177,12 @@ class MessageService extends MessageServiceBase
                             $simpleMessage->attribute('data_text1'),
                             $this->repository->getParticipantService()->loadPostParticipants($post)
                         );
+
+                    } elseif ($firstLink->attribute('message_type') == self::AUDIT) {
+                        $message = new Message\Audit();
+                        $type = 'audit';
+                        $message->text = $simpleMessage->attribute('data_text1');
+
                     } else {
                         $message = new Message\PrivateMessage();
                         $type = 'private';
@@ -212,6 +226,9 @@ class MessageService extends MessageServiceBase
                     elseif ($type == 'timeline')
                         $this->timelineItemsByPost[$postInternalId]->addMessage($message);
 
+                    elseif ($type == 'audit')
+                        $this->auditByPost[$postInternalId]->addMessage($message);
+
                     elseif ($type == 'private')
                         $this->privateMessagesByPost[$postInternalId]->addMessage($message);
 
@@ -251,7 +268,6 @@ class MessageService extends MessageServiceBase
         $this->createTimelineItem($struct);
         $this->clearMemoryCache($post);
     }
-
 
     public function createTimelineItem(Message\TimelineItemStruct $struct)
     {
@@ -392,4 +408,20 @@ class MessageService extends MessageServiceBase
         $this->repository->getUserService()->setLastAccessDateTime($struct->creator, $struct->post);
     }
 
+    /**
+     * @param Post $post
+     *
+     * @return Message\AuditCollection
+     */
+    public function loadAuditCollectionByPost(Post $post)
+    {
+        $this->internalLoadMessagesByPost($post);
+        return $this->auditByPost[$post->internalId];
+    }
+
+    public function createAudit(Message\AuditStruct $struct)
+    {
+        $message = $this->createMessage($struct);
+        $this->linkMessage($message, $struct, self::AUDIT);
+    }
 }

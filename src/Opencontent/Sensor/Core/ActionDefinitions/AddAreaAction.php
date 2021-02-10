@@ -8,6 +8,7 @@ use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 
@@ -29,10 +30,11 @@ class AddAreaAction extends ActionDefinition
     public function run(Repository $repository, Action $action, Post $post, User $user)
     {
         $areaIdList = (array)$action->getParameterValue('area_id');
-
+        $areaNameList = [];
         foreach ($areaIdList as $areaId) {
             try {
-                $repository->getAreaService()->loadArea($areaId);
+                $area = $repository->getAreaService()->loadArea($areaId);
+                $areaNameList[] = "#{$areaId} ({$area->name})";
             } catch (NotFoundException $e) {
                 throw new InvalidInputException("Item $areaId is not a valid area");
             }
@@ -41,28 +43,25 @@ class AddAreaAction extends ActionDefinition
         $areaId = array_shift($areaIdList);
 
         $isChanged = true;
-        foreach ($post->areas as $area) {
-            if ($area->id == $areaId){
-                $isChanged = false;
-                break;
-            }
-        }
+//        foreach ($post->areas as $area) {
+//            if ($area->id == $areaId){
+//                $isChanged = false;
+//                break;
+//            }
+//        }
 
         if ($isChanged) {
             $repository->getPostService()->setPostArea($post, $areaId);
+
+            $auditStruct = new AuditStruct();
+            $auditStruct->createdDateTime = new \DateTime();
+            $auditStruct->creator = $user;
+            $auditStruct->post = $post;
+            $auditStruct->text = "Impostata area " . implode(', ', $areaNameList);
+            $repository->getMessageService()->createAudit($auditStruct);
+
             $post = $repository->getPostService()->refreshPost($post);
             $this->fireEvent($repository, $post, $user, array('areas' => $areaId));
-        }
-
-        $observerIdList = array();
-        foreach ($post->areas as $area) {
-            $observerIdList = array_merge($observerIdList, $area->observersIdList);
-        }
-        if (!empty($observerIdList)) {
-            $action = new Action();
-            $action->identifier = 'add_observer';
-            $action->setParameter('participant_ids', $observerIdList);
-            $repository->getActionService()->runAction($action, $post);
         }
     }
 }

@@ -8,6 +8,7 @@ use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
 use Opencontent\Sensor\Api\Exception\UnauthorizedException;
 use Opencontent\Sensor\Api\Repository;
 use Opencontent\Sensor\Api\Values\Message;
+use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\Message\ResponseStruct;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
@@ -43,7 +44,16 @@ class EditResponseAction extends ActionDefinition
         /** @var Message $response */
         foreach ($post->responses as $response) {
             if ($response->id == $responseStruct->id && $response->creator->id == $user->id) {
+                $oldText = $response->text;
                 $repository->getMessageService()->updateResponse($responseStruct);
+
+                $auditStruct = new AuditStruct();
+                $auditStruct->createdDateTime = new \DateTime();
+                $auditStruct->creator = $user;
+                $auditStruct->post = $post;
+                $auditStruct->text = "Modificata risposta #{$response->id}, il testo precedente era: {$oldText}";
+                $repository->getMessageService()->createAudit($auditStruct);
+
                 $post = $repository->getPostService()->refreshPost($post);
                 $this->fireEvent($repository, $post, $user, array('message' => $responseStruct->text));
                 return;

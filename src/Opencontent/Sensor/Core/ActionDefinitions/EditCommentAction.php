@@ -8,6 +8,7 @@ use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
 use Opencontent\Sensor\Api\Exception\UnauthorizedException;
 use Opencontent\Sensor\Api\Repository;
 use Opencontent\Sensor\Api\Values\Message;
+use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\Message\CommentStruct;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
@@ -46,7 +47,16 @@ class EditCommentAction extends ActionDefinition
         /** @var Message $comment */
         foreach ($post->comments as $comment) {
             if ($comment->id == $commentStruct->id && $comment->creator->id == $user->id) {
+                $oldText = $comment->text;
                 $repository->getMessageService()->updateComment($commentStruct);
+
+                $auditStruct = new AuditStruct();
+                $auditStruct->createdDateTime = new \DateTime();
+                $auditStruct->creator = $user;
+                $auditStruct->post = $post;
+                $auditStruct->text = "Modificato commento #{$comment->id}, il testo precedente era: {$oldText}";
+                $repository->getMessageService()->createAudit($auditStruct);
+
                 $post = $repository->getPostService()->refreshPost($post);
                 if ($commentStruct->needModeration){
                     $this->fireEvent($repository, $post, $user, array('message' => $commentStruct->text), 'on_add_comment_to_moderate');

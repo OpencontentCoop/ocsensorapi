@@ -13,6 +13,7 @@ use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Exception\PermissionException;
 use Opencontent\Sensor\Api\Exception\UnexpectedException;
+use Opencontent\Sensor\Api\Values\Message\AuditCollection;
 use Opencontent\Sensor\Api\Values\Message\CommentCollection;
 use Opencontent\Sensor\Api\Values\Message\PrivateMessageCollection;
 use Opencontent\Sensor\Api\Values\Message\TimelineItemCollection;
@@ -241,6 +242,10 @@ class PostService extends PostServiceBase
                 $timelineMessages->addMessage($hiddenMessage);
             }
             $post->timelineItems = $timelineMessages;
+        }
+
+        if (!PermissionService::isSuperAdmin($this->repository->getCurrentUser())){
+            $post->audits = new AuditCollection();
         }
     }
 

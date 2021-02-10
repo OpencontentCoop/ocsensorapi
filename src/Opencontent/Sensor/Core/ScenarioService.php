@@ -4,8 +4,7 @@ namespace Opencontent\Sensor\Core;
 
 use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\ScenarioService as ScenarioServiceInterface;
-use Opencontent\Sensor\Api\Values\Message\PrivateMessageStruct;
-use Opencontent\Sensor\Api\Values\Message\TimelineItemStruct;
+use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\Scenario;
@@ -62,12 +61,12 @@ abstract class ScenarioService implements ScenarioServiceInterface
 
             } else {
 
-                $messageStruct = new PrivateMessageStruct();
-                $messageStruct->createdDateTime = new \DateTime();
-                $messageStruct->creator = $this->repository->getUserService()->loadUser(\eZINI::instance()->variable("UserSettings", "UserCreatorID")); //@todo
-                $messageStruct->post = $post;
-                $messageStruct->text = $scenario->getApplicationMessage($trigger);
-                $this->repository->getMessageService()->createPrivateMessage($messageStruct);
+                $auditStruct = new AuditStruct();
+                $auditStruct->createdDateTime = new \DateTime();
+                $auditStruct->creator = $this->repository->getUserService()->loadUser(\eZINI::instance()->variable("UserSettings", "UserCreatorID")); //@todo
+                $auditStruct->post = $post;
+                $auditStruct->text = $scenario->getApplicationMessage($trigger);
+                $this->repository->getMessageService()->createAudit($auditStruct);
 
                 if ($scenario->hasObservers()) {
                     $this->repository->getActionService()->runAction(

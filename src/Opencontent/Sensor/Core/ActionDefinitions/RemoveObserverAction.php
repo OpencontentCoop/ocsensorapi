@@ -6,6 +6,7 @@ use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
 use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
@@ -38,6 +39,14 @@ class RemoveObserverAction extends ActionDefinition
                 $observer->id,
                 $roleStandard
             );
+
+            $auditStruct = new AuditStruct();
+            $auditStruct->createdDateTime = new \DateTime();
+            $auditStruct->creator = $user;
+            $auditStruct->post = $post;
+            $auditStruct->text = "Rimosso osservatore #{$observer->id} ({$observer->name})";
+            $repository->getMessageService()->createAudit($auditStruct);
+
             $post = $repository->getPostService()->refreshPost($post);
             $this->fireEvent($repository, $post, $user);
         }

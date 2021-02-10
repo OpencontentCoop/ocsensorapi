@@ -6,13 +6,11 @@ use Opencontent\Opendata\Api\Values\Content;
 use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Values\Post;
-use Opencontent\Sensor\Api\Values\Scenario;
+use Opencontent\Sensor\Api\Values\Scenario\SearchScenarioParameters;
 use Opencontent\Sensor\Core\ScenarioService as BaseScenarioService;
 use Opencontent\Sensor\Legacy\Scenarios\FallbackScenario;
 use Opencontent\Sensor\Legacy\Scenarios\FirstAreaApproverScenario;
 use Opencontent\Sensor\Legacy\Scenarios\NullScenario;
-use Opencontent\Sensor\Api\Values\Scenario\SearchScenarioParameters;
-use Opencontent\Sensor\Api\Values\Scenario\ScenarioCriterion;
 use Opencontent\Sensor\Legacy\Scenarios\SensorScenario;
 
 class ScenarioService extends BaseScenarioService
@@ -24,35 +22,7 @@ class ScenarioService extends BaseScenarioService
      */
     protected $repository;
 
-    private $scenarios;
-
-    public function loadScenarios()
-    {
-        if ($this->scenarios === null) {
-            $scenarios = [
-                new FirstAreaApproverScenario($this->repository),
-                new FallbackScenario(),
-            ];
-
-            $this->setEnvironmentSettings(new \FullEnvironmentSettings());
-            $result = $this->search("sort [id=>asc] limit 300", []);
-            $items = [];
-            foreach ($result->searchHits as $item) {
-                $scenarios[] = new SensorScenario($this->repository, (new Content($item))->getContentObject($this->repository->getCurrentLanguage()));
-            }
-//            foreach ($this->repository->getScenariosRootNode()->subTree([
-//                'ClassFilterType' => 'include',
-//                'ClassFilterArray' => ['sensor_scenario'],
-//                'Limitation' => []
-//            ]) as $item) {
-//                $scenarios[] = new SensorScenario($this->repository, $item);
-//            }
-
-            $this->scenarios = $scenarios;
-        }
-
-        return $this->scenarios;
-    }
+    private $scenarioSearchLimit = 300;
 
     public function getClassIdentifierAsString()
     {
@@ -64,30 +34,45 @@ class ScenarioService extends BaseScenarioService
         return $this->repository->getScenariosRootNode()->attribute('node_id');
     }
 
+    public function getFirstScenariosByTrigger(Post $post, $trigger, SearchScenarioParameters $parameters = null)
+    {
+        $scenarios = $this->getScenariosByTrigger($post, $trigger, $parameters);
+        if (empty($scenarios)) {
+            return new NullScenario();
+        }
+
+        return array_shift($scenarios);
+    }
+
     public function getScenariosByTrigger(Post $post, $trigger, SearchScenarioParameters $parameters = null)
     {
         $scenarios = [];
-        foreach ($this->loadScenarios() as $scenario){
+        if ($trigger == self::INIT_POST) {
+            $loadedScenarios = $this->loadInitScenarios();
+        } else {
+            $loadedScenarios = $this->searchScenarios(['trigger' => $trigger]);
+        }
+        foreach ($loadedScenarios as $scenario) {
             $scenario->setCurrentPost($post);
             $isValid = false;
-            if (in_array($trigger, $scenario->triggers)){
+            if (in_array($trigger, $scenario->triggers)) {
                 $isValid = true;
-                if ($parameters instanceof SearchScenarioParameters){
-                    if ($isValid && $parameters->withApprovers){
+                if ($parameters instanceof SearchScenarioParameters) {
+                    if ($isValid && $parameters->withApprovers) {
                         $isValid = $scenario->hasApprovers();
                     }
-                    if ($isValid && $parameters->withOwnerGroups){
+                    if ($isValid && $parameters->withOwnerGroups) {
                         $isValid = $scenario->hasOwnerGroups();
                     }
-                    if ($isValid && $parameters->withOwners){
+                    if ($isValid && $parameters->withOwners) {
                         $isValid = $scenario->hasOwners();
                     }
-                    if ($isValid && $parameters->withObservers){
+                    if ($isValid && $parameters->withObservers) {
                         $isValid = $scenario->hasObservers();
                     }
                 }
             }
-            if ($isValid){
+            if ($isValid) {
                 $scenarios[] = $scenario;
             }
         }
@@ -95,42 +80,47 @@ class ScenarioService extends BaseScenarioService
         return $scenarios;
     }
 
-    public function getFirstScenariosByTrigger(Post $post, $trigger, SearchScenarioParameters $parameters = null)
+    public function loadInitScenarios()
     {
-        $scenarios = $this->getScenariosByTrigger($post, $trigger, $parameters);
-        if (empty($scenarios)){
-            return new NullScenario();
-        }
-
-        return array_shift($scenarios);
+        return [
+            new FirstAreaApproverScenario($this->repository),
+            new FallbackScenario(),
+        ];
     }
 
     public function searchScenarios(array $parameters)
     {
         $query = '';
-        if (isset($parameters['trigger'])){
+        if (isset($parameters['trigger'])) {
             $query .= "triggers = '" . addcslashes($parameters['trigger'], "')([]") . "' and ";
         }
-            if (isset($parameters['type'])){
+        if (isset($parameters['type'])) {
             $query .= "criterion_type = '" . addcslashes($parameters['type'], "')([]") . "' and ";
         }
-        if (isset($parameters['category'])){
+        if (isset($parameters['category'])) {
             $query .= "criterion_category.id = '" . addcslashes($parameters['category'], "')([]") . "' and ";
         }
-        if (isset($parameters['area'])){
+        if (isset($parameters['area'])) {
             $query .= "criterion_area.id = '" . addcslashes($parameters['area'], "')([]") . "' and ";
         }
-        if (isset($parameters['reporter_group'])){
+        if (isset($parameters['reporter_group'])) {
             $query .= "criterion_reporter_group.id = '" . addcslashes($parameters['reporter_group'], "')([]") . "' and ";
         }
-        $query .= "sort [id=>asc] limit 300";
+        $query .= "sort [id=>asc] limit {$this->scenarioSearchLimit}";
 
-        $this->setEnvironmentSettings(new \FullEnvironmentSettings());
-        $result = $this->search($query, []);
         $scenarios = [];
+
+        $this->setEnvironmentSettings(new \FullEnvironmentSettings(['maxSearchLimit' => $this->scenarioSearchLimit]));
+        $result = $this->search($query, []);
         foreach ($result->searchHits as $item) {
             $scenarios[] = new SensorScenario($this->repository, (new Content($item))->getContentObject($this->repository->getCurrentLanguage()));
         }
+        while ($result->nextPageQuery){
+            $result = $this->search($result->nextPageQuery, []);
+            foreach ($result->searchHits as $item) {
+                $scenarios[] = new SensorScenario($this->repository, (new Content($item))->getContentObject($this->repository->getCurrentLanguage()));
+            }
+        };
 
         return $scenarios;
     }
@@ -153,32 +143,6 @@ class ScenarioService extends BaseScenarioService
         return new SensorScenario($this->repository, $object);
     }
 
-    public function editScenario($id, $struct)
-    {
-        $scenario = \eZContentObject::fetch((int) $id);
-        if (!$scenario instanceof \eZContentObject){
-            throw new NotFoundException("Scenario $id");
-        }
-        $attributes = $this->loadStruct($struct);
-        $remoteId = SensorScenario::generateRemoteId($attributes);
-        $fixRemoteId = false;
-        if ($scenario->attribute('remote_id') != $remoteId){
-            $exists = \eZContentObject::fetchByRemoteID($remoteId);
-            if ($exists instanceof \eZContentObject) {
-                throw new InvalidArgumentException("Scenario already exists");
-            }
-            $fixRemoteId = true;
-        }
-        $params = [
-            'attributes' => $attributes
-        ];
-        if ($fixRemoteId){
-            $params['remote_id'] = $remoteId;
-        }
-
-        return \eZContentFunctions::updateAndPublishObject($scenario, $params);
-    }
-
     private function loadStruct($struct)
     {
         return [
@@ -196,5 +160,31 @@ class ScenarioService extends BaseScenarioService
             'reporter_as_owner' => isset($struct['assignments']['reporter_as_owner']) ? $struct['assignments']['reporter_as_owner'] : 0,
             'reporter_as_observer' => isset($struct['assignments']['reporter_as_observer']) ? $struct['assignments']['reporter_as_observer'] : 0,
         ];
+    }
+
+    public function editScenario($id, $struct)
+    {
+        $scenario = \eZContentObject::fetch((int)$id);
+        if (!$scenario instanceof \eZContentObject) {
+            throw new NotFoundException("Scenario $id");
+        }
+        $attributes = $this->loadStruct($struct);
+        $remoteId = SensorScenario::generateRemoteId($attributes);
+        $fixRemoteId = false;
+        if ($scenario->attribute('remote_id') != $remoteId) {
+            $exists = \eZContentObject::fetchByRemoteID($remoteId);
+            if ($exists instanceof \eZContentObject) {
+                throw new InvalidArgumentException("Scenario already exists");
+            }
+            $fixRemoteId = true;
+        }
+        $params = [
+            'attributes' => $attributes
+        ];
+        if ($fixRemoteId) {
+            $params['remote_id'] = $remoteId;
+        }
+
+        return \eZContentFunctions::updateAndPublishObject($scenario, $params);
     }
 }

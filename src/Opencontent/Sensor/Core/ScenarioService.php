@@ -30,10 +30,11 @@ abstract class ScenarioService implements ScenarioServiceInterface
         $this->roles = $this->repository->getParticipantService()->loadParticipantRoleCollection();
     }
 
-    public function applyScenario(Scenario $scenario, Post $post, $trigger)
+    public function applyScenario(Scenario $scenario, Post $post, $trigger, $context = [])
     {
         $scenario->setCurrentPost($post);
-        
+        $scenario->setCurrentContext($context);
+
         if ($this->match($scenario, $post) < 0){
             return false;
         }

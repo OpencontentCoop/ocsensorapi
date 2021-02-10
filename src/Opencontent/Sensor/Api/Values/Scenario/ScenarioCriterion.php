@@ -12,6 +12,11 @@ interface ScenarioCriterion
     public function getIdentifier();
 
     /**
+     * @return string
+     */
+    public function getDescription();
+
+    /**
      * @param Post $post
      * @return bool
      */

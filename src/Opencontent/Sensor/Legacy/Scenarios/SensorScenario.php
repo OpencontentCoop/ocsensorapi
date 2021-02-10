@@ -45,20 +45,26 @@ class SensorScenario extends Scenario
         }
 
         if (isset($dataMap['criterion_type']) && $dataMap['criterion_type']->hasContent()) {
-            $this->criteria[] = new Criteria\TypeCriterion(explode('|', $dataMap['criterion_type']->toString()));
+            $this->criteria[] = new Criteria\TypeCriterion(
+                $this->repository,
+                explode('|', $dataMap['criterion_type']->toString())
+            );
         }
         if (isset($dataMap['criterion_category']) && $dataMap['criterion_category']->hasContent()) {
             $this->criteria[] = new Criteria\CategoryCriterion(
+                $this->repository,
                 array_map( 'intval', explode('-', $dataMap['criterion_category']->toString()))
             );
         }
         if (isset($dataMap['criterion_area']) && $dataMap['criterion_area']->hasContent()) {
             $this->criteria[] = new Criteria\AreaCriterion(
+                $this->repository,
                 array_map( 'intval', explode('-', $dataMap['criterion_area']->toString()))
             );
         }
         if (isset($dataMap['criterion_reporter_group']) && $dataMap['criterion_reporter_group']->hasContent()) {
             $this->criteria[] = new Criteria\ReporterGroupCriterion(
+                $this->repository,
                 array_map( 'intval', explode('-', $dataMap['criterion_reporter_group']->toString()))
             );
         }
@@ -89,7 +95,6 @@ class SensorScenario extends Scenario
 
         return parent::getApprovers();
     }
-
 
     public function getOwners()
     {
@@ -132,7 +137,6 @@ class SensorScenario extends Scenario
 
         return $observers;
     }
-
 
     private function getRandomOperatorFromGroups($ownerGroupsIdList)
     {
@@ -231,18 +235,24 @@ class SensorScenario extends Scenario
     public static function getAvailableEvents()
     {
         return [
-            'on_create' => 'Creazione',
-            'on_add_category' => 'Assegnazione di categoria',
-            'on_add_area' => 'Assegnazione di zona',
-            'on_fix' => 'Fine lavorazione',
-            'on_close' => 'Chiusura',
+            'on_create' => 'Creazione della segnazione',
+            'on_add_category' => 'Assegnazione di categoria alla segnazione',
+            'on_add_area' => 'Assegnazione di zona alla segnazione',
+            'on_fix' => 'Fine lavorazione della segnazione',
+            'on_close' => 'Chiusura della segnazione',
         ];
     }
 
+    /**
+     * @param string $trigger
+     * @return string
+     */
     public function getApplicationMessage($trigger)
     {
         $currentPost = $this->currentPost;
+
         $this->currentPost = null;
+
         $data = $this->jsonSerialize();
         $assignments = $data['assignments'];
         $details = [];
@@ -276,14 +286,21 @@ class SensorScenario extends Scenario
                     $nameList[] = 'Operatore segnalatore';
                 }
                 if (!empty($nameList)) {
-                    $details[] = '• ' . $roleName . ': ' . implode(', ', $nameList);
+                    $details[] = ' • ' . $roleName . ': ' . implode(', ', $nameList);
                 }
             }
         }
-        $events = ' in ' . strtolower(self::getAvailableEvents()[$trigger]);
+        $availableEvents = self::getAvailableEvents();
+        $eventMessage = strtolower($availableEvents[$trigger]);
+
+        $criteriaMessages = [];
+        foreach ($this->criteria as $criterion){
+            $criteriaMessages[] = $criterion->getDescription();
+        }
+        $criteriaMessage = implode(' e ', $criteriaMessages);
+
         $this->currentPost = $currentPost;
 
-        return "Assegnazione automatica #{$this->id}{$events}:\n" . implode("\n", $details);
+        return "In seguito alla {$eventMessage} {$criteriaMessage}, viene eseguita l'assegnazione automatica di:\n" . implode("\n", $details) . "\n\n(Codice #{$this->id})";
     }
-
 }

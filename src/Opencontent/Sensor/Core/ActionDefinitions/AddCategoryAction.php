@@ -50,7 +50,7 @@ class AddCategoryAction extends ActionDefinition
 
             foreach ($post->categories as $category) {
                 if (in_array($category->id, $categoryIdList)) {
-                    //$isChanged = false;
+                    $isChanged = false; //da questo dipende l'applicazione di eventuali scenari!
                     break;
                 }
             }

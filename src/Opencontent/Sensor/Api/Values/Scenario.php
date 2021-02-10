@@ -42,11 +42,21 @@ class Scenario extends Exportable
      */
     protected $observersIdList = array();
 
+    /**
+     * @var Post
+     */
     protected $currentPost;
+
+    protected $currentContext = [];
 
     public function setCurrentPost(Post $post)
     {
         $this->currentPost = $post;
+    }
+
+    public function setCurrentContext(array $context)
+    {
+        $this->currentContext = $context;
     }
 
     /**

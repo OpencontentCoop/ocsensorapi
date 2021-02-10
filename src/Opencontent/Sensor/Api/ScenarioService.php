@@ -14,7 +14,7 @@ interface ScenarioService
     /**
      * @return Scenario[]
      */
-    public function loadScenarios();
+    public function loadInitScenarios();
 
     /**
      * @param array $parameters
@@ -57,7 +57,9 @@ interface ScenarioService
     /**
      * @param Scenario $scenario
      * @param Post $post
-     * @return void
+     * @param string $trigger
+     * @param array $context
+     * @return mixed
      */
-    public function applyScenario(Scenario $scenario, Post $post, $trigger);
+    public function applyScenario(Scenario $scenario, Post $post, $trigger, $context = []);
 }

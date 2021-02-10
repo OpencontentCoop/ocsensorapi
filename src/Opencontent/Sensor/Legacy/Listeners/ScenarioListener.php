@@ -26,11 +26,13 @@ class ScenarioListener extends AbstractListener
             }
             if ($param->post instanceof Post) {
                 $scenarios = $this->repository->getScenarioService()->getScenariosByTrigger($param->post, $param->identifier);
+                $this->repository->getLogger()->debug("Found " . count($scenarios) . " valid scenarios on trigger $param->identifier for post {$param->post->id}");
                 $matchesScenario = [];
                 foreach ($scenarios as $scenario){
                     $matches = $this->repository->getScenarioService()->match($scenario, $param->post);
                     if ($matches > 0){
                         $matchesScenario[$matches][$scenario->id] = $scenario;
+                        $this->repository->getLogger()->debug("Matching scenario $scenario->id on post {$param->post->id}: $matches matches");
                     }
                 }
                 krsort($matchesScenario);
@@ -38,7 +40,7 @@ class ScenarioListener extends AbstractListener
                     $scenarios = array_shift($matchesScenario);
                     ksort($scenarios);
                     foreach ($scenarios as $scenario) {
-                        $this->repository->getScenarioService()->applyScenario($scenario, $param->post, $param->identifier);
+                        $this->repository->getScenarioService()->applyScenario($scenario, $param->post, $param->identifier, $param->parameters);
                         break;
                     }
                 }

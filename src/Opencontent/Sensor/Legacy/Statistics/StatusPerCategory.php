@@ -72,29 +72,45 @@ class StatusPerCategory extends StatisticFactory
                 }
             }
 
-            foreach ($pivotItems as $pivotItem) {
-                $name = $pivotItem['value'] == 'open' ? 'Aperta' : 'Chiusa';
-                $data = [];
-                foreach ($tree as $treeId => $treeItem) {
-                    $item = [
-                        'interval' => $treeItem['name'],
-                        'count' => 0
-                    ];
-                    foreach ($pivotItem['pivot'] as $pivot) {
-                        if ($pivot['value'] == $treeId || in_array($pivot['value'], $treeItem['children'])) {
-                            $item['count'] += $pivot['count'];
-                        }
-                    }
-                    $data[] = $item;
-                }
-                $this->data['series'][] = [
-                    'name' => $name,
-                    'data' => $data,
-                    'id' => $name == 'open' ? 1 : 0
+            $serie = [];
+            foreach ($tree as $treeId => $treeItem) {
+                $serie[$treeId] = [
+                    'interval' => $treeItem['name'],
+                    'count' => 0
                 ];
             }
 
-            return $this->data;
+            $series = [
+                0 => [
+                    'name' => 'Chiusa',
+                    'data' => $serie,
+                    'id' => 0
+                ],
+                1 => [
+                    'name' => 'Aperta',
+                    'data' => $serie,
+                    'id' => 1
+                ],
+            ];
+
+            foreach ($pivotItems as $pivotItem) {
+                $serieIndex = $pivotItem['value'] == 'open' ? 1 : 0;
+                foreach ($tree as $treeId => $treeItem) {
+                    foreach ($pivotItem['pivot'] as $pivot) {
+                        if ($pivot['value'] == $treeId || in_array($pivot['value'], $treeItem['children'])) {
+                            $series[$serieIndex]['data'][$treeId]['count'] += $pivot['count'];
+                        }
+                    }
+                }
+            }
+
+            foreach ($series as $serieIndex => $serie){
+                $series[$serieIndex]['data'] = array_values($serie['data']);
+            }
+
+            $this->data['series'] = $series;
         }
+
+        return $this->data;
     }
 }

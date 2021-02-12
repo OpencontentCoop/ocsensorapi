@@ -36,12 +36,12 @@ abstract class StatisticFactory
 
     public function getParameter($name)
     {
-        return isset($this->parameters[$name]) ? $this->parameters[$name] : null;
+        return isset($this->parameters[$name]) && !empty($this->parameters[$name]) ? $this->parameters[$name] : null;
     }
 
     public function hasParameter($name)
     {
-        return isset($this->parameters[$name]);
+        return isset($this->parameters[$name]) && !empty($this->parameters[$name]);
     }
 
     public function setParameter($name, $value)

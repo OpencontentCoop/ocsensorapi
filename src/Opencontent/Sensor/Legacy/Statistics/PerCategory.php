@@ -13,7 +13,7 @@ class PerCategory extends StatisticFactory
 
     protected $repository;
 
-    private $data;
+    protected $data;
 
     protected $minCount = 1;
 
@@ -165,6 +165,16 @@ class PerCategory extends StatisticFactory
                     $this->data['series'][] = $item;
                 }
             }
+        }
+
+        sort($this->data['intervals']);
+        foreach ($this->data['series'] as $index => $serie){
+            usort($this->data['series'][$index]['data'], function ($a, $b){
+                if ($a['interval'] == $b['interval']) {
+                    return 0;
+                }
+                return ($a['interval'] < $b['interval']) ? -1 : 1;
+            });
         }
 
         return $this->data;

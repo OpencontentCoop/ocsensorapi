@@ -55,7 +55,7 @@ class TreeNode
         $languages = eZContentLanguage::fetchLocaleList();
         if ( !empty( $languages ) )
         {
-            $commonPath = eZDir::path( array( eZSys::cacheDirectory(), 'sensor' ) );
+            $commonPath = eZDir::path( array( eZSys::cacheDirectory(), 'ocopendata', 'sensor' ) );
             $fileHandler = eZClusterFileHandler::instance();
             $commonSuffix = "tree/" . eZDir::filenamePath( $treeId );
             $fileHandler->fileDeleteByDirList( $languages, $commonPath, $commonSuffix );
@@ -67,7 +67,7 @@ class TreeNode
         $cacheFile = $treeId . '.cache';
         $language = eZLocale::currentLocaleCode();
         $extraPath = eZDir::filenamePath( $treeId );
-        $cacheFilePath = eZDir::path( array( eZSys::cacheDirectory(), 'sensor', $language, 'tree', $extraPath, $cacheFile ) );
+        $cacheFilePath = eZDir::path( array( eZSys::cacheDirectory(), 'ocopendata', 'sensor', $language, 'tree', $extraPath, $cacheFile ) );
         return eZClusterFileHandler::instance( $cacheFilePath );
     }
 

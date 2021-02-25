@@ -75,7 +75,7 @@ class CachePostService extends PostService
         $languages = eZContentLanguage::fetchLocaleList();
         if ( !empty( $languages ) )
         {
-            $commonPath = eZDir::path( array( eZSys::cacheDirectory(), 'sensor' ) );
+            $commonPath = eZDir::path( array( eZSys::cacheDirectory(), 'ocopendata', 'sensor' ) );
             $fileHandler = eZClusterFileHandler::instance();
             $commonSuffix = "post-object/" . eZDir::filenamePath( $postId );
             $fileHandler->fileDeleteByDirList( $languages, $commonPath, $commonSuffix );
@@ -87,7 +87,7 @@ class CachePostService extends PostService
         $cacheFile = $postId . '.cache';
         $language = $this->repository->getCurrentLanguage();
         $extraPath = eZDir::filenamePath( $postId );
-        $cacheFilePath = eZDir::path( array( eZSys::cacheDirectory(), 'sensor', $language, 'post-object', $extraPath, $cacheFile ) );
+        $cacheFilePath = eZDir::path( array( eZSys::cacheDirectory(), 'ocopendata', 'sensor', $language, 'post-object', $extraPath, $cacheFile ) );
         return eZClusterFileHandler::instance( $cacheFilePath );
     }
 }

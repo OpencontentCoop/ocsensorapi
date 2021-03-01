@@ -18,5 +18,6 @@ class OnAddCommentToModerateNotificationType extends NotificationType
         $this->description = ezpI18n::tr('sensor/notification', 'Ricevi una notifica quando viene aggiunto un commento da moderare');
         $this->setTemplate();
         $this->targets[ParticipantRole::ROLE_APPROVER] = [Participant::TYPE_USER];
+        $this->targets[ParticipantRole::ROLE_AUTHOR] = [];
     }
 }

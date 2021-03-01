@@ -242,6 +242,19 @@ class PostService extends PostServiceBase
                 $timelineMessages->addMessage($hiddenMessage);
             }
             $post->timelineItems = $timelineMessages;
+
+            $comments = new CommentCollection();
+            foreach ($post->comments->messages as $message){
+                $hiddenMessage = clone $message;
+                if (isset($hiddenOperators[$message->creator->id])) {
+                    $hiddenMessage->creator = clone $message->creator;
+                    $hiddenMessage->creator->id = 1;
+                    $hiddenMessage->creator->name = $hiddenOperatorName;
+                    $hiddenMessage->creator->email = $hiddenOperatorEmail;
+                }
+                $comments->addMessage($hiddenMessage);
+            }
+            $post->comments = $comments;
         }
 
         if (!PermissionService::isSuperAdmin($this->repository->getCurrentUser())){

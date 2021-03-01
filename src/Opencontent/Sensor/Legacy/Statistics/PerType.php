@@ -36,7 +36,7 @@ class PerType extends StatisticFactory
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni per tipologia');
+        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni aperte per tipologia');
     }
 
     public function getData()

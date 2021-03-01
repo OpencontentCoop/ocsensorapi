@@ -38,7 +38,7 @@ class PerCategory extends StatisticFactory
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni per categoria');
+        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni aperte per categoria');
     }
 
     public function getData()

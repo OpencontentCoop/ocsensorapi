@@ -36,7 +36,7 @@ class PerArea extends StatisticFactory
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni per zona');
+        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni aperte per zona');
     }
 
     public function getData()

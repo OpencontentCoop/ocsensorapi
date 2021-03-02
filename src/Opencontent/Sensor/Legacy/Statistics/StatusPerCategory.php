@@ -62,7 +62,6 @@ class StatusPerCategory extends StatisticFactory
             $categoryTree = $this->repository->getCategoriesTree();
             $tree = [];
             foreach ($categoryTree->attribute('children') as $categoryTreeItem) {
-                $this->data['intervals'][] = $categoryTreeItem->attribute('name');
                 $tree[$categoryTreeItem->attribute('id')] = [
                     'name' => $categoryTreeItem->attribute('name'),
                     'children' => []
@@ -93,20 +92,50 @@ class StatusPerCategory extends StatisticFactory
                 ],
             ];
 
+            $sorter = [];
             foreach ($pivotItems as $pivotItem) {
                 $serieIndex = $pivotItem['value'] == 'open' ? 1 : 0;
                 foreach ($tree as $treeId => $treeItem) {
                     foreach ($pivotItem['pivot'] as $pivot) {
                         if ($pivot['value'] == $treeId || in_array($pivot['value'], $treeItem['children'])) {
                             $series[$serieIndex]['data'][$treeId]['count'] += $pivot['count'];
+                            if (!isset($sorter['c_' . $treeId])){
+                                $sorter['c_' . $treeId] = 0;
+                            }
+                            $sorter['c_' . $treeId] += $pivot['count'];
                         }
                     }
                 }
             }
 
-            foreach ($series as $serieIndex => $serie){
-                $series[$serieIndex]['data'] = array_values($serie['data']);
+            arsort($sorter, SORT_NUMERIC);
+
+            foreach (array_keys($sorter) as $cid){
+                $id = substr($cid, 2);
+                $this->data['intervals'][] = $tree[$id]['name'];
             }
+
+            foreach ($series as $serieIndex => $serie){
+                $data = [];
+                foreach (array_keys($sorter) as $cid){
+                    $id = substr($cid, 2);
+                    $data[] = $serie['data'][$id];
+                }
+                $series[$serieIndex]['data'] = $data;
+            }
+            $totals = [];
+            foreach ($sorter as $cid => $count){
+                $id = substr($cid, 2);
+                $totals[] = [
+                    'interval' => $tree[$id]['name'],
+                    'count' => $count
+                ];
+            }
+            $series[2] = [
+                'name' => 'Totale',
+                'data' => $totals,
+                'id' => 2
+            ];
 
             $this->data['series'] = $series;
         }

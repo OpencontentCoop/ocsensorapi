@@ -76,6 +76,7 @@ class SolrMapper
             'owner_id_list' => 'sensor_owner_id_list_lk',
             'owner_name_list' => 'sensor_owner_name_list_lk',
             'owner_user_id_list' => 'sensor_owner_user_id_list_lk',
+            'owner_group_id_list' => 'sensor_owner_group_id_list_lk',
             'observer_id_list' => 'sensor_observer_id_list_lk',
             'observer_name_list' => 'sensor_observer_name_list_lk',
             'history_owner_name' => 'sensor_history_owner_name_lk',
@@ -239,14 +240,18 @@ class SolrMapper
             $data['sensor_owner_name_list_lk'] = [];
             $participantNameList = array();
             $participantIdList = [];
+            $participantGroupIdList = [];
             foreach ($this->post->owners->participants as $participant) {
                 $participantNameList[] = $participant->name;
                 if ($participant->type == Participant::TYPE_USER) {
                     $participantIdList[] = $participant->id;
+                }elseif($participant->type == Participant::TYPE_GROUP){
+                    $participantGroupIdList[] = $participant->id;
                 }
             }
             $data['sensor_owner_user_id_list_lk'] = implode(',', $participantIdList);
             $data['sensor_owner_name_list_lk'] = implode(',', $participantNameList);
+            $data['sensor_owner_group_id_list_lk'] = implode(',', $participantGroupIdList);
         }
 
         if ($this->post->observers instanceof \Opencontent\Sensor\Api\Values\Participant\ObserverCollection) {

@@ -26,7 +26,7 @@ class SendMailListener extends AbstractListener
     public function handle(EventInterface $event, $param = null)
     {
         if ($param instanceof SensorEvent) {
-            if ($param->identifier == 'after_run_action' && $param->parameters['is_main']) {
+            if (($param->identifier == 'after_run_action' && $param->parameters['is_main']) || $param->identifier == 'on_create') {
                 $queue = MailNotificationListener::getQueue();
                 foreach ($queue as $mail) {
                     $receivers = array_merge(

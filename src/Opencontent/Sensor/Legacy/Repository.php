@@ -56,6 +56,11 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
     abstract public function getPostContentClassIdentifier();
 
     /**
+     * @return string
+     */
+    abstract public function getPostApiClass();
+
+    /**
      * @return \eZContentClassAttribute
      */
     abstract public function getPostContentClassAttribute($identifier);

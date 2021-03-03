@@ -124,7 +124,7 @@ class SearchService extends BaseSearchService
 
         $solrStorageTools = new \ezfSolrStorage();
 
-        $queryBuilder = new SearchService\QueryBuilder($this->repository->getPostContentClassIdentifier());
+        $queryBuilder = new SearchService\QueryBuilder($this->repository->getPostApiClass());
         $queryObject = $queryBuilder->instanceQuery($query);
         $ezFindQueryObject = $queryObject->convert();
 

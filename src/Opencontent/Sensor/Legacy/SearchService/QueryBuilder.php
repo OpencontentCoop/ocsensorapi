@@ -5,14 +5,13 @@ namespace Opencontent\Sensor\Legacy\SearchService;
 use Opencontent\Opendata\Api\ClassRepository;
 use Opencontent\Opendata\Api\QueryLanguage\EzFind;
 use eZINI;
+use Opencontent\Opendata\Api\Values\ContentClass;
 
 class QueryBuilder extends EzFind\QueryBuilder
 {
-    public function __construct($sensorPostClassIdentifier)
+    public function __construct(ContentClass $class)
     {
-        $classRepository = new ClassRepository();
         $availableFieldDefinitions = [];
-        $class = $classRepository->load($sensorPostClassIdentifier);
         foreach ($class->fields as $field) {
             if ($field['isSearchable']) {
                 if (!isset($attributes[$field['identifier']])) {

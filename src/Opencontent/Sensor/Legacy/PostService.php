@@ -141,11 +141,11 @@ class PostService extends PostServiceBase
     {
         $currentParticipant = $post->participants->getParticipantByUserId($this->repository->getCurrentUser()->id);
 
-        foreach ($post->participants as $participant) {
-            foreach ($participant as $user) {
-                $this->repository->getUserService()->setUserPostAware($user, $post);
-            }
-        }
+//        foreach ($post->participants as $participant) {
+//            foreach ($participant as $user) {
+//                $this->repository->getUserService()->setUserPostAware($user, $post);
+//            }
+//        }
         $this->repository->getUserService()->setUserPostAware(
             $this->repository->getCurrentUser(),
             $post

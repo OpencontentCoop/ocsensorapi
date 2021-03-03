@@ -7,6 +7,7 @@ use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Exception\UnauthorizedException;
 use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Api\Values\Post\Field\Area;
+use Opencontent\Sensor\Api\Values\Post\Field\GeoBounding;
 use Opencontent\Sensor\Api\Values\Post\Field\GeoLocation;
 use eZContentObject;
 
@@ -52,6 +53,10 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
             $geo->longitude = $content['data'][$this->repository->getCurrentLanguage()]['geo']['longitude'];
             $geo->address = $content['data'][$this->repository->getCurrentLanguage()]['geo']['address'];
             $area->geo = $geo;
+        }
+
+        if (isset($content['data'][$this->repository->getCurrentLanguage()]['bounding_box']['geo_json'])) {
+            $area->geoBounding = new GeoBounding($content['data'][$this->repository->getCurrentLanguage()]['bounding_box']);
         }
 
         return $area;

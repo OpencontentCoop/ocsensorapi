@@ -38,6 +38,9 @@ class NotificationService extends \Opencontent\Sensor\Core\NotificationService
     {
         foreach ($this->getNotificationTypes() as $notificationType) {
             if ($notificationType->identifier == $notificationIdentifier) {
+                if ($notificationType instanceof NotificationTypes\TemplateAwareNotificationTypeInterface){
+                    $notificationType->initTemplate();
+                }
                 return $notificationType;
             }
         }

@@ -4,7 +4,7 @@ namespace Opencontent\Sensor\Api\Values;
 
 use Opencontent\Sensor\Api\Exportable;
 
-class NotificationType extends Exportable
+abstract class NotificationType extends Exportable
 {
     public $identifier;
 

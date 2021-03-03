@@ -10,14 +10,16 @@ trait TemplateTextHelperTrait
 
     public $template;
 
-    protected function setTemplate()
+    public function initTemplate()
     {
-        $notificationTexts = SensorNotificationTextHelper::getTemplates();
-        if (!isset($notificationTexts[$this->identifier])){
-            $notificationTexts = SensorNotificationTextHelper::getDefaultTemplates();
-        }
-        if (isset($notificationTexts[$this->identifier])){
-            $this->template = $notificationTexts[$this->identifier];
+        if ($this->template === null) {
+            $notificationTexts = SensorNotificationTextHelper::getTemplates();
+            if (!isset($notificationTexts[$this->identifier])) {
+                $notificationTexts = SensorNotificationTextHelper::getDefaultTemplates();
+            }
+            if (isset($notificationTexts[$this->identifier])) {
+                $this->template = $notificationTexts[$this->identifier];
+            }
         }
     }
 }

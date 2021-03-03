@@ -7,7 +7,7 @@ use ezpI18n;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 
-class OnGroupAssignNotificationType extends NotificationType
+class OnGroupAssignNotificationType extends NotificationType implements TemplateAwareNotificationTypeInterface
 {
     use TemplateTextHelperTrait;
 
@@ -16,7 +16,6 @@ class OnGroupAssignNotificationType extends NotificationType
         $this->identifier = 'on_group_assign';
         $this->name = ezpI18n::tr('sensor/notification', 'Assegnazione di una segnalazione a un gruppo');
         $this->description = ezpI18n::tr('sensor/notification', 'Ricevi una notifica quando una segnalazione viene assegnata al tuo gruppo');
-        $this->setTemplate();
         $this->targets[ParticipantRole::ROLE_OWNER] = [Participant::TYPE_GROUP];
     }
 

@@ -1234,7 +1234,7 @@ class Controller
     private function convertQueryInQueryParameters($query, $parameters = array(), $extraParameters = array())
     {
         try {
-            $queryBuilder = new QueryBuilder($this->repository->getPostContentClassIdentifier());
+            $queryBuilder = new QueryBuilder($this->repository->getPostApiClass());
             $queryObject = $queryBuilder->instanceQuery($query);
             $queryObject->parse();
 

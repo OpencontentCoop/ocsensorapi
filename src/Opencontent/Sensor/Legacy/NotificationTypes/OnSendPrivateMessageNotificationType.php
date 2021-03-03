@@ -5,7 +5,7 @@ namespace Opencontent\Sensor\Legacy\NotificationTypes;
 use Opencontent\Sensor\Api\Values\NotificationType;
 use ezpI18n;
 
-class OnSendPrivateMessageNotificationType extends NotificationType
+class OnSendPrivateMessageNotificationType extends NotificationType implements TemplateAwareNotificationTypeInterface
 {
     use TemplateTextHelperTrait;
 
@@ -14,6 +14,5 @@ class OnSendPrivateMessageNotificationType extends NotificationType
         $this->identifier = 'on_send_private_message';
         $this->name = ezpI18n::tr('sensor/notification', 'Messaggio privato');
         $this->description = ezpI18n::tr('sensor/notification', 'Ricevi una notifica quando sei il destinatario di un messaggio privato');
-        $this->setTemplate();
     }
 }

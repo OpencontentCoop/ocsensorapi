@@ -26,6 +26,11 @@ class Area extends Field
     public $geo;
 
     /**
+     * @var GeoBounding
+     */
+    public $geoBounding;
+
+    /**
      * @var integer[]
      */
     public $operatorsIdList = array();

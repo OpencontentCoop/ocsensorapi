@@ -67,7 +67,7 @@ class TimelineTools
         return $extras;
     }
 
-    public static function getText($text, ParticipantCollection $participants)
+    public static function getText($text, ParticipantCollection $participants, $creatorId = null)
     {
         $result = $text;
         $parts = explode(' by ', $text);
@@ -77,12 +77,14 @@ class TimelineTools
         if (isset($parts[1])) {
             $nameParts = explode('::', $parts[1]);
             $nameString = array();
+            $nameIdList = [];
             foreach ($nameParts as $namePart) {
                 if (is_numeric($namePart)) {
                     $participant = $participants->getParticipantById(intval($namePart));
                     if (!$participant) {
                         $participant = $participants->getUserById(intval($namePart));
                     }
+                    $nameIdList[] = $participant ? $participant->id : 0;
                     $nameString[] = $participant ? $participant->name : '?';
                 } else {
                     $nameString[] = $namePart;
@@ -119,12 +121,21 @@ class TimelineTools
                     break;
 
                 case '_assigned':
-                    $result = ezpI18n::tr(
-                        'sensor/robot message',
-                        'Assegnata a %name',
-                        false,
-                        array('%name' => $name)
-                    );
+                    if (in_array($creatorId, $nameIdList)){
+                        $result = ezpI18n::tr(
+                            'sensor/robot message',
+                            'Presa in carico da %name',
+                            false,
+                            array('%name' => $name)
+                        );
+                    }else {
+                        $result = ezpI18n::tr(
+                            'sensor/robot message',
+                            'Assegnata a %name',
+                            false,
+                            array('%name' => $name)
+                        );
+                    }
                     break;
 
                 case '_reopened':

@@ -175,7 +175,8 @@ class MessageService extends MessageServiceBase
                         $message->extra = TimelineTools::getExtra($simpleMessage->attribute('data_text1'));
                         $message->text = TimelineTools::getText(
                             $simpleMessage->attribute('data_text1'),
-                            $this->repository->getParticipantService()->loadPostParticipants($post)
+                            $this->repository->getParticipantService()->loadPostParticipants($post),
+                            $simpleMessage->attribute('creator_id')
                         );
 
                     } elseif ($firstLink->attribute('message_type') == self::AUDIT) {

@@ -49,7 +49,7 @@ class StatusPerCategory extends StatisticFactory
             $rangeFilter = $this->getRangeFilter();
             $areaFilter = $this->getAreaFilter();
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter}{$rangeFilter} limit 1 facets [raw[submeta_category___id____si]|alpha|100] pivot [facet=>[sensor_status_lk,submeta_category___id____si],mincount=>{$this->minCount}}]",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter} limit 1 facets [raw[submeta_category___id____si]|alpha|1000] pivot [facet=>[sensor_status_lk,submeta_category___id____si],mincount=>{$this->minCount}]",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
             $this->data = [

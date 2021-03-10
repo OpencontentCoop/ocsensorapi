@@ -3,6 +3,7 @@
 namespace Opencontent\Sensor\Legacy\Statistics;
 
 use Opencontent\Sensor\Api\StatisticFactory;
+use Opencontent\Sensor\Legacy\Utils;
 
 trait FiltersTrait
 {
@@ -107,7 +108,7 @@ trait FiltersTrait
         switch ($interval) {
             case 'daily':
                 $intervalNameParser = function ($value) use ($format) {
-                    $dateTime = date_create_from_format('Yz', $value);
+                    $dateTime = date_create_from_format('Yz', $value, Utils::getDateTimeZone());
                     return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
@@ -126,7 +127,7 @@ trait FiltersTrait
                 $intervalNameParser = function ($value) use ($format) {
                     $year = substr($value, 0, 4);
                     $month = substr($value, -2);
-                    $dateTime = \DateTime::createFromFormat('d m Y', "01 $month $year");
+                    $dateTime = \DateTime::createFromFormat('d m Y', "01 $month $year", Utils::getDateTimeZone());
                     return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
@@ -139,7 +140,7 @@ trait FiltersTrait
                     elseif ($part == 2) $month = '04';
                     elseif ($part == 3) $month = '07';
                     else $month = '10';
-                    $dateTime = date_create_from_format('d/m/Y', "01/$month/$year");
+                    $dateTime = date_create_from_format('d/m/Y', "01/$month/$year", Utils::getDateTimeZone());
                     return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
@@ -149,14 +150,14 @@ trait FiltersTrait
                     $year = substr($value, 0, 4);
                     $part = substr($value, -1);
                     $month = $part == 2 ? '07' : '01';
-                    $dateTime = date_create_from_format('d/m/Y', "01/$month/$year");
+                    $dateTime = date_create_from_format('d/m/Y', "01/$month/$year", Utils::getDateTimeZone());
                     return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 
             case 'yearly':
                 $intervalNameParser = function ($value) use ($format) {
-                    $dateTime = date_create_from_format('d/m/Y', "01/01/$value");
+                    $dateTime = date_create_from_format('d/m/Y', "01/01/$value", Utils::getDateTimeZone());
                     return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;

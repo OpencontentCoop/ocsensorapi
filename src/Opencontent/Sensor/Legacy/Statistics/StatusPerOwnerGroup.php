@@ -14,7 +14,7 @@ class StatusPerOwnerGroup extends StatisticFactory
 
     protected $data;
 
-    protected $minCount = 0;
+    protected $minCount = 1;
 
     /**
      * StatusPercentage constructor.
@@ -37,19 +37,19 @@ class StatusPerOwnerGroup extends StatisticFactory
 
     public function getDescription()
     {
-        return \ezpI18n::tr('sensor/chart', 'Stato delle segnalazioni per gruppo di incaricati');
+        return \ezpI18n::tr('sensor/chart', 'Stato delle segnalazioni per gruppi di incaricati coinvolti');
     }
 
     public function getData()
     {
+        $ownerGroupFacetName = 'sensor_history_owner_id_lk';
+        //$ownerGroupFacetName = 'sensor_last_owner_group_id_i';
         if ($this->data === null) {
-            $byInterval = $this->getIntervalFilter();
-            $intervalNameParser = $this->getIntervalNameParser();
             $categoryFilter = $this->getCategoryFilter();
             $rangeFilter = $this->getRangeFilter();
             $areaFilter = $this->getAreaFilter();
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter}{$rangeFilter} limit 1 facets [raw[sensor_history_owner_id_lk]|alpha|100] pivot [facet=>[sensor_status_lk,sensor_history_owner_id_lk],mincount=>{$this->minCount}}]",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter} limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000] pivot [facet=>[sensor_status_lk,{$ownerGroupFacetName}],mincount=>{$this->minCount}]",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
 
@@ -58,7 +58,7 @@ class StatusPerOwnerGroup extends StatisticFactory
                 'series' => [],
             ];
 
-            $pivotItems = $search->pivot["sensor_status_lk,sensor_history_owner_id_lk"];
+            $pivotItems = $search->pivot["sensor_status_lk,{$ownerGroupFacetName}"];
 
             $groupTree = $this->repository->getGroupsTree();
             $tree = [];

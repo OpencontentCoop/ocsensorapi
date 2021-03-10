@@ -19,7 +19,7 @@ class Utils
      */
     public static function addDaysToTimeStamp($timestamp, $intervalDays)
     {
-        $expiringDate = new DateTime();
+        $expiringDate = new DateTime('now', self::getDateTimeZone());
         $expiringDate->setTimestamp($timestamp);
 
         $expiringIntervalString = 'P' . intval($intervalDays) . 'D';
@@ -33,7 +33,7 @@ class Utils
 
     public static function getDateTimeFromTimestamp($timestamp)
     {
-        $dateTime = new DateTime();
+        $dateTime = new DateTime('now', self::getDateTimeZone());
         $dateTime->setTimestamp($timestamp);
         return $dateTime;
     }
@@ -41,15 +41,15 @@ class Utils
     public static function getDateDiff($start, $end = null)
     {
         if (!$start instanceof DateTime) {
-            $start = new DateTime($start);
+            $start = new DateTime($start, self::getDateTimeZone());
         }
 
         if ($end === null) {
-            $end = new DateTime();
+            $end = new DateTime('now', self::getDateTimeZone());
         }
 
         if (!$end instanceof DateTime) {
-            $end = new DateTime($start);
+            $end = new DateTime($start, self::getDateTimeZone());
         }
 
         $interval = $end->diff($start);
@@ -131,9 +131,14 @@ class Utils
 
     public static function getDateIntervalSeconds(DateInterval $dateInterval)
     {
-        $reference = new DateTime();
+        $reference = new DateTime('now', self::getDateTimeZone());
         $endTime = clone $reference;
         $endTime = $endTime->add($dateInterval);
         return $endTime->getTimestamp() - $reference->getTimestamp();
+    }
+
+    public static function getDateTimeZone()
+    {
+        return new \DateTimeZone('Europe/Rome');
     }
 }

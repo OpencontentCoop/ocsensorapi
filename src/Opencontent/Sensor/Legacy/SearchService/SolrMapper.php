@@ -81,6 +81,8 @@ class SolrMapper
             'observer_name_list' => 'sensor_observer_name_list_lk',
             'history_owner_name' => 'sensor_history_owner_name_lk',
             'history_owner_id' => 'sensor_history_owner_id_lk',
+            'last_owner_user_id' => 'sensor_last_owner_user_id_i',
+            'last_owner_group_id' => 'sensor_last_owner_group_id_i',
 
             'area_name_list' => 'sensor_area_name_list_lk',
             'area_id_list' => 'sensor_area_id_list_lk',
@@ -263,17 +265,31 @@ class SolrMapper
         }
 
         $ownerHistory = array();
+        $lastOwnerUserId = 0;
+        $lastOwnerGroupId = 0;
         if ($assignedList) {
             foreach ($assignedList->messages as $message) {
                 foreach ($message->extra as $id) {
                     $participant = $this->post->participants->getParticipantById($id);
-                    if ($participant)
+                    if ($participant) {
                         $ownerHistory[$participant->id] = $participant->name;
+                        if ($participant->type == Participant::TYPE_GROUP){
+                            $lastOwnerGroupId = $participant->id;
+                        }elseif ($participant->type == Participant::TYPE_USER){
+                            $lastOwnerUserId = $participant->id;
+                        }
+                    }
                 }
             }
         }
         $data['sensor_history_owner_name_lk'] = implode(',', $ownerHistory);
         $data['sensor_history_owner_id_lk'] = implode(',', array_keys($ownerHistory));
+        if ($lastOwnerUserId > 0){
+            $data['sensor_last_owner_user_id_i'] = $lastOwnerUserId;
+        }
+        if ($lastOwnerGroupId > 0){
+            $data['sensor_last_owner_group_id_i'] = $lastOwnerGroupId;
+        }
 
         $areaList = array();
         foreach ($this->post->areas as $area)

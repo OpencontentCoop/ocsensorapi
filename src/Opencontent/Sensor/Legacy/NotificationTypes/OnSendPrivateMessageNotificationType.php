@@ -9,6 +9,8 @@ class OnSendPrivateMessageNotificationType extends NotificationType implements T
 {
     use TemplateTextHelperTrait;
 
+    public $group = 'operator';
+
     public function __construct()
     {
         $this->identifier = 'on_send_private_message';

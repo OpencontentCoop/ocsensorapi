@@ -11,6 +11,8 @@ class OnAddCommentToModerateNotificationType extends NotificationType implements
 {
     use TemplateTextHelperTrait;
 
+    public $group = 'operator';
+
     public function __construct()
     {
         $this->identifier = 'on_add_comment_to_moderate';

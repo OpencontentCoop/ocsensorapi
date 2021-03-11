@@ -166,4 +166,20 @@ trait FiltersTrait
 
         return $intervalNameParser;
     }
+
+    protected function getOwnerGroupFilter()
+    {
+        $groupFilter = '';
+        if ($this->hasParameter('group')) {
+            $group = $this->getParameter('group');
+            if (!empty($group)){
+                if (!is_array($group)){
+                    $group = [$group];
+                }
+                $groupFilter = 'raw[sensor_last_owner_group_id_i] in [' . implode(',', $group) . '] and ';
+            }
+        }
+
+        return $groupFilter;
+    }
 }

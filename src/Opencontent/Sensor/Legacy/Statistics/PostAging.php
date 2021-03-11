@@ -48,12 +48,14 @@ class PostAging extends StatisticFactory
             $ownerGroupFacetName = 'sensor_last_owner_group_id_i';
             $categoryFilter = $this->getCategoryFilter();
             $areaFilter = $this->getAreaFilter();
+            $groupFilter = $this->getOwnerGroupFilter();
+            
             $groupIdlist = [];
             $data = [];
             foreach ($this->getBuckets() as $bucket) {
                 $rangeFilter = $bucket['filter'];
                 $search = $this->repository->getStatisticsService()->searchPosts(
-                    "{$categoryFilter}{$areaFilter}{$rangeFilter} raw[sensor_status_lk] = 'open' limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000]",
+                    "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter} raw[sensor_status_lk] = 'open' limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000]",
                     ['authorFiscalCode' => $this->getAuthorFiscalCode()]
                 );
                 $data[$bucket['name']] = $search->facets[0]['data'];
@@ -68,6 +70,9 @@ class PostAging extends StatisticFactory
             foreach ($groupTree->attribute('children') as $groupTreeItem) {
                 $tree[$groupTreeItem->attribute('id')] = $groupTreeItem->attribute('name');
             }
+            usort($groupIdlist, function ($a, $b) use ($tree){
+                return strcmp($tree[$a], $tree[$b]);
+            });
 
             $series = [];
             foreach ($groupIdlist as $groupId){

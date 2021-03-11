@@ -42,8 +42,8 @@ class StatusPerOwnerGroup extends StatisticFactory
 
     public function getData()
     {
-        $ownerGroupFacetName = 'sensor_history_owner_id_lk';
-        //$ownerGroupFacetName = 'sensor_last_owner_group_id_i';
+        //$ownerGroupFacetName = 'sensor_history_owner_id_lk';
+        $ownerGroupFacetName = 'sensor_last_owner_group_id_i';
         if ($this->data === null) {
             $categoryFilter = $this->getCategoryFilter();
             $rangeFilter = $this->getRangeFilter();

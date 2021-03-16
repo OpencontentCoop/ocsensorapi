@@ -15,6 +15,8 @@ class StatusPerOwnerGroup extends StatisticFactory
     protected $data;
 
     protected $minCount = 1;
+    
+    protected $addTotals = true;
 
     /**
      * StatusPercentage constructor.
@@ -78,22 +80,14 @@ class StatusPerOwnerGroup extends StatisticFactory
                 ];
             }
 
-            $series = [
-                0 => [
-                    'name' => 'Chiusa',
-                    'data' => $serie,
-                    'id' => 0
-                ],
-                1 => [
-                    'name' => 'Aperta',
-                    'data' => $serie,
-                    'id' => 1
-                ],
-            ];
+            $series = $this->generateSeries($serie);
 
             $sorter = [];
             foreach ($pivotItems as $pivotItem) {
                 $serieIndex = $pivotItem['value'] == 'open' ? 1 : 0;
+                if (!isset($series[$serieIndex])){
+                    continue;
+                }
                 foreach ($tree as $treeId => $treeItem) {
                     foreach ($pivotItem['pivot'] as $pivot) {
                         if ($pivot['value'] == $treeId) {
@@ -122,23 +116,41 @@ class StatusPerOwnerGroup extends StatisticFactory
                 }
                 $series[$serieIndex]['data'] = $data;
             }
-            $totals = [];
-            foreach ($sorter as $cid => $count){
-                $id = substr($cid, 2);
-                $totals[] = [
-                    'interval' => $tree[$id]['name'],
-                    'count' => $count
+            if ($this->addTotals) {
+                $totals = [];
+                foreach ($sorter as $cid => $count) {
+                    $id = substr($cid, 2);
+                    $totals[] = [
+                        'interval' => $tree[$id]['name'],
+                        'count' => $count
+                    ];
+                }
+                $series[2] = [
+                    'name' => 'Totale',
+                    'data' => $totals,
+                    'id' => 2
                 ];
             }
-            $series[2] = [
-                'name' => 'Totale',
-                'data' => $totals,
-                'id' => 2
-            ];
 
-            $this->data['series'] = $series;
+            $this->data['series'] = array_values($series);
         }
 
         return $this->data;
+    }
+
+    protected function generateSeries($serie)
+    {
+        return [
+            0 => [
+                'name' => 'Chiusa',
+                'data' => $serie,
+                'id' => 0
+            ],
+            1 => [
+                'name' => 'Aperta',
+                'data' => $serie,
+                'id' => 1
+            ],
+        ];
     }
 }

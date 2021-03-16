@@ -92,11 +92,31 @@ trait FiltersTrait
         if (!$field){
             $field = $this->hasParameter('event') ? $this->getParameter('event') : 'open';
         }
+
         $start = $this->hasParameter('start') ? $this->getParameter('start') : null;
+        if ($start && $start != '*') {
+            $time = new \DateTime($start, new \DateTimeZone('UTC'));
+
+            if (!$time instanceof \DateTime) {
+                throw new \Exception("Problem with date $start");
+            }
+            $start = '"' . \ezfSolrDocumentFieldBase::convertTimestampToDate($time->format('U')) . '"';
+        }
+
         $end = $this->hasParameter('end') ? $this->getParameter('end') : null;
+        if ($end && $end != '*') {
+            $time = new \DateTime($end, new \DateTimeZone('UTC'));
+
+            if (!$time instanceof \DateTime) {
+                throw new \Exception("Problem with date $end");
+            }
+            $end = '"' . \ezfSolrDocumentFieldBase::convertTimestampToDate($time->format('U')) . '"';
+        }
+
         if ($start && $end && $field){
             return " $field range [$start,$end] and ";
         }
+        
         return '';
     }
 

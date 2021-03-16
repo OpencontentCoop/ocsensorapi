@@ -94,7 +94,7 @@ trait FiltersTrait
         }
 
         $start = $this->hasParameter('start') ? $this->getParameter('start') : null;
-        if ($start && $start != '*') {
+        if ($field !== 'published' && $start && $start != '*') {
             $time = new \DateTime($start, new \DateTimeZone('UTC'));
 
             if (!$time instanceof \DateTime) {
@@ -104,7 +104,7 @@ trait FiltersTrait
         }
 
         $end = $this->hasParameter('end') ? $this->getParameter('end') : null;
-        if ($end && $end != '*') {
+        if ($field !== 'published' && $end && $end != '*') {
             $time = new \DateTime($end, new \DateTimeZone('UTC'));
 
             if (!$time instanceof \DateTime) {
@@ -116,7 +116,7 @@ trait FiltersTrait
         if ($start && $end && $field){
             return " $field range [$start,$end] and ";
         }
-        
+
         return '';
     }
 

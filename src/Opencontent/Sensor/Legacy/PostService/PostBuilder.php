@@ -122,6 +122,8 @@ class PostBuilder
 
         $post->channel = $this->loadPostChannel();
 
+        $this->loadLatestOwnerAndOwnerGroup($post);
+
         $this->checkApproversConsistency($post);
 
         return $post;
@@ -540,5 +542,22 @@ class PostBuilder
         }
 
         return $this->repository->getChannelService()->loadPostDefaultChannel();
+    }
+
+    protected function loadLatestOwnerAndOwnerGroup(Post $post)
+    {
+        $assignedList = $post->timelineItems->getByType('assigned');
+        foreach ($assignedList->messages as $message) {
+            foreach ($message->extra as $id) {
+                $participant = $post->participants->getParticipantById($id);
+                if ($participant) {
+                    if ($participant->type == Participant::TYPE_GROUP){
+                        $post->latestOwnerGroup = $participant;
+                    }elseif ($participant->type == Participant::TYPE_USER){
+                        $post->latestOwner = $participant;
+                    }
+                }
+            }
+        }
     }
 }

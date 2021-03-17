@@ -255,6 +255,16 @@ class PostService extends PostServiceBase
                 $comments->addMessage($hiddenMessage);
             }
             $post->comments = $comments;
+
+            if ($post->latestOwner instanceof Participant){
+                if (isset($hiddenOperators[$post->latestOwner->id])) {
+                    $post->latestOwner = new Participant();
+                    $post->latestOwner->id = 1;
+                    $post->latestOwner->name = $hiddenOperatorName;
+                    $post->latestOwner->email = $hiddenOperatorEmail;
+                    $post->latestOwner->type = Participant::TYPE_USER;
+                }
+            }
         }
 
         if (!PermissionService::isSuperAdmin($this->repository->getCurrentUser())){

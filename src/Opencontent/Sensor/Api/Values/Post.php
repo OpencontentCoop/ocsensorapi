@@ -179,6 +179,16 @@ class Post extends Exportable
      */
     public $channel;
 
+    /**
+     * @var Participant
+     */
+    public $latestOwner;
+
+    /**
+     * @var Participant
+     */
+    public $latestOwnerGroup;
+
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);

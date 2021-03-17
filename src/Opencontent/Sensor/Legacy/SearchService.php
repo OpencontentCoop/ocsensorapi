@@ -33,7 +33,6 @@ class SearchService extends BaseSearchService
      */
     public function searchPost($postId, $parameters = array())
     {
-        //echo '<pre>';print_r($this->repository->getPostService()->loadPost($postId));die();
         $result = $this->internalSearchPosts('id = ' . $postId . ' limit 1', $parameters);
         if ($result->totalCount > 0) {
             return $result->searchHits[0];

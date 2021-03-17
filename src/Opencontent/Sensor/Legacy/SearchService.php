@@ -123,6 +123,10 @@ class SearchService extends BaseSearchService
 
         $solrStorageTools = new \ezfSolrStorage();
 
+        $defaultLimit = ($parameters['format'] === 'geojson') ? 200 : 10;
+        if (empty($query)) {
+            $query = 'limit ' . $defaultLimit;
+        }
         $queryBuilder = new SearchService\QueryBuilder($this->repository->getPostApiClass());
         $queryObject = $queryBuilder->instanceQuery($query);
         $ezFindQueryObject = $queryObject->convert();
@@ -147,7 +151,7 @@ class SearchService extends BaseSearchService
         $ezFindQuery = array_merge(
             array(
                 'SearchOffset' => 0,
-                'SearchLimit' => ($parameters['format'] === 'geojson') ? 200 : 10,
+                'SearchLimit' => $defaultLimit,
                 'Filter' => [],
             ),
             $ezFindQuery,

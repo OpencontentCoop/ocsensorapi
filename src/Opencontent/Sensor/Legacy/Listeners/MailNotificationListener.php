@@ -6,6 +6,7 @@ use League\Event\AbstractListener;
 use League\Event\EventInterface;
 use Opencontent\Sensor\Api\Values\Event as SensorEvent;
 use Opencontent\Sensor\Api\Values\Group;
+use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\NotificationType;
 use Opencontent\Sensor\Api\Values\Operator;
 use Opencontent\Sensor\Api\Values\Participant;
@@ -34,6 +35,7 @@ class MailNotificationListener extends AbstractListener
 
             $notificationType = $this->repository->getNotificationService()->getNotificationByIdentifier($param->identifier);
 
+            $auditMessages = [];
             if ($notificationType) {
                 $roles = $this->repository->getParticipantService()->loadParticipantRoleCollection();
                 /** @var ParticipantRole $role */
@@ -50,12 +52,21 @@ class MailNotificationListener extends AbstractListener
                         if ($mailData && !empty($addresses)) {
                             if ($this->sendMail($addresses, $mailData['subject'], $mailData['body'], $mailData['parameters'])) {
                                 $this->repository->getLogger()->info("Prepared notification mail to {$role->name} addresses: " . implode(',', $addresses));
+                                $auditMessages[] = "Invio notifica '{$notificationType->name}' a utenti con ruolo '{$role->name}': " . implode(', ', $addresses);
                             }
                         }
                     }else{
                         $this->repository->getLogger()->debug("Notification targets not found", ['role' => $role->name, 'notification' => $notificationType->name]);
                     }
                 }
+            }
+            if (!empty($auditMessages)){
+                $auditStruct = new AuditStruct();
+                $auditStruct->createdDateTime = new \DateTime();
+                $auditStruct->creator = $this->repository->getUserService()->loadUser(\eZINI::instance()->variable("UserSettings", "UserCreatorID")); //@todo
+                $auditStruct->post = $param->post;
+                $auditStruct->text = implode("\n", $auditMessages);
+                $this->repository->getMessageService()->createAudit($auditStruct);
             }
         }
     }

@@ -4,6 +4,7 @@ namespace Opencontent\Sensor\Legacy\Listeners;
 
 use League\Event\EventInterface;
 use Opencontent\Sensor\Api\Values\Event as SensorEvent;
+use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 
@@ -17,6 +18,7 @@ class PrivateMailNotificationListener extends MailNotificationListener
             if (!empty($receiverIdList)) {
                 $this->repository->getLogger()->info("Notify '{$param->identifier}' on post {$param->post->id} from user {$param->user->id}", $param->parameters);
                 $notificationType = $this->repository->getNotificationService()->getNotificationByIdentifier($param->identifier);
+                $auditMessages = [];
                 if ($notificationType) {
                     $roles = $this->repository->getParticipantService()->loadParticipantRoleCollection();
                     /** @var ParticipantRole $role */
@@ -34,12 +36,21 @@ class PrivateMailNotificationListener extends MailNotificationListener
                             if ($mailData && !empty($addresses)) {
                                 if ($this->sendMail($addresses, $mailData['subject'], $mailData['body'], $mailData['parameters'])) {
                                     $this->repository->getLogger()->info("Sent private notification mail to addresses: " . implode(',', $addresses));
+                                    $auditMessages[] = "Invio notifica privata a " . implode(',', $addresses);
                                 }
                             }
                         } else {
                             $this->repository->getLogger()->debug("Notification targets not found", ['role' => $role->name, 'notification' => $notificationType->name]);
                         }
                     }
+                }
+                if (!empty($auditMessages)){
+                    $auditStruct = new AuditStruct();
+                    $auditStruct->createdDateTime = new \DateTime();
+                    $auditStruct->creator = $this->repository->getUserService()->loadUser(\eZINI::instance()->variable("UserSettings", "UserCreatorID")); //@todo
+                    $auditStruct->post = $param->post;
+                    $auditStruct->text = implode("\n", $auditMessages);
+                    $this->repository->getMessageService()->createAudit($auditStruct);
                 }
             }
         }

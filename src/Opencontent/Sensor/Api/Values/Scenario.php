@@ -42,6 +42,8 @@ class Scenario extends Exportable
      */
     protected $observersIdList = array();
 
+    protected $expiry;
+
     /**
      * @var Post
      */
@@ -123,6 +125,14 @@ class Scenario extends Exportable
         return count($this->getObservers()) > 0;
     }
 
+    /**
+     * @return integer
+     */
+    public function getExpiry()
+    {
+        return (int)$this->expiry;
+    }
+
     public function jsonSerialize()
     {
         $objectVars['id'] = $this->id;
@@ -138,6 +148,7 @@ class Scenario extends Exportable
             'owner' => $this->getOwners(),
             'observer' => $this->getObservers(),
         ];
+        $objectVars['expiry'] = $this->getExpiry() > 0 ? $this->getExpiry() : null;
 
         return $this->toJson($objectVars);
     }

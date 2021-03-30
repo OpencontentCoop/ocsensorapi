@@ -91,6 +91,14 @@ abstract class ScenarioService implements ScenarioServiceInterface
                     );
                     $post = $this->repository->getPostService()->loadPost($post->id);
                 }
+
+                if ($scenario->getExpiry() > 0){
+                    $this->repository->getActionService()->runAction(
+                        new Action('set_expiry', ['expiry_days' => $scenario->getExpiry()], true),
+                        $post
+                    );
+                    $post = $this->repository->getPostService()->loadPost($post->id);
+                }
             }
 
             $this->repository->getLogger()->debug("End apply scenario $scenario->id on post $post->id in trigger $trigger");

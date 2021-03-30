@@ -81,6 +81,10 @@ class SensorScenario extends Scenario
         if (isset($dataMap['reporter_as_observer'])) {
             $this->makeReporterAsObserver = $dataMap['reporter_as_observer']->attribute('data_int') == 1;
         }
+
+        if (isset($dataMap['expiry']) && $dataMap['expiry']->hasContent()) {
+            $this->expiry = (int)$dataMap['expiry']->toString();
+        }
     }
 
     public function getApprovers()
@@ -298,6 +302,10 @@ class SensorScenario extends Scenario
             $criteriaMessages[] = $criterion->getDescription();
         }
         $criteriaMessage = implode(' e ', $criteriaMessages);
+
+        if (!empty($this->expiry)) {
+            $details[] = ' • Imposta scadenza a ' . $this->expiry . ' giorni';
+        }
 
         $this->currentPost = $currentPost;
 

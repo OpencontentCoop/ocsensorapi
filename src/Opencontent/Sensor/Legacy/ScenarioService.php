@@ -12,6 +12,7 @@ use Opencontent\Sensor\Legacy\Scenarios\FallbackScenario;
 use Opencontent\Sensor\Legacy\Scenarios\FirstAreaApproverScenario;
 use Opencontent\Sensor\Legacy\Scenarios\NullScenario;
 use Opencontent\Sensor\Legacy\Scenarios\SensorScenario;
+use Opencontent\Sensor\Legacy\Utils\TreeNode;
 
 class ScenarioService extends BaseScenarioService
 {
@@ -140,6 +141,10 @@ class ScenarioService extends BaseScenarioService
             'attributes' => $attributes
         ]);
 
+        if ($object instanceof \eZContentObject) {
+            TreeNode::clearCache($this->repository->getCategoriesRootNode()->attribute('node_id'));
+        }
+
         return new SensorScenario($this->repository, $object);
     }
 
@@ -159,6 +164,7 @@ class ScenarioService extends BaseScenarioService
             'reporter_as_approver' => isset($struct['assignments']['reporter_as_approver']) ? $struct['assignments']['reporter_as_approver'] : 0,
             'reporter_as_owner' => isset($struct['assignments']['reporter_as_owner']) ? $struct['assignments']['reporter_as_owner'] : 0,
             'reporter_as_observer' => isset($struct['assignments']['reporter_as_observer']) ? $struct['assignments']['reporter_as_observer'] : 0,
+            'expiry' => isset($struct['expiry']) && intval($struct['expiry']) > 0 ? intval($struct['expiry']) : ''
         ];
     }
 
@@ -185,6 +191,11 @@ class ScenarioService extends BaseScenarioService
             $params['remote_id'] = $remoteId;
         }
 
-        return \eZContentFunctions::updateAndPublishObject($scenario, $params);
+        $update = \eZContentFunctions::updateAndPublishObject($scenario, $params);
+        if ($update) {
+            TreeNode::clearCache($this->repository->getCategoriesRootNode()->attribute('node_id'));
+        }
+
+        return $update;
     }
 }

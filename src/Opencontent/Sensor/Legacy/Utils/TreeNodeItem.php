@@ -85,6 +85,28 @@ class TreeNodeItem implements \JsonSerializable
     {
         /** @var eZContentObjectAttribute[] $dataMap */
         $dataMap = $node->attribute('data_map');
+        if ($node->attribute('class_identifier') == 'sensor_category'){
+            $attributeId = eZContentObjectTreeNode::classAttributeIDByIdentifier('sensor_scenario/criterion_category');
+            $scenarios = $node->object()->reverseRelatedObjectList(
+                false, $attributeId, false, $params
+            );
+            foreach ($scenarios as $scenario){
+                $scenarioDataMap = $scenario->dataMap();
+                if (isset($scenarioDataMap['criterion_area'])
+                    && !$scenarioDataMap['criterion_area']->hasContent()
+                    && isset($scenarioDataMap['owner_group'])
+                    && $scenarioDataMap['owner_group']->hasContent()
+                ){
+                    $scenarioOwnerGroupIdList = explode('-', $scenarioDataMap['owner_group']->toString());
+                    $scenarioOwnerGroupList = \OpenPABase::fetchObjects($scenarioOwnerGroupIdList);
+                    $scenarioOwnerGroup = [];
+                    foreach ($scenarioOwnerGroupList as $object){
+                        $scenarioOwnerGroup[] = $object->attribute('name');
+                    }
+                    return implode(', ', $scenarioOwnerGroup);
+                }
+            }
+        }
 //        if (isset($dataMap['approver']) && $dataMap['approver']->hasContent()) {
 //            $idList = explode('-', $dataMap['approver']->toString());
 //            if (count($idList) > 0){

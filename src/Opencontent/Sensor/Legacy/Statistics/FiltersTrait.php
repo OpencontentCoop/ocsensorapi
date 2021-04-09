@@ -35,6 +35,28 @@ trait FiltersTrait
         return $categoryFilter;
     }
 
+    protected function getMainCategoryFilter()
+    {
+        $categoryFilter = '';
+        if ($this->hasParameter('maincategory')) {
+            $categoryId = (int)$this->getParameter('maincategory');
+            $categoryTree = $this->repository->getCategoriesTree();
+            if ($categoryId > 0){
+                $categoryList = [$categoryId];
+                foreach ($categoryTree->attribute('children') as $categoryTreeItem){
+                    if ($categoryTreeItem->attribute('id') == $categoryId){
+                        foreach ($categoryTreeItem->attribute('children') as $child){
+                            $categoryList[] = $child->attribute('id');
+                        }
+                    }
+                }
+                $categoryFilter = 'raw[submeta_category___id____si] in [' . implode(',', (array)$categoryList) . '] and ';
+            }
+        }
+
+        return $categoryFilter;
+    }
+
     protected function getAreaFilter()
     {
         $areaFilter = '';

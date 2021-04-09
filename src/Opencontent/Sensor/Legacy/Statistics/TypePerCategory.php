@@ -44,7 +44,7 @@ class TypePerCategory extends StatisticFactory
         if ($this->data === null) {
             $byInterval = $this->getIntervalFilter();
             $intervalNameParser = $this->getIntervalNameParser();
-            $categoryFilter = $this->getCategoryFilter();
+            $categoryFilter = $this->getMainCategoryFilter();
             $rangeFilter = $this->getRangeFilter();
             $areaFilter = $this->getAreaFilter();
             $groupFilter = $this->getOwnerGroupFilter();
@@ -68,7 +68,16 @@ class TypePerCategory extends StatisticFactory
                     'children' => []
                 ];
                 foreach ($categoryTreeItem->attribute('children') as $categoryTreeItemChild) {
-                    $tree[$categoryTreeItem->attribute('id')]['children'][] = $categoryTreeItemChild->attribute('id');
+                    if ($this->hasParameter('maincategory')){
+                        if ($categoryTreeItem->attribute('id') == $this->getParameter('maincategory')){
+                            $tree[$categoryTreeItemChild->attribute('id')] = [
+                                'name' => $categoryTreeItemChild->attribute('name'),
+                                'children' => []
+                            ];
+                        }
+                    }else {
+                        $tree[$categoryTreeItem->attribute('id')]['children'][] = $categoryTreeItemChild->attribute('id');
+                    }
                 }
             }
 

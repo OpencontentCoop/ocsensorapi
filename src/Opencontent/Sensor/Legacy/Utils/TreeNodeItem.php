@@ -133,6 +133,9 @@ class TreeNodeItem implements \JsonSerializable
                 }
             }
         }
+        if (isset($dataMap['tag']) && $dataMap['tag']->hasContent()) {
+            return trim($dataMap['tag']->toString());
+        }
         return null;
     }
 

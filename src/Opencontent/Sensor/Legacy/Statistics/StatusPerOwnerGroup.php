@@ -66,10 +66,39 @@ class StatusPerOwnerGroup extends StatisticFactory
 
             $groupTree = $this->repository->getGroupsTree();
             $tree = [];
-            foreach ($groupTree->attribute('children') as $groupTreeItem) {
-                $tree[$groupTreeItem->attribute('id')] = [
-                    'name' => $groupTreeItem->attribute('name')
-                ];
+            if ($this->hasParameter('taggroup')){
+                $groupTagCounter = [];
+                foreach ($groupTree->attribute('children') as $groupTreeItem) {
+                    $groupTag = $groupTreeItem->attribute('group');
+                    if (empty($groupTag)) {
+                        $tree[$groupTreeItem->attribute('id')] = [
+                            'name' => $groupTreeItem->attribute('name'),
+                            'children' => []
+                        ];
+                    }else{
+                        if (isset($groupTagCounter[$groupTag])){
+                            $groupTagId = $groupTagCounter[$groupTag];
+                        }else{
+                            $groupTagId = $groupTagCounter[$groupTag] = count($groupTagCounter) + 1;
+                        }
+
+                        if (isset($tree[$groupTagId])){
+                            $tree[$groupTagId]['children'][] = $groupTreeItem->attribute('id');
+                        }else{
+                            $tree[$groupTagId] = [
+                                'name' => $groupTag,
+                                'children' => [$groupTreeItem->attribute('id')]
+                            ];
+                        }
+                    }
+                }
+            }else {
+                foreach ($groupTree->attribute('children') as $groupTreeItem) {
+                    $tree[$groupTreeItem->attribute('id')] = [
+                        'name' => $groupTreeItem->attribute('name'),
+                        'children' => []
+                    ];
+                }
             }
 
             $serie = [];
@@ -90,7 +119,7 @@ class StatusPerOwnerGroup extends StatisticFactory
                 }
                 foreach ($tree as $treeId => $treeItem) {
                     foreach ($pivotItem['pivot'] as $pivot) {
-                        if ($pivot['value'] == $treeId) {
+                        if ($pivot['value'] == $treeId || in_array($pivot['value'], $treeItem['children'])) {
                             $series[$serieIndex]['data'][$treeId]['count'] += $pivot['count'];
                             if (!isset($sorter['c_' . $treeId])){
                                 $sorter['c_' . $treeId] = 0;

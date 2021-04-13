@@ -46,6 +46,9 @@ class StatusPerCategory extends StatisticFactory
             $byInterval = $this->getIntervalFilter();
             $intervalNameParser = $this->getIntervalNameParser();
             $categoryFilter = $this->getMainCategoryFilter();
+            if ($this->hasParameter('maincategory')){
+                $this->minCount = 1;
+            }
             $rangeFilter = $this->getRangeFilter();
             $areaFilter = $this->getAreaFilter();
             $groupFilter = $this->getOwnerGroupFilter();

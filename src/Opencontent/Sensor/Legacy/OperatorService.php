@@ -3,7 +3,7 @@
 namespace Opencontent\Sensor\Legacy;
 
 use Opencontent\Sensor\Api\Exception\NotFoundException;
-use Opencontent\Sensor\Api\Exception\UnauthorizedException;
+use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Api\Values\Group;
 use Opencontent\Sensor\Api\Values\Operator;
@@ -91,7 +91,7 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
     {
         $parentNode = $this->repository->getOperatorsRootNode();
         if (!$parentNode instanceof \eZContentObjectTreeNode || !$parentNode->canCreate()){
-            throw new UnauthorizedException("Current user can not create operator");
+            throw new ForbiddenException("Current user can not create operator");
         }
         $params = [
             'creator_id' => (int)$this->repository->getCurrentUser()->id,
@@ -117,7 +117,7 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
         $contentObject = $eZUser->contentObject();
         if ($contentObject instanceof eZContentObject) {
             if (!$contentObject->canEdit()){
-                throw new UnauthorizedException("Current user can not update operator");
+                throw new ForbiddenException("Current user can not update operator");
             }
             $attributes = [
                 'name' => (string)$payload['name'],

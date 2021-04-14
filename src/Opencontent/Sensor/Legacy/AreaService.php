@@ -4,7 +4,7 @@ namespace Opencontent\Sensor\Legacy;
 
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
-use Opencontent\Sensor\Api\Exception\UnauthorizedException;
+use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Api\Values\Post\Field\Area;
 use Opencontent\Sensor\Api\Values\Post\Field\GeoBounding;
@@ -84,7 +84,7 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
             (int)$this->repository->getAreasTree()->attribute('children')[0]->attribute('node_id')
         );
         if (!$parentNode instanceof \eZContentObjectTreeNode || !$parentNode->canCreate()) {
-            throw new UnauthorizedException("Current user can not create category");
+            throw new ForbiddenException("Current user can not create category");
         }
 
         $geo = '';
@@ -121,7 +121,7 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
         $contentObject = \eZContentObject::fetch($area->id);
         if ($contentObject instanceof eZContentObject) {
             if (!$contentObject->canEdit()){
-                throw new UnauthorizedException("Current user can not update category");
+                throw new ForbiddenException("Current user can not update category");
             }
 
             $approvers = [];

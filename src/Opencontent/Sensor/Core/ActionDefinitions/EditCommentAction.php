@@ -5,7 +5,7 @@ namespace Opencontent\Sensor\Core\ActionDefinitions;
 use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Action\ActionDefinitionParameter;
-use Opencontent\Sensor\Api\Exception\UnauthorizedException;
+use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Repository;
 use Opencontent\Sensor\Api\Values\Message;
 use Opencontent\Sensor\Api\Values\Message\AuditStruct;
@@ -67,6 +67,6 @@ class EditCommentAction extends ActionDefinition
             }
         }
 
-        throw new UnauthorizedException("Current user can not edit this comment");
+        throw new ForbiddenException("Current user can not edit this comment");
     }
 }

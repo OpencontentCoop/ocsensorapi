@@ -11,7 +11,7 @@ use Opencontent\Sensor\Api\Values\Message\PrivateMessage;
 use Opencontent\Sensor\Api\Values\Message\PrivateMessageStruct;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
-use Opencontent\Sensor\Api\Exception\UnauthorizedException;
+use Opencontent\Sensor\Api\Exception\ForbiddenException;
 
 class EditPrivateMessageAction extends ActionDefinition
 {
@@ -60,7 +60,7 @@ class EditPrivateMessageAction extends ActionDefinition
             }
         }
 
-        throw new UnauthorizedException("Current user can not edit this comment");
+        throw new ForbiddenException("Current user can not edit this comment");
     }
 }
 

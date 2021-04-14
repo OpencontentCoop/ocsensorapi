@@ -5,7 +5,7 @@ namespace Opencontent\Sensor\Legacy\Validators;
 use Opencontent\Sensor\Api\Validators\PostUpdateStructValidator as BasePostUpdateStructValidator;
 use Opencontent\Sensor\Api\Values\PostUpdateStruct;
 use Opencontent\Sensor\Legacy\Repository;
-use Opencontent\Sensor\Api\Exception\UnauthorizedException;
+use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 
@@ -30,7 +30,7 @@ class PostUpdateStructValidator extends BasePostUpdateStructValidator
     public function validate(PostUpdateStruct $updateStruct)
     {
         if (!$this->contentObject instanceof \eZContentObject || !$this->contentObject->canEdit()) {
-            throw new UnauthorizedException("Current user can not edit post");
+            throw new ForbiddenException("Current user can not edit post");
         }
 
         parent::validate($updateStruct);

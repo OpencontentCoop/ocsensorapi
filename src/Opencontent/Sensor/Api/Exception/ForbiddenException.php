@@ -2,10 +2,12 @@
 
 namespace Opencontent\Sensor\Api\Exception;
 
-class UnauthorizedException extends BaseException
+
+class ForbiddenException extends BaseException
 {
     public function getServerErrorCode()
     {
-        return 401;
+        return 403;
     }
+
 }

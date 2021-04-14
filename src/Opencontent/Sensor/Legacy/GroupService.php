@@ -4,7 +4,7 @@ namespace Opencontent\Sensor\Legacy;
 
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
-use Opencontent\Sensor\Api\Exception\UnauthorizedException;
+use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Api\Values\Group;
 use eZContentObject;
@@ -51,7 +51,7 @@ class GroupService extends \Opencontent\Sensor\Core\GroupService
     {
         $parentNode = $this->repository->getGroupsRootNode();
         if (!$parentNode instanceof \eZContentObjectTreeNode || !$parentNode->canCreate()){
-            throw new UnauthorizedException("Current user can not create group");
+            throw new ForbiddenException("Current user can not create group");
         }
         $params = [
             'creator_id' => (int)$this->repository->getCurrentUser()->id,
@@ -73,7 +73,7 @@ class GroupService extends \Opencontent\Sensor\Core\GroupService
         $contentObject = \eZContentObject::fetch($group->id);
         if ($contentObject instanceof eZContentObject) {
             if (!$contentObject->canEdit()){
-                throw new UnauthorizedException("Current user can not update operator");
+                throw new ForbiddenException("Current user can not update operator");
             }
             $attributes = [
                 self::NAME_ATTRIBUTE_IDENTIFIER => (string)$payload['name'],

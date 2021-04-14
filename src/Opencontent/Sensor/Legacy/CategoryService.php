@@ -4,7 +4,7 @@ namespace Opencontent\Sensor\Legacy;
 
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
-use Opencontent\Sensor\Api\Exception\UnauthorizedException;
+use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Api\Values\Post\Field\Category;
 use eZContentObject;
@@ -115,7 +115,7 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
      * @return Category
      * @throws InvalidInputException
      * @throws NotFoundException
-     * @throws UnauthorizedException
+     * @throws ForbiddenException
      * @throws UnexpectedException
      */
     public function createCategory($payload)
@@ -135,7 +135,7 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
             $parentNode = $this->repository->getCategoriesRootNode();
         }
         if (!$parentNode instanceof \eZContentObjectTreeNode || !$parentNode->canCreate()) {
-            throw new UnauthorizedException("Current user can not create category");
+            throw new ForbiddenException("Current user can not create category");
         }
 
         $approvers = [];
@@ -167,7 +167,7 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
      * @return Category
      * @throws InvalidInputException
      * @throws NotFoundException
-     * @throws UnauthorizedException
+     * @throws ForbiddenException
      * @throws UnexpectedException
      */
     public function updateCategory(Category $category, $payload)
@@ -175,7 +175,7 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
         $contentObject = \eZContentObject::fetch($category->id);
         if ($contentObject instanceof eZContentObject) {
             if (!$contentObject->canEdit()){
-                throw new UnauthorizedException("Current user can not update category");
+                throw new ForbiddenException("Current user can not update category");
             }
 
             if (isset($payload['parent'])) {

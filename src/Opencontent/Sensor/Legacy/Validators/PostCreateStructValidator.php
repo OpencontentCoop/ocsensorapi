@@ -5,7 +5,7 @@ namespace Opencontent\Sensor\Legacy\Validators;
 use Opencontent\Sensor\Api\Validators\PostCreateStructValidator as BasePostCreateStructValidator;
 use Opencontent\Sensor\Api\Values\PostCreateStruct;
 use Opencontent\Sensor\Legacy\Repository;
-use Opencontent\Sensor\Api\Exception\UnauthorizedException;
+use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 
@@ -19,7 +19,7 @@ class PostCreateStructValidator extends BasePostCreateStructValidator
     public function validate(PostCreateStruct $createStruct)
     {
         if (!$this->repository->getPostRootNode()->canCreate()) {
-            throw new UnauthorizedException("Current user can not create post");
+            throw new ForbiddenException("Current user can not create post");
         }
 
         parent::validate($createStruct);

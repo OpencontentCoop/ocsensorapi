@@ -7,7 +7,7 @@ use eZCollaborationItemStatus;
 use eZContentObject;
 use eZUser;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
-use Opencontent\Sensor\Api\Exception\UnauthorizedException;
+use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Api\Values\Event;
 use Opencontent\Sensor\Api\Values\Post;
@@ -90,7 +90,7 @@ class UserService extends UserServiceBase
         $parentNodeId = (int)$ini->variable( "UserSettings", "DefaultUserPlacement" );
         $parentNode = \eZContentObjectTreeNode::fetch($parentNodeId);
         if (!$parentNode instanceof \eZContentObjectTreeNode || (!$parentNode->canCreate() && $ignorePolicies === false)){
-            throw new UnauthorizedException("Current user can not create user");
+            throw new ForbiddenException("Current user can not create user");
         }
 
         $contentClass = \eZContentClass::fetch($ini->variable("UserSettings", "UserClassID"));
@@ -168,7 +168,7 @@ class UserService extends UserServiceBase
         $contentObject = $eZUser->contentObject();
         if ($contentObject instanceof eZContentObject) {
             if (!$contentObject->canEdit()){
-                throw new UnauthorizedException("Current user can not update user");
+                throw new ForbiddenException("Current user can not update user");
             }
             $attributes = [
                 'first_name' => (string)$payload['first_name'],

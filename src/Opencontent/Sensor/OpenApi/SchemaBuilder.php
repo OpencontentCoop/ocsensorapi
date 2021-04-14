@@ -25,6 +25,7 @@ class SchemaBuilder
     private $postClassDataMap;
 
     private static $tags = [
+        'auth' => "Authentication",
         'posts' => "Posts",
         'post-operators' => "Operators of post",
         'post-statuses' => "Statuses of post",
@@ -35,6 +36,8 @@ class SchemaBuilder
         'areas' => "Areas",
         'stat' => "Statistics",
     ];
+    
+    private $isJwtEnabled = false;
 
     public function __construct(OpenApi $apiSettings)
     {
@@ -42,6 +45,9 @@ class SchemaBuilder
         $this->siteIni = \eZINI::instance();
         $this->postClass = $this->apiSettings->getRepository()->getPostContentClass();
         $this->postClassDataMap = $this->postClass->dataMap();
+        if (class_exists('\SensorJwtManager')) {
+            $this->isJwtEnabled = \SensorJwtManager::instance()->isJwtAuthEnabled();
+        }
     }
 
     /**
@@ -49,9 +55,16 @@ class SchemaBuilder
      */
     public function build()
     {
+        $security = [
+            ['basicAuth' => []],
+        ];
+        if ($this->isJwtEnabled) {
+            $security[] = ['bearerAuth' => []];
+        }
         $document = new OA\Document(
             $this->buildInfo(),
             array_merge(
+                $this->buildAuthPaths(),
                 $this->buildPostPaths(),
                 $this->buildUserPaths(),
                 $this->buildOperatorPaths(),
@@ -65,7 +78,7 @@ class SchemaBuilder
                 'servers' => $this->buildServers(),
                 'tags' => $this->buildTags(),
                 'components' => $this->buildComponents(),
-                'security' => [['basicAuth' => []]]
+                'security' => $security
             ]
         );
 
@@ -109,7 +122,7 @@ class SchemaBuilder
 
     private function buildTags()
     {
-        return [
+        $tags = [
             new OA\Tag(self::$tags['posts']),
             new OA\Tag(self::$tags['post-operators']),
             new OA\Tag(self::$tags['post-statuses']),
@@ -120,6 +133,47 @@ class SchemaBuilder
             new OA\Tag(self::$tags['areas']),
             new OA\Tag(self::$tags['stat']),
         ];
+        if ($this->isJwtEnabled) {
+            array_unshift($tags, new OA\Tag(self::$tags['auth']));
+        }
+
+        return $tags;
+    }
+
+    private function buildAuthPaths()
+    {
+        $path = [];
+        if ($this->isJwtEnabled) {
+            $path['/auth'] = new OA\PathItem([
+                'post' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response', [
+                            'application/json' => new OA\MediaType([
+                                'schema' => new OA\Schema([
+                                    'title' => 'Token',
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'token' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'JWT Token'])
+                                    ]
+                                ])
+                            ])
+                        ]),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '401' => new OA\Response('Unauthorized'),
+                    ],
+                    'auth',
+                    'Retrieve authentication token',
+                    [
+                        'summary' => 'Retrieve authentication token',
+                        'tags' => [self::$tags['auth']],
+                        'requestBody' => new OA\Reference('#/components/requestBodies/Credentials'),
+                        'security' => []
+                    ]
+                )
+            ]);
+        }
+
+        return $path;
     }
 
     private function buildPostPaths()
@@ -1697,6 +1751,9 @@ class SchemaBuilder
         $components->securitySchemes = [
             'basicAuth' => new OA\SecurityScheme('http', null, ['scheme' => 'basic']),
         ];
+        if ($this->isJwtEnabled) {
+            $components->securitySchemes['bearerAuth'] = new OA\SecurityScheme('http', null, ['scheme' => 'bearer', 'bearerFormat' => 'JWT']);
+        }
 
         $components->schemas = [
             'PostCollection' => $this->buildSchema('PostCollection'),
@@ -1773,6 +1830,17 @@ class SchemaBuilder
             'Category' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewCategory')
             ])], 'Category object that needs to be added or updated', true),
+
+            'Credentials' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Schema([
+                    'title' => 'Credentials',
+                    'type' => 'object',
+                    'properties' => [
+                        'username' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Username']),
+                        'password' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Password']),
+                    ]
+                ])
+            ])], 'Authorization credentials', true),
         ];
 
         return $components;

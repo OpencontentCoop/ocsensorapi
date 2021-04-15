@@ -53,35 +53,6 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
         $category = new Category();
         $category->id = (int)$content['metadata']['id'];
         $category->name = $content['metadata']['name'][$language];
-        $category->operatorsIdList = [];
-
-        if (isset($content['data'][$language]['approver'])) {
-            foreach ($content['data'][$language]['approver'] as $item) {
-                if (in_array($item['classIdentifier'], \eZUser::fetchUserClassNames())) {
-                    $category->operatorsIdList[] = (int)$item['id'];
-                } else {
-                    $category->groupsIdList[] = (int)$item['id'];
-                }
-            }
-        }
-
-        if (isset($content['data'][$language]['owner'])) {
-            foreach ($content['data'][$language]['owner'] as $item) {
-                $category->ownersIdList[] = (int)$item['id'];
-            }
-        }
-
-        if (isset($content['data'][$language]['owner_group'])) {
-            foreach ($content['data'][$language]['owner_group'] as $item) {
-                $category->ownerGroupsIdList[] = (int)$item['id'];
-            }
-        }
-
-        if (isset($content['data'][$language]['observer'])) {
-            foreach ($content['data'][$language]['observer'] as $item) {
-                $category->observersIdList[] = (int)$item['id'];
-            }
-        }
 
         return $category;
     }
@@ -138,21 +109,12 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
             throw new ForbiddenException("Current user can not create category");
         }
 
-        $approvers = [];
-        if (!empty($payload['operators'])) {
-            $approvers = array_merge($approvers, $payload['operators']);
-        }
-        if (!empty($payload['groups'])) {
-            $approvers = array_merge($approvers, $payload['groups']);
-        }
-
         $params = [
             'creator_id' => (int)$this->repository->getCurrentUser()->id,
             'class_identifier' => $this->getClassIdentifierAsString(),
             'parent_node_id' => $parentNode->attribute('node_id'),
             'attributes' => [
                 'name' => (string)$payload['name'],
-                'approver' => implode('-', $approvers),
             ]
         ];
 
@@ -193,17 +155,8 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
                 $parentNode = $this->repository->getCategoriesRootNode();
             }
 
-            $approvers = [];
-            if (!empty($payload['operators'])) {
-                $approvers = array_merge($approvers, $payload['operators']);
-            }
-            if (!empty($payload['groups'])) {
-                $approvers = array_merge($approvers, $payload['groups']);
-            }
-
             $attributes = [
                 'name' => (string)$payload['name'],
-                'approver' => implode('-', $approvers),
             ];
             if (\eZContentFunctions::updateAndPublishObject($contentObject, ['attributes' => $attributes])) {
 

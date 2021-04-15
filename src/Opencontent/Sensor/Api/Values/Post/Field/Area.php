@@ -30,21 +30,6 @@ class Area extends Field
      */
     public $geoBounding;
 
-    /**
-     * @var integer[]
-     */
-    public $operatorsIdList = array();
-
-    /**
-     * @var integer[]
-     */
-    public $groupsIdList = array();
-
-    /**
-     * @var integer[]
-     */
-    public $observersIdList = array();
-
     public function __toString()
     {
         return '' . $this->id;

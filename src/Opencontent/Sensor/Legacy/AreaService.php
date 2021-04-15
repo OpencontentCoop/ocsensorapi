@@ -36,17 +36,7 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
         $area = new Area();
         $area->id = (int)$content['metadata']['id'];
         $area->name = $content['metadata']['name'][$this->repository->getCurrentLanguage()];
-        $area->operatorsIdList = [];
-        foreach ($content['data'][$this->repository->getCurrentLanguage()]['approver'] as $item) {
-            if (in_array($item['classIdentifier'], \eZUser::fetchUserClassNames())) {
-                $area->operatorsIdList[] = (int)$item['id'];
-            } else {
-                $area->groupsIdList[] = (int)$item['id'];
-            }
-        }
-        foreach ($content['data'][$this->repository->getCurrentLanguage()]['observer'] as $item) {
-            $area->observersIdList[] = (int)$item['id'];
-        }
+        
         if (isset($content['data'][$this->repository->getCurrentLanguage()]['geo'])) {
             $geo = new GeoLocation();
             $geo->latitude = $content['data'][$this->repository->getCurrentLanguage()]['geo']['latitude'];
@@ -92,21 +82,12 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
             $geo = GeoLocation::fromArray($payload['geo']);
         }
 
-        $approvers = [];
-        if (!empty($payload['operators'])) {
-            $approvers = array_merge($approvers, $payload['operators']);
-        }
-        if (!empty($payload['groups'])) {
-            $approvers = array_merge($approvers, $payload['groups']);
-        }
-
         $params = [
             'creator_id' => (int)$this->repository->getCurrentUser()->id,
             'class_identifier' => $this->getClassIdentifierAsString(),
             'parent_node_id' => $parentNode->attribute('node_id'),
             'attributes' => [
                 'name' => (string)$payload['name'],
-                'approver' => implode('-', $approvers),
                 'geo' => (string)$geo,
             ]
         ];
@@ -124,14 +105,6 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
                 throw new ForbiddenException("Current user can not update category");
             }
 
-            $approvers = [];
-            if (!empty($payload['operators'])) {
-                $approvers = array_merge($approvers, $payload['operators']);
-            }
-            if (!empty($payload['groups'])) {
-                $approvers = array_merge($approvers, $payload['groups']);
-            }
-
             $geo = '';
             if (!empty($payload['geo'])) {
                 $geo = GeoLocation::fromArray($payload['geo']);
@@ -139,7 +112,6 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
 
             $attributes = [
                 'name' => (string)$payload['name'],
-                'approver' => implode('-', $approvers),
                 'geo' => (string)$geo,
             ];
             if (\eZContentFunctions::updateAndPublishObject($contentObject, ['attributes' => $attributes])) {

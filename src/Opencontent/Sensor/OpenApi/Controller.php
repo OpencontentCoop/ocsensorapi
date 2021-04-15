@@ -899,16 +899,6 @@ class Controller
         if (empty($payload['name'])) {
             throw new InvalidInputException("Field name is required");
         }
-        if (!empty($payload['operators'])) {
-            foreach ($payload['operators'] as $operator) {
-                $this->repository->getOperatorService()->loadOperator($operator);
-            }
-        }
-        if (!empty($payload['groups'])) {
-            foreach ($payload['groups'] as $group) {
-                $this->repository->getGroupService()->loadGroup($group);
-            }
-        }
         if (!empty($payload['parent'])) {
             $this->repository->getCategoryService()->loadCategory($payload['parent']);
         }
@@ -935,20 +925,9 @@ class Controller
         if (empty($payload['name'])) {
             throw new InvalidInputException("Field name is required");
         }
-        if (!empty($payload['operators'])) {
-            foreach ($payload['operators'] as $operator) {
-                $this->repository->getOperatorService()->loadOperator($operator);
-            }
-        }
-        if (!empty($payload['groups'])) {
-            foreach ($payload['groups'] as $group) {
-                $this->repository->getGroupService()->loadGroup($group);
-            }
-        }
         if (!empty($payload['parent'])) {
             $this->repository->getCategoryService()->loadCategory($payload['parent']);
         }
-
 
         $result = new ezpRestMvcResult();
         $result->variables = $this->repository->getCategoryService()->updateCategory($category, $payload);
@@ -996,17 +975,6 @@ class Controller
         if (empty($payload['name'])) {
             throw new InvalidInputException("Field name is required");
         }
-        if (!empty($payload['operators'])) {
-            foreach ($payload['operators'] as $operator) {
-                $this->repository->getOperatorService()->loadOperator($operator);
-            }
-        }
-        if (!empty($payload['groups'])) {
-            foreach ($payload['groups'] as $group) {
-                $this->repository->getGroupService()->loadGroup($group);
-            }
-        }
-
 
         $result = new ezpRestMvcResult();
         $result->variables = $this->serializer['area']->serialize($this->repository->getAreaService()->createArea($payload));
@@ -1027,16 +995,6 @@ class Controller
         $payload = $this->restController->getPayload();
         if (empty($payload['name'])) {
             throw new InvalidInputException("Field name is required");
-        }
-        if (!empty($payload['operators'])) {
-            foreach ($payload['operators'] as $operator) {
-                $this->repository->getOperatorService()->loadOperator($operator);
-            }
-        }
-        if (!empty($payload['groups'])) {
-            foreach ($payload['groups'] as $group) {
-                $this->repository->getGroupService()->loadGroup($group);
-            }
         }
 
         $result = new ezpRestMvcResult();

@@ -20,31 +20,6 @@ class Category extends Field
      */
     public $name;
 
-    /**
-     * @var integer[]
-     */
-    public $operatorsIdList = array();
-
-    /**
-     * @var integer[]
-     */
-    public $groupsIdList = array();
-
-    /**
-     * @var integer[]
-     */
-    public $ownersIdList = array();
-
-    /**
-     * @var integer[]
-     */
-    public $ownerGroupsIdList = array();
-
-    /**
-     * @var integer[]
-     */
-    public $observersIdList = array();
-
     public function __toString()
     {
         return '' . $this->id;

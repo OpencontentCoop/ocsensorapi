@@ -2218,8 +2218,6 @@ class SchemaBuilder
                     'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
                     'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
                     'geo' => $this->buildSchemaProperty(['ref' => '#/components/schemas/Address']),
-                    'operators' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Operators', 'items' => ['type' => 'integer']]),
-                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Groups', 'items' => ['type' => 'integer']]),
                 ];
                 break;
             case 'NewArea':
@@ -2228,9 +2226,7 @@ class SchemaBuilder
                 $schema->required = ['name'];
                 $schema->properties = [
                     'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
-                    'operators' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Operators', 'items' => ['type' => 'integer']]),
                     'geo' => $this->buildSchemaProperty(['ref' => '#/components/schemas/Address']),
-                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Groups', 'items' => ['type' => 'integer']]),
                 ];
                 break;
 
@@ -2250,8 +2246,6 @@ class SchemaBuilder
                 $schema->properties = [
                     'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
                     'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
-                    'operators' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Operators', 'items' => ['type' => 'integer']]),
-                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Groups', 'items' => ['type' => 'integer']]),
                 ];
                 break;
             case 'NewCategory':
@@ -2260,8 +2254,6 @@ class SchemaBuilder
                 $schema->required = ['name'];
                 $schema->properties = [
                     'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
-                    'operators' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Operators', 'items' => ['type' => 'integer']]),
-                    'groups' => $this->buildSchemaProperty(['type' => 'array', 'description' => 'Groups', 'items' => ['type' => 'integer']]),
                     'parent' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'nullable' => true, 'description' => 'ID', 'description' => 'Parent category id']),
                 ];
                 break;

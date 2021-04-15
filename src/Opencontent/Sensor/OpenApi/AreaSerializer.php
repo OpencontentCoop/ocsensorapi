@@ -17,14 +17,6 @@ class AreaSerializer extends AbstractSerializer
     {
         $area = $item->jsonSerialize();
 
-        $area['operators'] = (array)$area['operatorsIdList'];
-        $area['operators'] = array_map('intval', $area['operators']);
-        unset($area['operatorsIdList']);
-
-        $area['groups'] = (array)$area['groupsIdList'];
-        $area['groups'] = array_map('intval', $area['groups']);
-        unset($area['groupsIdList']);
-
         return $area;
     }
 }

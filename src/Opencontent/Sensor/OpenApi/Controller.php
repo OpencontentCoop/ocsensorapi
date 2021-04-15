@@ -1089,6 +1089,91 @@ class Controller
         $result->variables = $factoryItem;
         return $result;
     }
+    
+    public function loadFaqs()
+    {
+        $q = $this->getRequestParameter('q');
+        $limit = $this->getRequestParameter('limit');
+        $offset = $this->getRequestParameter('offset');
+        $cursor = $this->getRequestParameter('cursor');
+
+        if ($limit > SearchService::MAX_LIMIT) {
+            throw new InvalidArgumentException('Max limit allowed is ' . SearchService::MAX_LIMIT);
+        }
+
+        $searchResults = $this->repository->getFaqService()->loadFaqs($q, $limit, $cursor);
+        $parameters = [
+            'limit' => $limit,
+            'cursor' => $searchResults['current'],
+            'q' => $q
+        ];
+        $results = [
+            'self' => $this->restController->getBaseUri() . "/faq?" . http_build_query($parameters),
+            'next' => null,
+            'items' => $searchResults['items'],
+            'count' => (int)$searchResults['count'],
+        ];
+        if ($searchResults['next']) {
+            $parameters['cursor'] = $searchResults['next'];
+            $results['next'] = $this->restController->getBaseUri() . "/faq?" . http_build_query($parameters);
+        }
+
+        $result = new ezpRestMvcResult();
+        $result->variables = $results;
+
+        return $result;
+    }
+
+    public function createFaq()
+    {
+        $payload = $this->restController->getPayload();
+
+        if (empty($payload['question'])) {
+            throw new InvalidInputException("Field question is required");
+        }
+        if (empty($payload['answer'])) {
+            throw new InvalidInputException("Field answer is required");
+        }
+        if (empty($payload['category'])) {
+            throw new InvalidInputException("Field category is required");
+        }
+        $this->repository->getCategoryService()->loadCategory((int)$payload['category']);
+
+        $result = new ezpRestMvcResult();
+        $result->variables = $this->repository->getFaqService()->createFaq($payload);
+
+        return $result;
+    }
+
+    public function getFaqById()
+    {
+        $result = new ezpRestMvcResult();
+        $result->variables = $this->repository->getFaqService()->loadFaq($this->restController->faqId);
+
+        return $result;
+    }
+
+    public function updateFaqById()
+    {
+        $faq = $this->repository->getFaqService()->loadFaq($this->restController->faqId);
+        $payload = $this->restController->getPayload();
+
+        if (empty($payload['question'])) {
+            throw new InvalidInputException("Field question is required");
+        }
+        if (empty($payload['answer'])) {
+            throw new InvalidInputException("Field answer is required");
+        }
+        if (empty($payload['category'])) {
+            throw new InvalidInputException("Field category is required");
+        }
+        $this->repository->getCategoryService()->loadCategory((int)$payload['category']);
+
+        $result = new ezpRestMvcResult();
+        $result->variables = $this->repository->getFaqService()->updateFaq($faq, $payload);
+
+        return $result;
+    }
 
     private function loadPost()
     {

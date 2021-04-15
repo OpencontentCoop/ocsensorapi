@@ -115,6 +115,11 @@ abstract class Repository implements RepositoryInterface
      */
     protected $scenarioService;
 
+    /**
+     * @var \Opencontent\Sensor\Api\FaqService
+     */
+    protected $faqService;
+
     public function getCurrentUser()
     {
         return $this->user;

@@ -119,6 +119,11 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
     abstract public function getRootNodeAttribute($identifier);
 
     /**
+     * @return eZContentObjectTreeNode
+     */
+    abstract public function getFaqRootNode();
+
+    /**
      * @return TreeNodeItem
      */
     public function getAreasTree()
@@ -318,4 +323,12 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
         return $this->scenarioService;
     }
 
+    public function getFaqService()
+    {
+        if ($this->faqService === null) {
+            $this->faqService = new FaqService($this);
+        }
+
+        return $this->faqService;
+    }
 }

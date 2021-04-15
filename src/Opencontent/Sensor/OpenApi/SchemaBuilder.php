@@ -35,6 +35,7 @@ class SchemaBuilder
         'categories' => "Categories",
         'areas' => "Areas",
         'stat' => "Statistics",
+        'faq' => "FAQs",
     ];
     
     private $isJwtEnabled = false;
@@ -71,7 +72,8 @@ class SchemaBuilder
                 $this->buildGroupPaths(),
                 $this->buildCategoryPaths(),
                 $this->buildAreaPaths(),
-                $this->buildStatisticPaths()
+                $this->buildStatisticPaths(),
+                $this->buildFaqPaths()
             ),
             '3.0.1',
             [
@@ -132,6 +134,7 @@ class SchemaBuilder
             new OA\Tag(self::$tags['categories']),
             new OA\Tag(self::$tags['areas']),
             new OA\Tag(self::$tags['stat']),
+            new OA\Tag(self::$tags['faq']),
         ];
         if ($this->isJwtEnabled) {
             array_unshift($tags, new OA\Tag(self::$tags['auth']));
@@ -1725,6 +1728,96 @@ class SchemaBuilder
         ];
     }
 
+    private function buildFaqPaths()
+    {
+        return [
+            '/faq' => new OA\PathItem([
+                'get' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response.', [
+                            'application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/FaqCollection')
+                            ])
+                        ]),
+                        '400' => new OA\Response('Invalid search limit provided.'),
+                    ],
+                    'loadFaqs',
+                    'Get all frequently asked questions',
+                    [
+                        'description' => 'Returns a list of frequently asked questions',
+                        'tags' => [self::$tags['faq']],
+                        'parameters' => $this->buildSearchParameters()
+                    ]
+                ),
+                'post' => new OA\Operation(
+                    [
+                        '201' => new OA\Response('Successful response', [
+                            'application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/Faq')
+                            ])
+                        ]),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '403' => new OA\Response('Forbidden'),
+                        '405' => new OA\Response('Invalid input'),
+                    ],
+                    'createFaq',
+                    'Add a new frequently asked question',
+                    [
+                        'summary' => 'Returns a list of faq',
+                        'tags' => [self::$tags['faq']],
+                        'requestBody' => new OA\Reference('#/components/requestBodies/Faq')
+                    ]
+                ),
+            ]),
+            '/faq/{faqId}' => new OA\PathItem([
+                'get' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response',
+                            ['application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/Faq')
+                            ])], null),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '404' => new OA\Response('Not found'),
+                    ],
+                    'getFaqById',
+                    'Get single frequently asked question',
+                    [
+                        'tags' => [self::$tags['faq']],
+                        'parameters' => [
+                            new OA\Parameter('faqId', OA\Parameter::IN_PATH, 'ID of faq', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
+                            ]),
+                        ]
+                    ]
+                ),
+                'put' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response',
+                            ['application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/Faq')
+                            ])], null),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '403' => new OA\Response('Forbidden'),
+                        '404' => new OA\Response('Not found'),
+                    ],
+                    'updateFaqById',
+                    'Update single frequently asked question',
+                    [
+                        'tags' => [self::$tags['faq']],
+                        'parameters' => [
+                            new OA\Parameter('faqId', OA\Parameter::IN_PATH, 'ID of faq', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
+                            ]),
+                        ],
+                        'requestBody' => new OA\Reference('#/components/requestBodies/Faq')
+                    ]
+                ),
+            ]),
+        ];
+    }
+
     private function buildSearchParameters()
     {
         return [
@@ -1804,6 +1897,10 @@ class SchemaBuilder
             'Stat' => $this->buildSchema('Stat'),
             'StatusStat' => $this->buildSchema('StatusStat'),
             'AvgStat' => $this->buildSchema('AvgStat'),
+
+            'FaqCollection' => $this->buildSchema('FaqCollection'),
+            'Faq' => $this->buildSchema('Faq'),
+            'NewFaq' => $this->buildSchema('NewFaq'),
         ];
 
         $components->requestBodies = [
@@ -1841,6 +1938,10 @@ class SchemaBuilder
                     ]
                 ])
             ])], 'Authorization credentials', true),
+
+            'Faq' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/NewFaq')
+            ])], 'Faq object that needs to be added or updated', true),
         ];
 
         return $components;
@@ -2359,6 +2460,39 @@ class SchemaBuilder
                         ]]]),
                     ]]),
 
+                ];
+                break;
+
+            case 'FaqCollection':
+                $schema->title = 'FaqCollection';
+                $schema->type = 'object';
+                $schema->properties = [
+                    'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['ref' => '#/components/schemas/Faq']]),
+                    'self' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Current pagination cursor']),
+                    'next' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Next pagination cursor', 'nullable' => true]),
+                    'count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int32', 'description' => 'Total number of items available']),
+                ];
+                break;
+            case 'Faq':
+                $schema->title = 'Faq';
+                $schema->type = 'object';
+                $schema->properties = [
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
+                    'question' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Question']),
+                    'answer' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Answer']),
+                    'category' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'description' => 'ID', 'description' => 'Category id']),
+                    'priority' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'nullable' => true, 'description' => 'ID', 'description' => 'Priority']),
+                ];
+                break;
+            case 'NewFaq':
+                $schema->title = 'NewFaq';
+                $schema->type = 'object';
+                $schema->required = ['question', 'answer', 'category'];
+                $schema->properties = [
+                    'question' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Question']),
+                    'answer' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Answer']),
+                    'category' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'description' => 'ID', 'description' => 'Category id']),
+                    'priority' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'nullable' => true, 'description' => 'ID', 'description' => 'Priority']),
                 ];
                 break;
         }

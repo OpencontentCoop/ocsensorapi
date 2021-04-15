@@ -129,4 +129,9 @@ interface Repository
      * @return ScenarioService
      */
     public function getScenarioService();
+
+    /**
+     * @return FaqService
+     */
+    public function getFaqService();
 }

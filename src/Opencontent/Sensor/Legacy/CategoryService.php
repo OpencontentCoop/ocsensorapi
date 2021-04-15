@@ -214,7 +214,7 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
                         \eZSearch::addObject($contentObject, true);
                     }
                 }
-
+                unset($this->categories[$contentObject->attribute('id')]);
                 return $this->loadCategory($contentObject->attribute('id'));
             }
         }

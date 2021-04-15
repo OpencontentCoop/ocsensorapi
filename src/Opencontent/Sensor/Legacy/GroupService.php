@@ -71,9 +71,9 @@ class GroupService extends \Opencontent\Sensor\Core\GroupService
     public function updateGroup(Group $group, array $payload)
     {
         $contentObject = \eZContentObject::fetch($group->id);
-        if ($contentObject instanceof eZContentObject) {
+        if ($contentObject instanceof \eZContentObject) {
             if (!$contentObject->canEdit()){
-                throw new ForbiddenException("Current user can not update operator");
+                throw new ForbiddenException("Current user can not update group");
             }
             $attributes = [
                 self::NAME_ATTRIBUTE_IDENTIFIER => (string)$payload['name'],

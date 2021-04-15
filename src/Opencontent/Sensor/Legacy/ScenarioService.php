@@ -3,6 +3,7 @@
 namespace Opencontent\Sensor\Legacy;
 
 use Opencontent\Opendata\Api\Values\Content;
+use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Values\Post;
@@ -170,6 +171,10 @@ class ScenarioService extends BaseScenarioService
 
     public function editScenario($id, $struct)
     {
+        if (\eZUser::currentUser()->hasAccessTo('sensor', 'config')['accessWord'] == 'no') { //@todo
+            throw new ForbiddenException('edit', 'scenario');
+        }
+
         $scenario = \eZContentObject::fetch((int)$id);
         if (!$scenario instanceof \eZContentObject) {
             throw new NotFoundException("Scenario $id");

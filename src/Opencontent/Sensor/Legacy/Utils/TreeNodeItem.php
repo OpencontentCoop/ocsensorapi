@@ -87,6 +87,7 @@ class TreeNodeItem implements \JsonSerializable
         $dataMap = $node->attribute('data_map');
         if ($node->attribute('class_identifier') == 'sensor_category'){
             $attributeId = eZContentObjectTreeNode::classAttributeIDByIdentifier('sensor_scenario/criterion_category');
+            $params = false;
             $scenarios = $node->object()->reverseRelatedObjectList(
                 false, $attributeId, false, $params
             );

@@ -635,4 +635,12 @@ class PostService extends PostServiceBase
         }
     }
 
+    public function setPostType(Post $post, Post\Type $type)
+    {
+        $contentObjectDataMap = $this->getContentObject($post)->dataMap();
+        if (isset($contentObjectDataMap['type'])) {
+            $contentObjectDataMap['type']->fromString($type->identifier);
+            $contentObjectDataMap['type']->store();
+        }
+    }
 }

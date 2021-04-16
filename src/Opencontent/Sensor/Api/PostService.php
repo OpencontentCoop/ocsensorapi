@@ -146,4 +146,11 @@ interface PostService
 
     public function setCommentsIsOpen(Post $post);
 
+    /**
+     * @param Post $post
+     * @param Post\Type $type
+     * @throw \Exception
+     */
+    public function setPostType(Post $post, Post\Type $type);
+
 }

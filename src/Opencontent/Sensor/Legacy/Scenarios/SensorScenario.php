@@ -240,6 +240,7 @@ class SensorScenario extends Scenario
     {
         return [
             'on_create' => 'Creazione della segnalazione',
+            'on_set_type' => 'Assegnazione della tipologia alla segnalazione',
             'on_add_category' => 'Assegnazione di categoria alla segnalazione',
             'on_add_area' => 'Assegnazione di zona alla segnalazione',
             'on_fix' => 'Fine lavorazione della segnalazione',

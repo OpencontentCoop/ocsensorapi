@@ -2043,85 +2043,70 @@ class SchemaBuilder
                 break;
             case 'NewPost':
                 $schema->title = 'NewPost';
-                $postClass = $this->apiSettings->getRepository()->getPostContentClass();
-                /**
-                 * @var string $identifier
-                 * @var \eZContentClassAttribute $attribute
-                 */
+                $attributeList = $this->apiSettings->getRepository()->getPublicPostContentClassAttributes();
 
-                foreach ($this->postClassDataMap as $identifier => $attribute) {
-                    if ($attribute->attribute('category') == 'content' || $attribute->attribute('category') == '') {
-
+                foreach ($attributeList as $identifier => $attribute) {
+                    if ($identifier == 'geo') {
+                        $identifier = 'address';
                         $properties = [
                             'description' => $attribute->attribute('name'),
-                            'type' => 'string'
+                            'nullable' => true,
+                            'ref' => '#/components/schemas/Address'
                         ];
+                    } elseif ($identifier == 'area') {
+                        $properties = [
+                            'type' => 'integer',
+                            'description' => $attribute->attribute('name'),
+                            'maximum' => 1,
+                            'nullable' => true
+                        ];
+                    } elseif ($identifier == 'category') {
+                        $properties = [
+                            'type' => 'integer',
+                            'description' => $attribute->attribute('name'),
+                            'maximum' => 1,
+                            'nullable' => true
+                        ];
+                    } elseif ($identifier == 'image') {
+                        $properties = [
+                            'description' => $attribute->attribute('name'),
+                            'ref' => '#/components/schemas/Image'
+                        ];
+                    } elseif ($identifier == 'images') {
+                        $properties = [
+                            'type' => 'array',
+                            'description' => $attribute->attribute('name'),
+                            'items' => ['ref' => '#/components/schemas/Image']
+                        ];
+                    } elseif ($identifier == 'type') {
+                        $properties = [
+                            'description' => $attribute->attribute('name'),
+                            'type' => 'string',
+                            'enum' => $typeEnum,
+                            'default' => $typeEnum[0],
+                        ];
+                    } elseif ($identifier == 'privacy') {
+                        $identifier = 'is_private';
+                        $properties = [
+                            'type' => 'boolean',
+                            'description' => $attribute->attribute('name'),
+                            'default' => false
+                        ];
+                    } else {
+                        $properties = [
+                            'type' => 'string',
+                            'description' => $attribute->attribute('name'),
+                        ];
+                    }
 
-                        if ($identifier == 'geo') {
-                            $identifier = 'address';
-                            $properties = [
-                                'description' => $attribute->attribute('name'),
-                                'nullable' => true,
-                                'ref' => '#/components/schemas/Address'
-                            ];
-                        }
-
-                        if ($identifier == 'area') {
-                            $properties = [
-                                'type' => 'integer',
-                                'maximum' => 1,
-                                'nullable' => true
-                            ];
-                        }
-
-                        if ($identifier == 'category') {
-                            $properties = [
-                                'type' => 'integer',
-                                'maximum' => 1,
-                                'nullable' => true
-                            ];
-                        }
-
-                        if ($identifier == 'image') {
-                            $properties = [
-                                'description' => $attribute->attribute('name'),
-                                'ref' => '#/components/schemas/Image'
-                            ];
-                        }
-
-                        if ($identifier == 'images') {
-                            $properties = [
-                                'type' => 'array',
-                                'description' => $attribute->attribute('name'),
-                                'items' => ['ref' => '#/components/schemas/Image']
-                            ];
-                        }
-
-                        if ($identifier == 'type') {
-                            $properties['enum'] = $typeEnum;
-                            $properties['default'] = $typeEnum[0];
-
-                        }
-
-                        if ($identifier == 'privacy') {
-                            if ($this->apiSettings->getRepository()->getSensorSettings()->get('HidePrivacyChoice')){
-                                continue;
-                            }
-                            $identifier = 'is_private';
-                            $properties = [
-                                'type' => 'boolean',
-                                'default' => false
-                            ];
-                        }
-
-                        $schema->properties[$identifier] = $this->buildSchemaProperty($properties);
-                        if ($attribute->attribute('is_required')) {
-                            $schema->required[] = $identifier;
-                        }
+                    $schema->properties[$identifier] = $this->buildSchemaProperty($properties);
+                    if ($attribute->attribute('is_required')) {
+                        $schema->required[] = $identifier;
                     }
                 }
 
                 $schema->properties['channel'] = $this->buildSchemaProperty([
+                    'type' => 'string',
                     'enum' => $channelEnum
                 ]);
                 $schema->properties['author'] = $this->buildSchemaProperty([

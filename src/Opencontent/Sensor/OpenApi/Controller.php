@@ -1232,7 +1232,13 @@ class Controller
             $postCreateStruct->areas = (array)$payload['areas'];
         }
 
-        if (isset($payload['type'])) {
+        if (isset($payload['category']) && !empty($payload['category'])) {
+            $postCreateStruct->categories = [(int)$payload['category']];
+        }
+
+        if ($this->apiSettings->getRepository()->getSensorSettings()->get('HideTypeChoice')){
+            $postCreateStruct->type = $this->repository->getPostTypeService()->loadPostTypes()[0]->identifier;
+        }elseif (isset($payload['type'])) {
             $postCreateStruct->type = $payload['type'];
         }
 

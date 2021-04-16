@@ -13,6 +13,7 @@ use Opencontent\Sensor\Legacy\Utils\TreeNodeItem;
 use eZContentObjectTreeNode;
 use eZContentClass;
 use eZContentObjectState;
+use eZContentClassAttribute;
 
 abstract class Repository extends CoreRepository implements ListenerProviderInterface
 {
@@ -49,6 +50,11 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
      * @return eZContentClass
      */
     abstract public function getPostContentClass();
+
+    /**
+     * @return eZContentClassAttribute[]
+     */
+    abstract public function getPublicPostContentClassAttributes();
 
     /**
      * @return string

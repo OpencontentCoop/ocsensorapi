@@ -69,7 +69,11 @@ class Controller
             $parameters['authorFiscalCode'] = $authorFiscalCode;
         }
 
-        if ($limit > SearchService::MAX_LIMIT) {
+        if ($this->hasRequestAcceptTypes('application/vnd.geo+json')){
+            $parameters['format'] = 'geojson';
+        }
+
+        if ($limit > SearchService::MAX_LIMIT && !$this->hasRequestAcceptTypes('application/vnd.geo+json')) {
             throw new InvalidArgumentException('Max limit allowed is ' . SearchService::MAX_LIMIT);
         }
 
@@ -83,19 +87,28 @@ class Controller
             $query .= "limit $limit cursor [$cursor] sort [id=>asc]";
         }
 
-        $searchResults = $this->repository->getSearchService()->searchPosts($query, $parameters);
-        $postSearchResults = [
-            'self' => $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->query, $this->getRequestParameters(), $parameters),
-            'next' => null,
-            'items' => $this->serializer['post']->serializeItems($searchResults->searchHits),
-            'count' => (int)$searchResults->totalCount,
-        ];
-        if ($searchResults->nextPageQuery) {
-            $postSearchResults['next'] = $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->nextPageQuery, $this->getRequestParameters(), $parameters);
-        }
-
         $result = new ezpRestMvcResult();
-        $result->variables = $postSearchResults;
+
+        $searchResults = $this->repository->getSearchService()->searchPosts($query, $parameters);
+        if ($this->hasRequestAcceptTypes('application/vnd.geo+json')){
+            $searchResults = (array) $searchResults;
+            unset($searchResults['query']);
+            unset($searchResults['nextPageQuery']);
+            unset($searchResults['totalCount']);
+            unset($searchResults['facets']);
+            $result->variables = $searchResults;
+        }else {
+            $postSearchResults = [
+                'self' => $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->query, $this->getRequestParameters(), $parameters),
+                'next' => null,
+                'items' => $this->serializer['post']->serializeItems($searchResults->searchHits),
+                'count' => (int)$searchResults->totalCount,
+            ];
+            if ($searchResults->nextPageQuery) {
+                $postSearchResults['next'] = $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->nextPageQuery, $this->getRequestParameters(), $parameters);
+            }
+            $result->variables = $postSearchResults;
+        }
 
         return $result;
     }
@@ -1272,6 +1285,15 @@ class Controller
             $this->restController->getRequest()->get
         );
         return isset($parameters[$name]) ? $parameters[$name] : null;
+    }
+
+    private function hasRequestAcceptTypes($mediaType)
+    {
+        if ($this->restController->getRequest()->accept instanceof \ezcMvcRequestAccept){
+            return in_array($mediaType, $this->restController->getRequest()->accept->types);
+        }
+
+        return false;
     }
 
     private function convertQueryInQueryParameters($query, $parameters = array(), $extraParameters = array())

@@ -13,6 +13,7 @@ use Opencontent\Opendata\GeoJson\FeatureCollection;
 use Opencontent\Opendata\GeoJson\Geometry;
 use Opencontent\Opendata\GeoJson\Properties;
 use Opencontent\Sensor\Api\Exception;
+use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Core\SearchService as BaseSearchService;
 use Opencontent\Sensor\Legacy\SearchService\SolrMapper;
@@ -102,13 +103,6 @@ class SearchService extends BaseSearchService
             'authorFiscalCode' => false
         ], $parameters);
 
-        // bootst perfomance if geojson
-        if ($parameters['format'] == 'geojson'){
-            $parameters['executionTimes'] = false;
-            $parameters['readingStatuses'] = false;
-            $parameters['capabilities'] = false;
-        }
-
         if (!empty($parameters['authorFiscalCode'])) {
             $authorIdList = $this->getUserIdListByFiscalCode($parameters['authorFiscalCode']);
             if (empty($authorIdList)) {
@@ -123,29 +117,51 @@ class SearchService extends BaseSearchService
 
         $solrStorageTools = new \ezfSolrStorage();
 
-        $defaultLimit = ($parameters['format'] === 'geojson') ? 200 : 10;
+        $defaultLimit = ($parameters['format'] === 'geojson') ? 1500 : self::DEFAULT_LIMIT;
+
+        // allow empty queries
         if (empty($query)) {
             $query = 'limit ' . $defaultLimit;
         }
+
+        // generate query from string
         $queryBuilder = new SearchService\QueryBuilder($this->repository->getPostApiClass());
         $queryObject = $queryBuilder->instanceQuery($query);
         $ezFindQueryObject = $queryObject->convert();
-
         if (!$ezFindQueryObject instanceof \ArrayObject) {
             throw new Exception\UnexpectedException("Query builder did not return a valid query");
         }
-
         if ($ezFindQueryObject->getArrayCopy() === array("_query" => null) && !empty($query)) {
             throw new Exception\UnexpectedException("Inconsistent query");
         }
         $ezFindQuery = $ezFindQueryObject->getArrayCopy();
 
-        $fieldsToReturn = [$solrStorageTools->getSolrStorageFieldName(SolrMapper::SOLR_STORAGE_POST)];
-        if ($parameters['executionTimes']) {
-            $fieldsToReturn[] = $solrStorageTools->getSolrStorageFieldName(SolrMapper::SOLR_STORAGE_EXECUTION_TIMES);
-        }
-        if ($parameters['readingStatuses']) {
-            $fieldsToReturn[] = $solrStorageTools->getSolrStorageFieldName(SolrMapper::SOLR_STORAGE_READ_STATUSES);
+        $currentUserId = $this->repository->getCurrentUser()->id;
+
+        // boost geojson query fetching single fields
+        if ($parameters['format'] == 'geojson'){
+            $fieldsToReturn = [
+                'sensor_coordinates_gpt',
+                'sensor_type_s',
+                'sensor_status_lk',
+                'meta_published_dt',
+                'meta_modified_dt',
+                'sensor_user_' . $currentUserId. '_responses_i',
+                'sensor_user_' . $currentUserId. '_comments_i',
+            ];
+            if (empty($ezFindQuery['Filter'])) {
+                $ezFindQuery['Filter'] = ["sensor_coordinates_gpt:[-90,-90 TO 90,90]"];
+            } else {
+                $ezFindQuery['Filter'] = [$ezFindQuery['Filter'], "sensor_coordinates_gpt:[-90,-90 TO 90,90]"];
+            }
+        }else {
+            $fieldsToReturn = [$solrStorageTools->getSolrStorageFieldName(SolrMapper::SOLR_STORAGE_POST)];
+            if ($parameters['executionTimes']) {
+                $fieldsToReturn[] = $solrStorageTools->getSolrStorageFieldName(SolrMapper::SOLR_STORAGE_EXECUTION_TIMES);
+            }
+            if ($parameters['readingStatuses']) {
+                $fieldsToReturn[] = $solrStorageTools->getSolrStorageFieldName(SolrMapper::SOLR_STORAGE_READ_STATUSES);
+            }
         }
 
         $ezFindQuery = array_merge(
@@ -166,12 +182,16 @@ class SearchService extends BaseSearchService
         );
 
         if ($parameters['currentUserInParticipants']) {
-            $currentUserFilter = "sensor_participant_id_list_lk:" . $this->repository->getCurrentUser()->id;
+            $currentUserFilter = "sensor_participant_id_list_lk:" . $currentUserId;
             if (empty($ezFindQuery['Filter'])) {
                 $ezFindQuery['Filter'] = [$currentUserFilter];
             } else {
                 $ezFindQuery['Filter'] = [$ezFindQuery['Filter'], $currentUserFilter];
             }
+        }
+
+        if ($ezFindQuery['SearchLimit'] > self::MAX_LIMIT && $parameters['format'] !== 'geojson'){
+            throw new InvalidInputException('Max limit allowed is ' . self::MAX_LIMIT);
         }
 
         $ini = \eZINI::instance();
@@ -207,7 +227,6 @@ class SearchService extends BaseSearchService
         }
 
         $searchResults = new SearchResults();
-
         $searchResults->totalCount = (int)$rawResults['SearchCount'];
         $searchResults->query = (string)$queryObject;
 
@@ -219,7 +238,47 @@ class SearchService extends BaseSearchService
 
         foreach ($rawResults['SearchResult'] as $resultItem) {
             try {
-                if (isset($resultItem['data_map'][SolrMapper::SOLR_STORAGE_POST])) {
+                if ($parameters['format'] == 'geojson') {
+                    if (isset($resultItem['fields']['sensor_coordinates_gpt'])) {
+                        $points = explode(',', $resultItem['fields']['sensor_coordinates_gpt'], 2);
+                        $id = (int)$resultItem['id'];
+                        $status = '';
+                        if (isset($resultItem['fields']['sensor_status_lk'])){
+                            $status = $this->repository->getPostStatusService()->loadPostStatus(
+                                $resultItem['fields']['sensor_status_lk']
+                            );
+                        }
+                        $type = '';
+                        if (isset($resultItem['fields']['sensor_type_s'])){
+                            $type = $this->repository->getPostTypeService()->loadPostType(
+                                $resultItem['fields']['sensor_type_s']
+                            );
+                        }
+                        $commentCount = isset($resultItem['sensor_user_' . $currentUserId . '_comments_i']) ?
+                            (int)$resultItem['sensor_user_' . $currentUserId . '_comments_i'] : 0;
+                        $responseCount = isset($resultItem['sensor_user_' . $currentUserId . '_responses_i']) ?
+                            (int)$resultItem['sensor_user_' . $currentUserId . '_responses_i'] : 0;
+
+                        $geometry = new Geometry();
+                        $geometry->type = 'Point';
+                        $geometry->coordinates = [
+                            $points[1],
+                            $points[0]
+                        ];
+                        $feature = new Feature($id, $geometry, new Properties([
+                            'id' => $id,
+                            'subject' => isset($resultItem['name']) ? $resultItem['name'] : '',
+                            'status' => $status,
+                            'type' => $type,
+                            'published' => $resultItem['published'],
+                            'modified' => $resultItem['modified'],
+                            'comment_count' => $commentCount,
+                            'response_count' => $responseCount,
+                        ]));
+                        $searchResults->searchHits[] = $feature;
+                    }
+
+                }elseif (isset($resultItem['data_map'][SolrMapper::SOLR_STORAGE_POST])) {
                     $postSerialized = $resultItem['data_map'][SolrMapper::SOLR_STORAGE_POST];
                     /** @var Post $post */
                     $post = unserialize($postSerialized);
@@ -229,15 +288,12 @@ class SearchService extends BaseSearchService
                     if ($parameters['readingStatuses']) {
                         $post->readingStatuses = $this->getReadingStatusesForUser(
                             $resultItem['data_map'][SolrMapper::SOLR_STORAGE_READ_STATUSES],
-                            $this->repository->getCurrentUser()->id
+                            $currentUserId
                         );
                     }
-                    // bootst perfomance if geojson
-                    if ($parameters['format'] != 'geojson') {
-                        $this->repository->getPostService()->refreshExpirationInfo($post);
-                        $this->repository->getPostService()->setCommentsIsOpen($post);
-                        $this->repository->getPostService()->setUserPostAware($post);
-                    }
+                    $this->repository->getPostService()->refreshExpirationInfo($post);
+                    $this->repository->getPostService()->setCommentsIsOpen($post);
+                    $this->repository->getPostService()->setUserPostAware($post);
                     if ($parameters['capabilities']) {
                         $post->capabilities = $this->repository->getPermissionService()->loadCurrentUserPostPermissionCollection($post)->getArrayCopy();
                     }
@@ -282,31 +338,7 @@ class SearchService extends BaseSearchService
 
         }elseif ($parameters['format'] === 'geojson'){
             $collection = new FeatureCollection();
-
-            /** @var Post $post */
-            foreach ($searchResults->searchHits as $post) {
-                if ($post->geoLocation->latitude) {
-                    $geometry = new Geometry();
-                    $geometry->type = 'Point';
-                    $geometry->coordinates = [
-                        $post->geoLocation->longitude,
-                        $post->geoLocation->latitude,
-                    ];
-                    $properties = [
-                        'id' => $post->id,
-                        'subject' => $post->subject,
-                        'status' => $post->status,
-                        'type' => $post->type,
-                        'published' => $post->published->format(DATE_ISO8601),
-                        'modified' => $post->modified->format(DATE_ISO8601),
-                        'comment_count' => $post->comments->count(),
-                        'response_count' => $post->responses->count(),
-                    ];
-                    $feature = new Feature($post->id, $geometry, new Properties($properties));
-                    $collection->add($feature);
-                }
-            }
-
+            $collection->features = $searchResults->searchHits;
             $collection->query = $searchResults->query;
             $collection->nextPageQuery = $searchResults->nextPageQuery;
             $collection->totalCount = $searchResults->totalCount;

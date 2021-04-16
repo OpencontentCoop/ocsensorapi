@@ -3,6 +3,7 @@
 namespace Opencontent\Sensor\Core;
 
 use Opencontent\Sensor\Api\OperatorService;
+use Opencontent\Sensor\Api\PostStatusService;
 use Opencontent\Sensor\Api\Repository as RepositoryInterface;
 use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Permission\PermissionDefinition;
@@ -119,6 +120,11 @@ abstract class Repository implements RepositoryInterface
      * @var \Opencontent\Sensor\Api\FaqService
      */
     protected $faqService;
+
+    /**
+     * @var \Opencontent\Sensor\Api\PostStatusService
+     */
+    protected $postStatusService;
 
     public function getCurrentUser()
     {

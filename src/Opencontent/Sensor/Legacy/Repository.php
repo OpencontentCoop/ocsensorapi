@@ -331,4 +331,13 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
 
         return $this->faqService;
     }
+
+    public function getPostStatusService()
+    {
+        if ($this->postStatusService === null) {
+            $this->postStatusService = new PostStatusService($this);
+        }
+
+        return $this->postStatusService;
+    }
 }

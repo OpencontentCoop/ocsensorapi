@@ -134,4 +134,9 @@ interface Repository
      * @return FaqService
      */
     public function getFaqService();
+
+    /**
+     * @return PostStatusService
+     */
+    public function getPostStatusService();
 }

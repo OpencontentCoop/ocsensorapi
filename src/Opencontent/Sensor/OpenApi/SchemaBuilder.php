@@ -188,7 +188,10 @@ class SchemaBuilder
                         '200' => new OA\Response('Successful response.', [
                             'application/json' => new OA\MediaType([
                                 'schema' => new OA\Reference('#/components/schemas/PostCollection')
-                            ])
+                            ]),
+                            'application/vnd.geo+json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/FeatureCollection')
+                            ]),
                         ]),
                         '400' => new OA\Response('Invalid search limit provided.'),
                     ],
@@ -1850,6 +1853,7 @@ class SchemaBuilder
 
         $components->schemas = [
             'PostCollection' => $this->buildSchema('PostCollection'),
+            'FeatureCollection' => $this->buildSchema('FeatureCollection'),
             'NewPost' => $this->buildSchema('NewPost'),
             'Post' => $this->buildSchema('Post'),
 
@@ -2485,6 +2489,39 @@ class SchemaBuilder
                     'answer' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Answer']),
                     'category' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'description' => 'ID', 'description' => 'Category id']),
                     'priority' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'nullable' => true, 'description' => 'ID', 'description' => 'Priority']),
+                ];
+                break;
+
+            case 'FeatureCollection':
+                $schema->title = 'FeatureCollection';
+                $schema->type = 'object';
+                $schema->properties = [
+                    'type' => $this->buildSchemaProperty(['type' => 'string', 'default' => 'FeatureCollection']),
+                    'features' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'object', 'properties' => [
+                        'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64']),
+                        'geometry' => $this->buildSchemaProperty(['type' => 'object', 'properties' => [
+                            'type' => $this->buildSchemaProperty(['type' => 'string', 'default' => 'Point']),
+                            'coordinates' => $this->buildSchemaProperty(['type' => 'array', 'minItems' => 2, 'maxItems' => 3, 'items' => ['type' => 'number']]),
+                        ]]),
+                        'type' => $this->buildSchemaProperty(['type' => 'string', 'default' => 'Feature']),
+                        'properties' => $this->buildSchemaProperty(['type' => 'object', 'properties' => [
+                            'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64']),
+                            'subject' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Subject']),
+                            'type' => $this->buildSchemaProperty(['type' => 'object', 'properties' => [
+                                'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Type label']),
+                                'identifier' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Type identifier', 'enum' => $typeEnum]),
+                            ]]),
+                            'status' => $this->buildSchemaProperty(['type' => 'object', 'properties' => [
+                                'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Status label']),
+                                'identifier' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Status identifier', 'enum' => ['pending', 'open', 'close']]),
+                            ]]),
+                            'subject' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Subject']),
+                            'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Publication date']),
+                            'modified_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Last modification date']),
+                            'response_count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64']),
+                            'comment_count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64']),
+                        ]]),
+                    ]]]),
                 ];
                 break;
         }

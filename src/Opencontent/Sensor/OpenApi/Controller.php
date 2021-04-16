@@ -637,11 +637,33 @@ class Controller
         return $result;
     }
 
+    public function getCurrentUser()
+    {
+        $result = new ezpRestMvcResult();
+        $result->variables = $this->serializer['user']->serializeItem($this->repository->getCurrentUser());
+
+        return $result;
+    }
+
     public function updateUserById()
     {
         $userData = $this->repository->getUserService()->searchOne('id = ' . $this->restController->userId);
         $user = $this->repository->getUserService()->loadUser($userData['metadata']['id']);
+        $payload = $this->restController->getPayload();
 
+        return $this->updateUser($user, $payload);
+    }
+
+    public function updateCurrentUser()
+    {
+        $user = $this->repository->getCurrentUser();
+        $payload = $this->restController->getPayload();
+
+        return $this->updateUser($user, $payload);
+    }
+
+    private function updateUser($user, $payload)
+    {
         $payload = $this->restController->getPayload();
         if (empty($payload['first_name'])) {
             throw new InvalidInputException("Field first_name is required");

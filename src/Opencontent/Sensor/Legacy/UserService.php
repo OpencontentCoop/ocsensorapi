@@ -30,6 +30,8 @@ class UserService extends UserServiceBase
      */
     protected $users = array();
 
+    private $userContentClass;
+
     /**
      * @param $id
      * @return Post|User
@@ -93,7 +95,7 @@ class UserService extends UserServiceBase
             throw new ForbiddenException("Current user can not create user");
         }
 
-        $contentClass = \eZContentClass::fetch($ini->variable("UserSettings", "UserClassID"));
+        $contentClass = $this->getUserContentClass();
 
         if (empty($payload['first_name'])) {
             throw new InvalidInputException("Field first_name is required");
@@ -112,26 +114,7 @@ class UserService extends UserServiceBase
         }
         if (isset($payload['fiscal_code'])){
             $payload['fiscal_code'] = strtoupper($payload['fiscal_code']);
-            foreach ($contentClass->dataMap() as $identifier => $classAttribute){
-                /** @var \eZContentClassAttribute $classAttribute */
-                if ($identifier == 'fiscal_code'){
-                    $dataType = $classAttribute->dataType();
-                    if ($dataType instanceof \OCCodiceFiscaleType){
-                        $fakeObjectAttribute = new \eZContentObjectAttribute([
-                            'contentobject_id' => 0,
-                            'contentclassattribute_id' => $classAttribute->attribute('id')
-                        ]);
-                        if ($dataType->validateStringHTTPInput(
-                            $payload['fiscal_code'],
-                            $fakeObjectAttribute,
-                            $classAttribute
-                            ) === \eZInputValidator::STATE_INVALID){
-                            throw new InvalidInputException("Invalid fiscal code: " . $fakeObjectAttribute->validationError());
-                        }
-                    }
-                    break;
-                }
-            }
+            $this->assertIsValidFiscalCode($payload['fiscal_code']);
         }
 
         $params = [
@@ -170,17 +153,26 @@ class UserService extends UserServiceBase
             if (!$contentObject->canEdit()){
                 throw new ForbiddenException("Current user can not update user");
             }
+            if (\eZUser::fetchByEmail($payload['email']) && $user->email != $payload['email']) {
+                throw new InvalidInputException("Email address already exists");
+            }
+
+            if (isset($payload['fiscal_code']) && strcasecmp($payload['fiscal_code'], $user->fiscalCode) !== 0){
+                $payload['fiscal_code'] = strtoupper($payload['fiscal_code']);
+                $this->assertIsValidFiscalCode($payload['fiscal_code']);
+            }
+            
             $attributes = [
                 'first_name' => (string)$payload['first_name'],
                 'last_name' => (string)$payload['last_name'],
                 'fiscal_code' => (string)$payload['fiscal_code'],
+                'phone' => (string)$payload['phone'],
             ];
             if (\eZContentFunctions::updateAndPublishObject($contentObject, ['attributes' => $attributes])) {
                 if ($payload['email'] != $user->email) {
                     $eZUser->setAttribute('email', $payload['email']);
                     $eZUser->store();
                 }
-
                 $this->refreshUser($user);
 
                 return $this->loadUser($contentObject->attribute('id'));
@@ -214,6 +206,39 @@ class UserService extends UserServiceBase
             $this->users[$id] = $user;
         }
         return $this->users[$id];
+    }
+
+    private function getUserContentClass()
+    {
+        if ($this->userContentClass === null) {
+            $this->userContentClass = \eZContentClass::fetch(\eZINI::instance()->variable("UserSettings", "UserClassID"));
+        }
+
+        return $this->userContentClass;
+    }
+
+    private function assertIsValidFiscalCode($fiscalCode)
+    {
+        $contentClass = $this->getUserContentClass();
+        foreach ($contentClass->dataMap() as $identifier => $classAttribute){
+            /** @var \eZContentClassAttribute $classAttribute */
+            if ($identifier == 'fiscal_code'){
+                $dataType = $classAttribute->dataType();
+                if ($dataType instanceof \OCCodiceFiscaleType){
+                    $fakeObjectAttribute = new \eZContentObjectAttribute([
+                        'contentobject_id' => 0,
+                        'contentclassattribute_id' => $classAttribute->attribute('id')
+                    ]);
+                    if ($dataType->validateStringHTTPInput(
+                            $fiscalCode,
+                            $fakeObjectAttribute,
+                            $classAttribute
+                        ) === \eZInputValidator::STATE_INVALID){
+                        throw new InvalidInputException($fakeObjectAttribute->validationError());
+                    }
+                }
+            }
+        }
     }
 
     private function loadUserGroups(eZContentObject $contentObject)

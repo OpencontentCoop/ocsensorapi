@@ -1195,6 +1195,40 @@ class SchemaBuilder
                     ]
                 ),
             ]),
+            '/users/current' => new OA\PathItem([
+                'get' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response',
+                            ['application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/User')
+                            ])], null),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '404' => new OA\Response('Not found'),
+                    ],
+                    'getCurrentUser',
+                    'Get the current authenticated user',
+                    [
+                        'tags' => [self::$tags['users']],
+                    ]
+                ),
+                'put' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response',
+                            ['application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/User')
+                            ])], null),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '403' => new OA\Response('Forbidden'),
+                        '404' => new OA\Response('Not found'),
+                    ],
+                    'updateCurrentUser',
+                    'Update the current authenticated user',
+                    [
+                        'tags' => [self::$tags['users']],
+                        'requestBody' => new OA\Reference('#/components/requestBodies/User')
+                    ]
+                ),
+            ]),
             '/users/{userId}' => new OA\PathItem([
                 'get' => new OA\Operation(
                     [

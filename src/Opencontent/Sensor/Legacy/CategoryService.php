@@ -20,6 +20,8 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
 
     protected $categories = [];
 
+    private $treeId;
+
     /**
      * @param $categoryId
      * @return Category
@@ -53,8 +55,25 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
         $category = new Category();
         $category->id = (int)$content['metadata']['id'];
         $category->name = $content['metadata']['name'][$language];
+        $category->parent = $this->findParentId($category->id);
 
         return $category;
+    }
+
+    private function findParentId($id)
+    {
+        if ($this->treeId === null) {
+            $this->treeId = [];
+            $tree = $this->repository->getCategoriesTree();
+            foreach ($tree->attribute('children') as $item) {
+                $this->treeId[$item->attribute('id')] = 0;
+                foreach ($item->attribute('children') as $child) {
+                    $this->treeId[$child->attribute('id')] = (int)$item->attribute('id');
+                }
+            }
+        }
+
+        return isset($this->treeId[$id]) ? $this->treeId[$id] : 0;
     }
 
     /**

@@ -200,11 +200,7 @@ class SchemaBuilder
                     [
                         'description' => 'Returns a list of post',
                         'tags' => [self::$tags['posts']],
-                        'parameters' => array_merge($this->buildSearchParameters(), [
-                            new OA\Parameter('authorFiscalCode', OA\Parameter::IN_QUERY, 'Filter by author fiscal code', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true]),
-                            ])
-                        ])
+                        'parameters' => $this->buildSearchParameters(['q', 'limit', 'offset', 'cursor', 'authorFiscalCode']),
                     ]
                 ),
                 'post' => new OA\Operation(
@@ -1855,22 +1851,35 @@ class SchemaBuilder
         ];
     }
 
-    private function buildSearchParameters()
+    private function buildSearchParameters($keys = ['q', 'limit', 'cursor'])
     {
-        return [
-            new OA\Parameter('q', OA\Parameter::IN_QUERY, 'Query parameter', [
+        $parameters = [];
+        if (in_array('q', $keys)) {
+            $parameters[] = new OA\Parameter('q', OA\Parameter::IN_QUERY, 'Query parameter', [
                 'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true]),
-            ]),
-            new OA\Parameter('limit', OA\Parameter::IN_QUERY, 'Limit to restrict the number of entries on a page', [
+            ]);
+        }
+        if (in_array('limit', $keys)) {
+            $parameters[] = new OA\Parameter('limit', OA\Parameter::IN_QUERY, 'Limit to restrict the number of entries on a page', [
                 'schema' => $this->buildSchemaProperty(['type' => 'integer', 'minimum' => 1, 'maximum' => SearchService::MAX_LIMIT, 'default' => SearchService::DEFAULT_LIMIT, 'nullable' => true]),
-            ]),
-            new OA\Parameter('offset', OA\Parameter::IN_QUERY, 'Numeric offset of the first element provided on a page representing a collection request', [
+            ]);
+        }
+        if (in_array('offset', $keys)) {
+            $parameters[] = new OA\Parameter('offset', OA\Parameter::IN_QUERY, 'Numeric offset of the first element provided on a page representing a collection request', [
                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-            ]),
-            new OA\Parameter('cursor', OA\Parameter::IN_QUERY, 'Cursor pagination', [
+            ]);
+        }
+        if (in_array('cursor', $keys)) {
+            $parameters[] = new OA\Parameter('cursor', OA\Parameter::IN_QUERY, 'Cursor pagination', [
                 'schema' => $this->buildSchemaProperty(['type' => 'string', 'default' => '*', 'nullable' => true]),
-            ])
-        ];
+            ]);
+        }
+        if (in_array('authorFiscalCode', $keys)) {
+            $parameters[] = new OA\Parameter('authorFiscalCode', OA\Parameter::IN_QUERY, 'Filter by author fiscal code', [
+                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true]),
+            ]);
+        }
+        return $parameters;
     }
 
     private function buildComponents()
@@ -2269,6 +2278,7 @@ class SchemaBuilder
                 $schema->properties = [
                     'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
                     'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'parent' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'nullable' => true, 'description' => 'ID', 'description' => 'Parent category id']),
                 ];
                 break;
             case 'NewCategory':

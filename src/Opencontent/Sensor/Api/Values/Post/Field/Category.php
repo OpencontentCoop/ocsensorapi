@@ -20,6 +20,11 @@ class Category extends Field
      */
     public $name;
 
+    /**
+     * @var integer
+     */
+    public $parent = 0;
+
     public function __toString()
     {
         return '' . $this->id;

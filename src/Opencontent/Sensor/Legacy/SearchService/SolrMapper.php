@@ -110,6 +110,20 @@ class SolrMapper
             'semester' => 'sensor_semester_i',
             'year' => 'sensor_year_i',
 
+            'first_assignment_day' => 'sensor_first_assignment_day_i',
+            'first_assignment_month' => 'sensor_first_assignment_week_i',
+            'first_assignment_month' => 'sensor_first_assignment_month_i',
+            'first_assignment_quarter' => 'sensor_first_assignment_quarter_i',
+            'first_assignment_semester' => 'sensor_first_assignment_semester_i',
+            'first_assignment_year' => 'sensor_first_assignment_year_i',
+
+            'closing_day' => 'sensor_closing_day_i',
+            'closing_month' => 'sensor_closing_week_i',
+            'closing_month' => 'sensor_closing_month_i',
+            'closing_quarter' => 'sensor_closing_quarter_i',
+            'closing_semester' => 'sensor_closing_semester_i',
+            'closing_year' => 'sensor_closing_year_i',
+
             'related_id_list' => 'sensor_related_id_list_lk',
 
             //'published' => 'published',
@@ -160,6 +174,8 @@ class SolrMapper
         }
 
         $assignedList = false;
+        $firstAssignmentDate = false;
+        $closingDate = false;
         if ($this->post->timelineItems instanceof \Opencontent\Sensor\Api\Values\Message\TimelineItemCollection) {
             $read = $this->post->timelineItems->getByType('read')->first();
             if ($read && $read->published instanceof \DateTime) {
@@ -182,6 +198,7 @@ class SolrMapper
                 );
                 $interval = $this->post->published->diff($assigned->published);
                 $data['sensor_assigning_time_i'] = Utils::getDateIntervalSeconds($interval);
+                $firstAssignmentDate = $assigned->published;
             }
 
             $fix = $this->post->timelineItems->getByType('fixed')->last();
@@ -206,6 +223,7 @@ class SolrMapper
 
                 $interval = $this->post->published->diff($close->published);
                 $data['sensor_closing_time_i'] = Utils::getDateIntervalSeconds($interval);
+                $closingDate = $close->published;
             }
         }
 
@@ -267,6 +285,7 @@ class SolrMapper
         $ownerHistory = array();
         $lastOwnerUserId = 0;
         $lastOwnerGroupId = 0;
+//        $lastAssignmentDate = false;
         if ($assignedList) {
             foreach ($assignedList->messages as $message) {
                 foreach ($message->extra as $id) {
@@ -280,6 +299,7 @@ class SolrMapper
                         }
                     }
                 }
+//                $lastAssignmentDate = $message->published;
             }
         }
         $data['sensor_history_owner_name_lk'] = implode(',', $ownerHistory);
@@ -303,23 +323,20 @@ class SolrMapper
         $data['sensor_category_name_list_lk'] = implode(',', array_values($categoryList));
         $data['sensor_category_id_list_lk'] = implode(',', array_keys($categoryList));
 
-        $month = $this->post->published->format('n');
-        if ($month >= 10) $quarter = 4;
-        elseif ($month >= 7) $quarter = 3;
-        elseif ($month >= 4) $quarter = 2;
-        else $quarter = 1;
+        foreach ($this->generateDateTimeIndexes($this->post->published) as $key => $value){
+            $data['sensor_' .$key . '_i'] = $value;
+        }
 
-        if ($month >= 6) $semester = 2;
-        else $semester = 1;
-
-        $data['sensor_day_i'] = $this->post->published->format('Yz');
-        $weekNum = $this->post->published->format('W');
-        $weekNum = $weekNum == 53 ? 52 : $weekNum;
-        $data['sensor_week_i'] = $this->post->published->format('Y') . $weekNum;
-        $data['sensor_month_i'] = $this->post->published->format('Ym');
-        $data['sensor_quarter_i'] = $this->post->published->format('Y') . $quarter;
-        $data['sensor_semester_i'] = $this->post->published->format('Y') . $semester;
-        $data['sensor_year_i'] = $this->post->published->format('Y');
+        if ($firstAssignmentDate instanceof \DateTimeInterface){
+            foreach ($this->generateDateTimeIndexes($firstAssignmentDate) as $key => $value){
+                $data['sensor_first_assignment_' .$key . '_i'] = $value;
+            }
+        }
+        if ($closingDate instanceof \DateTimeInterface){
+            foreach ($this->generateDateTimeIndexes($closingDate) as $key => $value){
+                $data['sensor_closing_' .$key . '_i'] = $value;
+            }
+        }
 
         $data['sensor_related_id_list_lk'] = implode(',', $this->post->relatedItems);
 
@@ -403,6 +420,31 @@ class SolrMapper
         $readStatusesIdentifier = $solrStorage->getSolrStorageFieldName(self::SOLR_STORAGE_READ_STATUSES);
         $readStatusesValue = $solrStorage->serializeData($this->getReadStatusesData($data));
         $data[$readStatusesIdentifier] = $readStatusesValue;
+
+        return $data;
+    }
+
+    private function generateDateTimeIndexes(\DateTimeInterface $dateTime)
+    {
+        $month = $dateTime->format('n');
+        if ($month >= 10) $quarter = 4;
+        elseif ($month >= 7) $quarter = 3;
+        elseif ($month >= 4) $quarter = 2;
+        else $quarter = 1;
+
+        if ($month >= 6) $semester = 2;
+        else $semester = 1;
+
+        $data['day'] = $dateTime->format('Yz');
+        $weekNum = $dateTime->format('W');
+        if ($weekNum == 53){
+            $weekNum = $dateTime->format('m') == '01' ? '01' : '52';
+        }
+        $data['week'] = $dateTime->format('Y') . $weekNum;
+        $data['month'] = $dateTime->format('Ym');
+        $data['quarter'] = $dateTime->format('Y') . $quarter;
+        $data['semester'] = $dateTime->format('Y') . $semester;
+        $data['year'] = $dateTime->format('Y');
 
         return $data;
     }

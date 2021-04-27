@@ -112,7 +112,7 @@ class UserService extends UserServiceBase
         if (\eZUser::fetchByEmail($payload['email'])) {
             throw new InvalidInputException("Email address already exists");
         }
-        if (isset($payload['fiscal_code'])){
+        if (isset($payload['fiscal_code']) && !empty($payload['fiscal_code'])){
             $payload['fiscal_code'] = strtoupper($payload['fiscal_code']);
             $this->assertIsValidFiscalCode($payload['fiscal_code']);
         }

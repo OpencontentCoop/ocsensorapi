@@ -8,6 +8,8 @@ use Opencontent\Sensor\Legacy\Repository;
 use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
+use Opencontent\Sensor\Api\Values\Event;
+use Opencontent\Sensor\Api\Values\Post;
 
 class PostCreateStructValidator extends BasePostCreateStructValidator
 {
@@ -64,12 +66,19 @@ class PostCreateStructValidator extends BasePostCreateStructValidator
                 if ($user instanceof \eZUser){
                     $createStruct->author = $user->id();
                 }else{
-                    $createStruct->author = $this->repository->getUserService()->createUser([
+                    $author = $this->repository->getUserService()->createUser([
                         'first_name' => $createStruct->author,
-                        'last_name' => '',
+                        'last_name' => $createStruct->author,
                         'email' => $createStruct->author,
                         'fiscal_code' => '',
-                    ], true)->id;
+                    ], true);
+                    $createStruct->author = $author->id;
+
+                    $event = new Event();
+                    $event->identifier = 'on_generate_user';
+                    $event->post = new Post();
+                    $event->user = $author;
+                    $this->repository->getEventService()->fire($event);
                 }
             }
             if (!$this->repository->getUserService()->loadUser($createStruct->author)) {

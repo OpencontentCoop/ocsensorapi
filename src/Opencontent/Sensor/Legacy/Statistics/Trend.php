@@ -32,12 +32,12 @@ class Trend extends StatisticFactory
 
     public function getName()
     {
-        return ezpI18n::tr('sensor/chart', 'Trend apertura/chiusura');
+        return ezpI18n::tr('sensor/chart', 'Trend inserimento/chiusura');
     }
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni aperte e chiuse per intervallo di tempo');
+        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni inserite e chiuse per intervallo di tempo');
     }
 
     public function getData()

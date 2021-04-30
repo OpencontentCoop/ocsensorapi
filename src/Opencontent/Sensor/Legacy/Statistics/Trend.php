@@ -61,7 +61,7 @@ class Trend extends StatisticFactory
             $series = [
                 0 => [
 //                    'name' => $this->hasParameter('group') ? 'assegnate' : 'aperte',
-                    'name' => 'aperte',
+                    'name' => 'inserite',
                     'data' => []
                 ],
                 1 => [

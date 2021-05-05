@@ -135,9 +135,17 @@ class PostAging extends StatisticFactory
         $data[] = $item;
 
         $end = (clone $now)->sub(new \DateInterval('P7D'))->setTime(23, 59);
+        $start = (clone $now)->sub(new \DateInterval('P15D'))->setTime(23, 59);
+        $item = [
+            'name' => '7-15gg',
+            'filter' => " $field range [{$start->format('c')},{$end->format('c')}] and ",
+        ];
+        $data[] = $item;
+
+        $end = (clone $now)->sub(new \DateInterval('P15D'))->setTime(23, 59);
         $start = (clone $now)->sub(new \DateInterval('P30D'))->setTime(23, 59);
         $item = [
-            'name' => '7-30gg',
+            'name' => '15-30gg',
             'filter' => " $field range [{$start->format('c')},{$end->format('c')}] and ",
         ];
         $data[] = $item;

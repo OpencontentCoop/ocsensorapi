@@ -46,18 +46,10 @@ class Controller
         $this->apiSettings = $apiSettings;
         $this->repository = $this->apiSettings->getRepository();
         $this->restController = $restController;
-        $this->serializer = [
-            'post' => new PostSerializer($this->apiSettings),
-            'message' => new MessageSerializer($this->apiSettings),
-            'attachment' => new AttachmentSerializer($this->apiSettings),
-            'area' => new AreaSerializer($this->apiSettings),
-            'participants' => new ParticipantsSerializer($this->apiSettings),
-            'user' => new UserSerializer($this->apiSettings),
-            'operator' => new OperatorSerializer($this->apiSettings),
-        ];
+        $this->serializer = new Serializer($this->apiSettings);
     }
 
-    public function loadPosts()
+    public function loadPosts($authorId = null)
     {
         $q = $this->getRequestParameter('q');
         $limit = $this->getRequestParameter('limit');
@@ -79,7 +71,10 @@ class Controller
 
         $query = '';
         if ($q) {
-            $query = 'q = "' . $q . '" ';
+            $query = 'q = "' . $q . '" and ';
+        }
+        if ($authorId){
+            $query .= 'author_id = "' . (int)$authorId . '" ';
         }
         if ($offset !== null) {
             $query .= "limit $limit offset $offset sort [id=>asc]";
@@ -101,7 +96,7 @@ class Controller
             $postSearchResults = [
                 'self' => $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->query, $this->getRequestParameters(), $parameters),
                 'next' => null,
-                'items' => $this->serializer['post']->serializeItems($searchResults->searchHits),
+                'items' => $this->serializer->setEmbedFields($this->getRequestParameter('embed'))->serializeItems($searchResults->searchHits),
                 'count' => (int)$searchResults->totalCount,
             ];
             if ($searchResults->nextPageQuery) {
@@ -127,7 +122,7 @@ class Controller
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['post']->serialize($post);
+        $result->variables = $this->serializer->serialize($post);
 
         return $result;
     }
@@ -135,7 +130,9 @@ class Controller
     public function getPostById()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['post']->serializeItem($this->loadPost());
+        $result->variables = $this->serializer
+            ->setEmbedFields($this->getRequestParameter('embed'))
+            ->serializeItem($this->loadPost());
 
         return $result;
     }
@@ -151,7 +148,7 @@ class Controller
         }
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['post']->serialize($post);
+        $result->variables = $this->serializer->serialize($post);
 
         return $result;
     }
@@ -159,7 +156,7 @@ class Controller
     public function getApproversByPostId()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['participants']->serialize($this->loadPost()->approvers);
+        $result->variables = $this->serializer->serialize($this->loadPost()->approvers);
         return $result;
     }
 
@@ -171,7 +168,7 @@ class Controller
         $this->repository->getActionService()->runAction($action, $this->loadPost());
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['participants']->serialize($this->loadPost()->approvers);
+        $result->variables = $this->serializer->serialize($this->loadPost()->approvers);
 
         return $result;
     }
@@ -179,7 +176,7 @@ class Controller
     public function getOwnersByPostId()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['participants']->serialize($this->loadPost()->owners);
+        $result->variables = $this->serializer->serialize($this->loadPost()->owners);
 
         return $result;
     }
@@ -192,7 +189,7 @@ class Controller
         $this->repository->getActionService()->runAction($action, $this->loadPost());
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['participants']->serialize($this->loadPost()->owners);
+        $result->variables = $this->serializer->serialize($this->loadPost()->owners);
 
         return $result;
     }
@@ -200,7 +197,7 @@ class Controller
     public function getObserversByPostId()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['participants']->serialize($this->loadPost()->observers);
+        $result->variables = $this->serializer->serialize($this->loadPost()->observers);
 
         return $result;
     }
@@ -213,7 +210,7 @@ class Controller
         $this->repository->getActionService()->runAction($action, $this->loadPost());
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['participants']->serialize($this->loadPost()->observers);
+        $result->variables = $this->serializer->serialize($this->loadPost()->observers);
 
         return $result;
     }
@@ -221,7 +218,7 @@ class Controller
     public function getParticipantsByPostId()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['participants']->serialize($this->loadPost()->participants);
+        $result->variables = $this->serializer->serialize($this->loadPost()->participants);
 
         return $result;
     }
@@ -237,7 +234,7 @@ class Controller
     public function getCommentsByPostId()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = ['items' => $this->serializer['message']->serializeItems($this->loadPost()->comments)];
+        $result->variables = ['items' => $this->serializer->serializeItems($this->loadPost()->comments)];
 
         return $result;
     }
@@ -252,7 +249,7 @@ class Controller
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['message']->serialize($this->repository->getMessageService()->loadCommentCollectionByPost($post)->last());
+        $result->variables = $this->serializer->serialize($this->repository->getMessageService()->loadCommentCollectionByPost($post)->last());
 
         return $result;
     }
@@ -267,7 +264,7 @@ class Controller
         $this->repository->getActionService()->runAction($action, $post);
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['message']->serialize($this->repository->getMessageService()->loadCommentCollectionByPost($post)->getById($this->restController->commentId));
+        $result->variables = $this->serializer->serialize($this->repository->getMessageService()->loadCommentCollectionByPost($post)->getById($this->restController->commentId));
 
         return $result;
     }
@@ -275,7 +272,7 @@ class Controller
     public function getPrivateMessagesByPostId()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = ['items' => $this->serializer['message']->serializeItems($this->loadPost()->privateMessages)];
+        $result->variables = ['items' => $this->serializer->serializeItems($this->loadPost()->privateMessages)];
 
         return $result;
     }
@@ -293,7 +290,7 @@ class Controller
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['message']->serialize($this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post)->last());
+        $result->variables = $this->serializer->serialize($this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post)->last());
 
         return $result;
     }
@@ -308,7 +305,7 @@ class Controller
         $this->repository->getActionService()->runAction($action, $post);
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['message']->serialize($this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post)->getById($this->restController->privateMessageId));
+        $result->variables = $this->serializer->serialize($this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post)->getById($this->restController->privateMessageId));
 
         return $result;
     }
@@ -316,7 +313,7 @@ class Controller
     public function getResponsesByPostId()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = ['items' => $this->serializer['message']->serializeItems($this->loadPost()->responses)];
+        $result->variables = ['items' => $this->serializer->serializeItems($this->loadPost()->responses)];
 
         return $result;
     }
@@ -331,7 +328,7 @@ class Controller
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['message']->serialize($this->repository->getMessageService()->loadResponseCollectionByPost($post)->last());
+        $result->variables = $this->serializer->serialize($this->repository->getMessageService()->loadResponseCollectionByPost($post)->last());
 
         return $result;
     }
@@ -346,7 +343,7 @@ class Controller
         $this->repository->getActionService()->runAction($action, $post);
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['message']->serialize($this->repository->getMessageService()->loadResponseCollectionByPost($post)->getById($this->restController->responseId));
+        $result->variables = $this->serializer->serialize($this->repository->getMessageService()->loadResponseCollectionByPost($post)->getById($this->restController->responseId));
 
         return $result;
     }
@@ -354,7 +351,7 @@ class Controller
     public function getAttachmentsByPostId()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = ['items' => $this->serializer['attachment']->serializeItems($this->loadPost()->attachments)];
+        $result->variables = ['items' => $this->serializer->serializeItems($this->loadPost()->attachments)];
 
         return $result;
     }
@@ -369,7 +366,7 @@ class Controller
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->variables = ['items' => $this->serializer['attachment']->serializeItems($this->loadPost()->attachments)];
+        $result->variables = ['items' => $this->serializer->serializeItems($this->loadPost()->attachments)];
 
         return $result;
     }
@@ -391,7 +388,7 @@ class Controller
     public function getTimelineByPostId()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = ['items' => $this->serializer['message']->serializeItems($this->loadPost()->timelineItems)];
+        $result->variables = ['items' => $this->serializer->serializeItems($this->loadPost()->timelineItems)];
 
         return $result;
     }
@@ -400,7 +397,7 @@ class Controller
     {
         $result = new ezpRestMvcResult();
         $result->variables = [
-            'items' => $this->serializer['area']->serializeItems($this->loadPost()->areas),
+            'items' => $this->serializer->serializeItems($this->loadPost()->areas),
             'self' => $this->restController->getBaseUri() . "/post/{$this->restController->postId}/areas",
             'next' => null,
             'count' => count($this->loadPost()->areas),
@@ -417,7 +414,7 @@ class Controller
         $action->setParameter('area_id', $this->restController->getPayload()['area_id']);
         $this->repository->getActionService()->runAction($action, $post);
         $result = new ezpRestMvcResult();
-        $result->variables = ['items' => $this->serializer['area']->serializeItems($this->loadPost()->areas)];
+        $result->variables = ['items' => $this->serializer->serializeItems($this->loadPost()->areas)];
 
         return $result;
     }
@@ -426,7 +423,7 @@ class Controller
     {
         $result = new ezpRestMvcResult();
         $result->variables = [
-            'items' => $this->serializer['area']->serializeItems($this->loadPost()->categories),
+            'items' => $this->serializer->serializeItems($this->loadPost()->categories),
             'self' => $this->restController->getBaseUri() . "/post/{$this->restController->postId}/categories",
             'next' => null,
             'count' => count($this->loadPost()->categories),
@@ -445,7 +442,7 @@ class Controller
         $action->setParameter('category_id', $payload['category_id']);
         $this->repository->getActionService()->runAction($action, $post);
         $result = new ezpRestMvcResult();
-        $result->variables = ['items' => $this->serializer['area']->serializeItems($this->loadPost()->categories)];
+        $result->variables = ['items' => $this->serializer->serializeItems($this->loadPost()->categories)];
 
         return $result;
     }
@@ -580,7 +577,7 @@ class Controller
         $this->repository->getActionService()->runAction($action, $this->loadPost());
 
         $result = new ezpRestMvcResult();
-        $result->variables = ['expiry_at' => $this->serializer['post']->serialize($this->loadPost())['expiry_at']];
+        $result->variables = ['expiry_at' => $this->serializer->serialize($this->loadPost())['expiry_at']];
         return $result;
     }
 
@@ -604,7 +601,7 @@ class Controller
         $results = [
             'self' => $this->restController->getBaseUri() . "/users?" . http_build_query($parameters),
             'next' => null,
-            'items' => $this->serializer['user']->serializeItems($searchResults['items']),
+            'items' => $this->serializer->serializeItems($searchResults['items']),
             'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
@@ -622,7 +619,7 @@ class Controller
     {
         $payload = $this->restController->getPayload();
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['user']->serializeItem($this->repository->getUserService()->createUser($payload));
+        $result->variables = $this->serializer->serializeItem($this->repository->getUserService()->createUser($payload));
         return $result;
     }
 
@@ -632,17 +629,31 @@ class Controller
         // utilizzo la ricerca per il controllo dei permessi di accesso
         $userData = $this->repository->getUserService()->searchOne('id = ' . $this->restController->userId);
         $user = $this->repository->getUserService()->loadUser($userData['metadata']['id']);
-        $result->variables = $this->serializer['user']->serializeItem($user);
+        $result->variables = $this->serializer->serializeItem($user);
 
         return $result;
+    }
+
+    public function getUserByIdPosts()
+    {
+        // utilizzo la ricerca per il controllo dei permessi di accesso
+        $userData = $this->repository->getUserService()->searchOne('id = ' . $this->restController->userId);
+        $user = $this->repository->getUserService()->loadUser($userData['metadata']['id']);
+
+        return $this->loadPosts($user->id);
     }
 
     public function getCurrentUser()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['user']->serializeItem($this->repository->getCurrentUser());
+        $result->variables = $this->serializer->serializeItem($this->repository->getCurrentUser());
 
         return $result;
+    }
+
+    public function getCurrentUserPosts()
+    {
+        return $this->loadPosts($this->repository->getCurrentUser()->id);
     }
 
     public function updateUserById()
@@ -682,7 +693,7 @@ class Controller
         }
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['user']->serializeItem($this->repository->getUserService()->updateUser($user, $payload));
+        $result->variables = $this->serializer->serializeItem($this->repository->getUserService()->updateUser($user, $payload));
         return $result;
     }
 
@@ -706,7 +717,7 @@ class Controller
         $results = [
             'self' => $this->restController->getBaseUri() . "/operators?" . http_build_query($parameters),
             'next' => null,
-            'items' => $this->serializer['operator']->serializeItems($searchResults['items']),
+            'items' => $this->serializer->serializeItems($searchResults['items']),
             'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
@@ -746,14 +757,14 @@ class Controller
         }
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['operator']->serializeItem($this->repository->getOperatorService()->createOperator($payload));
+        $result->variables = $this->serializer->serializeItem($this->repository->getOperatorService()->createOperator($payload));
         return $result;
     }
 
     public function getOperatorById()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['operator']->serializeItem($this->repository->getOperatorService()->loadOperator($this->restController->operatorId));
+        $result->variables = $this->serializer->serializeItem($this->repository->getOperatorService()->loadOperator($this->restController->operatorId));
 
         return $result;
     }
@@ -785,7 +796,7 @@ class Controller
         }
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['user']->serializeItem($this->repository->getOperatorService()->updateOperator($operator, $payload));
+        $result->variables = $this->serializer->serializeItem($this->repository->getOperatorService()->updateOperator($operator, $payload));
         return $result;
     }
 
@@ -913,7 +924,7 @@ class Controller
         $results = [
             'self' => $this->restController->getBaseUri() . "/categories?" . http_build_query($parameters),
             'next' => null,
-            'items' => $this->serializer['area']->serializeItems($searchResults['items']),
+            'items' => $this->serializer->serializeItems($searchResults['items']),
             'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
@@ -940,14 +951,14 @@ class Controller
 
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['area']->serialize($this->repository->getCategoryService()->createCategory($payload));
+        $result->variables = $this->serializer->serialize($this->repository->getCategoryService()->createCategory($payload));
         return $result;
     }
 
     public function getCategoryById()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['area']->serialize($this->repository->getCategoryService()->loadCategory($this->restController->categoryId));
+        $result->variables = $this->serializer->serialize($this->repository->getCategoryService()->loadCategory($this->restController->categoryId));
 
         return $result;
     }
@@ -989,7 +1000,7 @@ class Controller
         $results = [
             'self' => $this->restController->getBaseUri() . "/areas?" . http_build_query($parameters),
             'next' => null,
-            'items' => $this->serializer['area']->serializeItems($searchResults['items']),
+            'items' => $this->serializer->serializeItems($searchResults['items']),
             'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
@@ -1012,14 +1023,14 @@ class Controller
         }
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['area']->serialize($this->repository->getAreaService()->createArea($payload));
+        $result->variables = $this->serializer->serialize($this->repository->getAreaService()->createArea($payload));
         return $result;
     }
 
     public function getAreaById()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer['area']->serialize($this->repository->getAreaService()->loadArea($this->restController->areaId));
+        $result->variables = $this->serializer->serialize($this->repository->getAreaService()->loadArea($this->restController->areaId));
         return $result;
     }
 
@@ -1312,6 +1323,11 @@ class Controller
             $this->restController->getRequest()->variables,
             $this->restController->getRequest()->get
         );
+
+        if ($name == 'embed'){
+            return isset($parameters['embed']) ? explode(',', $parameters['embed']) : [];
+        }
+
         return isset($parameters[$name]) ? $parameters[$name] : null;
     }
 

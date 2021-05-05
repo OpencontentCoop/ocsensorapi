@@ -200,7 +200,10 @@ class SchemaBuilder
                     [
                         'description' => 'Returns a list of post',
                         'tags' => [self::$tags['posts']],
-                        'parameters' => $this->buildSearchParameters(['q', 'limit', 'offset', 'cursor', 'authorFiscalCode']),
+                        'parameters' => array_merge(
+                            $this->buildSearchParameters(['q', 'limit', 'offset', 'cursor', 'authorFiscalCode']),
+                            $this->buildEmbedParameters()
+                        ),
                     ]
                 ),
                 'post' => new OA\Operation(
@@ -253,12 +256,15 @@ class SchemaBuilder
                     'Get single post',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => array_merge(
+                            [
+                                new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
+                                    'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                    'required' => true,
+                                ]),
+                            ],
+                            $this->buildEmbedParameters()
+                        ),
                     ]
                 ),
                 'put' => new OA\Operation(
@@ -1225,6 +1231,31 @@ class SchemaBuilder
                     ]
                 ),
             ]),
+            '/users/current/posts' => new OA\PathItem([
+                'get' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response.', [
+                            'application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/PostCollection')
+                            ]),
+                            'application/vnd.geo+json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/FeatureCollection')
+                            ]),
+                        ]),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '404' => new OA\Response('Not found'),
+                    ],
+                    'getCurrentUserPosts',
+                    'Get all posts that the current user is the author of',
+                    [
+                        'tags' => [self::$tags['users']],
+                        'parameters' => array_merge(
+                            $this->buildSearchParameters(['q', 'limit', 'offset', 'cursor']),
+                            $this->buildEmbedParameters()
+                        ),
+                    ]
+                ),
+            ]),
             '/users/{userId}' => new OA\PathItem([
                 'get' => new OA\Operation(
                     [
@@ -1268,6 +1299,35 @@ class SchemaBuilder
                             ]),
                         ],
                         'requestBody' => new OA\Reference('#/components/requestBodies/User')
+                    ]
+                ),
+            ]),
+            '/users/{userId}/posts' => new OA\PathItem([
+                'get' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response.', [
+                            'application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/PostCollection')
+                            ]),
+                            'application/vnd.geo+json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/FeatureCollection')
+                            ]),
+                        ]),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '404' => new OA\Response('Not found'),
+                    ],
+                    'getUserByIdPosts',
+                    'Get all posts that the selected user is the author of',
+                    [
+                        'tags' => [self::$tags['users']],
+                        'parameters' => array_merge(
+                            [new OA\Parameter('userId', OA\Parameter::IN_PATH, 'ID of user', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
+                            ])],
+                            $this->buildSearchParameters(['q', 'limit', 'offset', 'cursor']),
+                            $this->buildEmbedParameters()
+                        ),
                     ]
                 ),
             ]),
@@ -1879,6 +1939,33 @@ class SchemaBuilder
                 'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true]),
             ]);
         }
+        return $parameters;
+    }
+
+    private function buildEmbedParameters()
+    {
+        $parameters = [];
+        $parameters[] = new OA\Parameter('embed', OA\Parameter::IN_QUERY, 'Allow to embed the nested resources. Allowed comma separated multiple value (e.g. embed=privateMessages,responses)', [
+            'schema' => $this->buildSchemaProperty([
+                'type' => 'array',
+                'items' => ['type' => 'string', 'enum' => [
+                    'comments',
+                    'privateMessages',
+                    'responses',
+                    'attachments',
+                    'timeline',
+                    'areas',
+                    'categories',
+                    'approvers',
+                    'owners',
+                    'observers',
+                ]],
+                'nullable' => true,
+            ]),
+            'style' =>  'form',
+            'explode' =>  false,
+        ]);
+
         return $parameters;
     }
 

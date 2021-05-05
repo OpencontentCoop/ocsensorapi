@@ -11,6 +11,11 @@ abstract class AbstractSerializer
      */
     protected $apiSettings;
 
+    /**
+     * @var string[]
+     */
+    private $embedFields = [];
+
     public function __construct(OpenApi $apiSettings)
     {
         $this->apiSettings = $apiSettings;
@@ -39,5 +44,23 @@ abstract class AbstractSerializer
             return $dateTime->format('c');
         }
         return null;
+    }
+
+    /**
+     * @return array
+     */
+    public function getEmbedFields()
+    {
+        return $this->embedFields;
+    }
+
+    /**
+     * @param array $embedFields
+     * @return PostSerializer
+     */
+    public function setEmbedFields($embedFields)
+    {
+        $this->embedFields = $embedFields;
+        return $this;
     }
 }

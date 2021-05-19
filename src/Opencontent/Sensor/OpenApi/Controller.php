@@ -1303,8 +1303,17 @@ class Controller
     private function downloadImage($image)
     {
         if (filter_var($image, FILTER_VALIDATE_URL)){
+            $context = null;
+            $apiRequestHttpStreamContext = (array)\eZINI::instance('ocsensor.ini')->variable('SensorConfig', 'ApiRequestHttpStreamContext');
+            if (!empty($apiRequestHttpStreamContext)) {
+                $httpOpts = [];
+                foreach ($apiRequestHttpStreamContext as $key => $value){
+                    $httpOpts[$key] = $value;
+                }
+                $context = stream_context_create(['http' => $httpOpts]);
+            }
             $imagePath = \eZSys::cacheDirectory() . '/' . basename($image);
-            \eZFile::create(basename($imagePath), dirname($imagePath), file_get_contents($image));
+            \eZFile::create(basename($imagePath), dirname($imagePath), file_get_contents($image, false, $context));
         }else {
             $imagePath = \eZSys::cacheDirectory() . '/' . $image['filename'];
             \eZFile::create(basename($imagePath), dirname($imagePath), base64_decode($image['file']));

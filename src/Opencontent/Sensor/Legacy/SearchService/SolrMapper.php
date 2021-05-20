@@ -63,6 +63,7 @@ class SolrMapper
             'read_assign_time' => 'sensor_read_assign_time_i',
             'assign_fix_time' => 'sensor_assign_fix_time_i',
             'fix_close_time' => 'sensor_fix_close_time_i',
+            'bouncing_ball_time' => 'sensor_bouncing_ball_time_i',
 
             'author_id' => 'sensor_author_id_i',
             'author_name' => 'sensor_author_name_t',
@@ -285,7 +286,7 @@ class SolrMapper
         $ownerHistory = array();
         $lastOwnerUserId = 0;
         $lastOwnerGroupId = 0;
-//        $lastAssignmentDate = false;
+        $lastAssignmentDate = false;
         if ($assignedList) {
             foreach ($assignedList->messages as $message) {
                 foreach ($message->extra as $id) {
@@ -299,7 +300,7 @@ class SolrMapper
                         }
                     }
                 }
-//                $lastAssignmentDate = $message->published;
+                $lastAssignmentDate = $message->published;
             }
         }
         $data['sensor_history_owner_name_lk'] = implode(',', $ownerHistory);
@@ -335,6 +336,15 @@ class SolrMapper
         if ($closingDate instanceof \DateTimeInterface){
             foreach ($this->generateDateTimeIndexes($closingDate) as $key => $value){
                 $data['sensor_closing_' .$key . '_i'] = $value;
+            }
+        }
+
+        if ($firstAssignmentDate instanceof \DateTimeInterface
+            && $lastAssignmentDate instanceof \DateTimeInterface
+            && $firstAssignmentDate->getTimestamp() !== $lastAssignmentDate->getTimestamp()){
+            $interval = $firstAssignmentDate->diff($lastAssignmentDate);
+            if ($interval instanceof \DateInterval) {
+                $data['sensor_bouncing_ball_time_i'] = Utils::getDateIntervalSeconds($interval);
             }
         }
 

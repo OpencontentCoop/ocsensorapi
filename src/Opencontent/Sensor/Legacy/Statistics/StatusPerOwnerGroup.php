@@ -51,6 +51,7 @@ class StatusPerOwnerGroup extends StatisticFactory
             $rangeFilter = $this->getRangeFilter();
             $areaFilter = $this->getAreaFilter();
             $groupFilter = $this->getOwnerGroupFilter();
+            $typeFilter = $this->getTypeFilter();
 
             //$ownerGroupFacetName = 'sensor_history_owner_id_lk';
             $ownerGroupFacetName = 'sensor_last_owner_group_id_i';
@@ -59,7 +60,7 @@ class StatusPerOwnerGroup extends StatisticFactory
             }
 
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter} limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000] pivot [facet=>[sensor_status_lk,{$ownerGroupFacetName}],mincount=>{$this->minCount}]",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter} limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000] pivot [facet=>[sensor_status_lk,{$ownerGroupFacetName}],mincount=>{$this->minCount}]",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
 

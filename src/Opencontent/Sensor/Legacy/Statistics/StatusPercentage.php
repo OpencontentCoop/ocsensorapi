@@ -46,9 +46,10 @@ class StatusPercentage extends StatisticFactory
             $areaFilter = $this->getAreaFilter();
             $rangeFilter = $this->getRangeFilter();
             $groupFilter = $this->getOwnerGroupFilter();
+            $typeFilter = $this->getTypeFilter();
 
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter} facets [status] limit 1",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter} facets [status] limit 1",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
 

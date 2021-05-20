@@ -224,4 +224,19 @@ trait FiltersTrait
 
         return $groupFilter;
     }
+    protected function getTypeFilter()
+    {
+        $typeFilter = '';
+        if ($this->hasParameter('type')) {
+            $type = $this->getParameter('type');
+            if (!empty($type)){
+                if (!is_array($type)){
+                    $type = [$type];
+                }
+                $typeFilter = 'raw[sensor_type_s] in [' . implode(',', $type) . '] and ';
+            }
+        }
+
+        return $typeFilter;
+    }
 }

@@ -48,9 +48,10 @@ class AvgTimes extends StatisticFactory
             $areaFilter = $this->getAreaFilter();
             $rangeFilter = $this->getRangeFilter();
             $groupFilter = $this->getOwnerGroupFilter();
+            $typeFilter = $this->getTypeFilter();
 
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter} workflow_status in [closed] and stats [field=>[sensor_fix_close_time_i,sensor_assign_fix_time_i,sensor_read_assign_time_i,sensor_open_read_time_i],facet=>{$byInterval}] limit 1",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter} workflow_status in [closed] and stats [field=>[sensor_fix_close_time_i,sensor_assign_fix_time_i,sensor_read_assign_time_i,sensor_open_read_time_i],facet=>{$byInterval}] limit 1",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
             $this->data = [
@@ -66,7 +67,7 @@ class AvgTimes extends StatisticFactory
                 $item['data'][] = [
                     'interval' => 'all',
                     'count' => $values['count'],
-                    'avg' => $values['count'] > 0 ? $this->secondsInDay($values['sum'] / $values['count']) : 0
+                    'avg' => $values['count'] > 0 ? $this->secondsInDay($values['mean']) : 0
                 ];
                 $this->data['intervals']['all'] = 'all';
 
@@ -77,7 +78,7 @@ class AvgTimes extends StatisticFactory
                         $item['data'][] = [
                             'interval' => $intervalName,
                             'count' => $facetValue['count'],
-                            'avg' => $facetValue['count'] > 0 ? $this->secondsInDay($facetValue['sum'] / $facetValue['count']) : 0
+                            'avg' => $facetValue['count'] > 0 ? $this->secondsInDay($facetValue['mean']) : 0
                         ];
                     }
                 }

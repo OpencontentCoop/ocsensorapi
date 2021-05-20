@@ -48,6 +48,8 @@ class UserService extends UserServiceBase
                 if ($userObject instanceof \eZContentObject) {
                     $user->email = $ezUser->Email;
                     $user->name = $userObject->name(false, $this->repository->getCurrentLanguage());
+                    $user->firstName = $this->loadUserFirstName($userObject);
+                    $user->lastName = $this->loadUserLastName($userObject);
                     $user->description = $this->loadUserDescription($userObject);
                     $user->fiscalCode = $this->loadUserFiscalCode($userObject);
                     $user->phone = $this->loadUserPhone($userObject);
@@ -161,15 +163,26 @@ class UserService extends UserServiceBase
                 $payload['fiscal_code'] = strtoupper($payload['fiscal_code']);
                 $this->assertIsValidFiscalCode($payload['fiscal_code']);
             }
-            
-            $attributes = [
-                'first_name' => (string)$payload['first_name'],
-                'last_name' => (string)$payload['last_name'],
-                'fiscal_code' => (string)$payload['fiscal_code'],
-                'phone' => (string)$payload['phone'],
-            ];
-            if (\eZContentFunctions::updateAndPublishObject($contentObject, ['attributes' => $attributes])) {
-                if ($payload['email'] != $user->email) {
+
+            $attributes = [];
+            if (isset($payload['first_name']) && !empty($payload['first_name'])){
+                $attributes['first_name'] = (string)$payload['first_name'];
+            }
+            if (isset($payload['last_name']) && !empty($payload['last_name'])){
+                $attributes['last_name'] = (string)$payload['last_name'];
+            }
+            if (isset($payload['fiscal_code']) && !empty($payload['fiscal_code'])){
+                $attributes['fiscal_code'] = (string)$payload['fiscal_code'];
+            }
+            if (isset($payload['phone']) && !empty($payload['phone'])){
+                $attributes['phone'] = (string)$payload['phone'];
+            }
+
+            if (
+                \eZContentFunctions::updateAndPublishObject($contentObject, ['attributes' => $attributes])
+                || (empty($attributes) && isset($payload['email']) && !empty($payload['email']))
+            ) {
+                if (isset($payload['email']) && $payload['email'] != $user->email) {
                     $eZUser->setAttribute('email', $payload['email']);
                     $eZUser->store();
                 }
@@ -193,6 +206,8 @@ class UserService extends UserServiceBase
                 if ($userObject instanceof \eZContentObject) {
                     $user->email = $ezUser->Email;
                     $user->name = $userObject->name(false, $this->repository->getCurrentLanguage());
+                    $user->firstName = $this->loadUserFirstName($userObject);
+                    $user->lastName = $this->loadUserLastName($userObject);
                     $user->description = $this->loadUserDescription($userObject);
                     $user->fiscalCode = $this->loadUserFiscalCode($userObject);
                     $user->isEnabled = $ezUser->isEnabled();
@@ -268,6 +283,28 @@ class UserService extends UserServiceBase
     {
         $dataMap = $contentObject->dataMap();
         $attributeIdentifier = 'phone';
+        if (isset($dataMap[$attributeIdentifier]) && $dataMap[$attributeIdentifier]->hasContent()) {
+            return $dataMap[$attributeIdentifier]->content();
+        }
+
+        return '';
+    }
+
+    private function loadUserFirstName(eZContentObject $contentObject)
+    {
+        $dataMap = $contentObject->dataMap();
+        $attributeIdentifier = 'first_name';
+        if (isset($dataMap[$attributeIdentifier]) && $dataMap[$attributeIdentifier]->hasContent()) {
+            return $dataMap[$attributeIdentifier]->content();
+        }
+
+        return '';
+    }
+
+    private function loadUserLastName(eZContentObject $contentObject)
+    {
+        $dataMap = $contentObject->dataMap();
+        $attributeIdentifier = 'last_name';
         if (isset($dataMap[$attributeIdentifier]) && $dataMap[$attributeIdentifier]->hasContent()) {
             return $dataMap[$attributeIdentifier]->content();
         }

@@ -25,6 +25,16 @@ class User extends Exportable
     /**
      * @var string
      */
+    public $firstName;
+
+    /**
+     * @var string
+     */
+    public $lastName;
+
+    /**
+     * @var string
+     */
     public $description;
 
     /**

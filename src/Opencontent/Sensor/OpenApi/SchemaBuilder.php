@@ -33,6 +33,7 @@ class SchemaBuilder
         'operators' => "Operators",
         'groups' => "Groups of operators",
         'categories' => "Categories",
+        'types' => "Types",
         'areas' => "Areas",
         'stat' => "Statistics",
         'faq' => "FAQs",
@@ -71,6 +72,7 @@ class SchemaBuilder
                 $this->buildOperatorPaths(),
                 $this->buildGroupPaths(),
                 $this->buildCategoryPaths(),
+                $this->buildTypePaths(),
                 $this->buildAreaPaths(),
                 $this->buildStatisticPaths(),
                 $this->buildFaqPaths()
@@ -132,6 +134,7 @@ class SchemaBuilder
             new OA\Tag(self::$tags['operators']),
             new OA\Tag(self::$tags['groups']),
             new OA\Tag(self::$tags['categories']),
+            new OA\Tag(self::$tags['types']),
             new OA\Tag(self::$tags['areas']),
             new OA\Tag(self::$tags['stat']),
             new OA\Tag(self::$tags['faq']),
@@ -1230,6 +1233,23 @@ class SchemaBuilder
                         'requestBody' => new OA\Reference('#/components/requestBodies/User')
                     ]
                 ),
+                'patch' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response',
+                            ['application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/User')
+                            ])], null),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '403' => new OA\Response('Forbidden'),
+                        '404' => new OA\Response('Not found'),
+                    ],
+                    'patchCurrentUser',
+                    'Patch the current authenticated user',
+                    [
+                        'tags' => [self::$tags['users']],
+                        'requestBody' => new OA\Reference('#/components/requestBodies/PatchUser')
+                    ]
+                ),
             ]),
             '/users/current/posts' => new OA\PathItem([
                 'get' => new OA\Operation(
@@ -1299,6 +1319,29 @@ class SchemaBuilder
                             ]),
                         ],
                         'requestBody' => new OA\Reference('#/components/requestBodies/User')
+                    ]
+                ),
+                'patch' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response',
+                            ['application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/User')
+                            ])], null),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '403' => new OA\Response('Forbidden'),
+                        '404' => new OA\Response('Not found'),
+                    ],
+                    'patchUserById',
+                    'Patch single user',
+                    [
+                        'tags' => [self::$tags['users']],
+                        'parameters' => [
+                            new OA\Parameter('userId', OA\Parameter::IN_PATH, 'ID of user', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
+                            ]),
+                        ],
+                        'requestBody' => new OA\Reference('#/components/requestBodies/PatchUser')
                     ]
                 ),
             ]),
@@ -1723,6 +1766,53 @@ class SchemaBuilder
         ];
     }
 
+    private function buildTypePaths()
+    {
+        return [
+            '/types' => new OA\PathItem([
+                'get' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response.', [
+                            'application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/TypeCollection')
+                            ])
+                        ]),
+                        '400' => new OA\Response('Invalid search limit provided.'),
+                    ],
+                    'loadTypes',
+                    'Get all post types',
+                    [
+                        'description' => 'Returns a list of type',
+                        'tags' => [self::$tags['types']]
+                    ]
+                )
+            ]),
+            '/types/{typeIdentifier}' => new OA\PathItem([
+                'get' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response',
+                            ['application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/Type')
+                            ])], null),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '404' => new OA\Response('Not found'),
+                    ],
+                    'getTypeByIdentifier',
+                    'Get single post type by identifier',
+                    [
+                        'tags' => [self::$tags['types']],
+                        'parameters' => [
+                            new OA\Parameter('typeIdentifier', OA\Parameter::IN_PATH, 'Identifier of type', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'string']),
+                                'required' => true,
+                            ]),
+                        ]
+                    ]
+                )
+            ]),
+        ];
+    }
+
     private function buildStatisticPaths()
     {
         return [
@@ -2018,6 +2108,7 @@ class SchemaBuilder
             'UserCollection' => $this->buildSchema('UserCollection'),
             'User' => $this->buildSchema('User'),
             'NewUser' => $this->buildSchema('NewUser'),
+            'PatchUser' => $this->buildSchema('PatchUser'),
 
             'OperatorCollection' => $this->buildSchema('OperatorCollection'),
             'Operator' => $this->buildSchema('Operator'),
@@ -2035,6 +2126,9 @@ class SchemaBuilder
             'FaqCollection' => $this->buildSchema('FaqCollection'),
             'Faq' => $this->buildSchema('Faq'),
             'NewFaq' => $this->buildSchema('NewFaq'),
+
+            'TypeCollection' => $this->buildSchema('TypeCollection'),
+            'Type' => $this->buildSchema('Type'),
         ];
 
         $components->requestBodies = [
@@ -2045,6 +2139,10 @@ class SchemaBuilder
             'User' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewUser')
             ])], 'User object that needs to be added or updated', true),
+
+            'PatchUser' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/PatchUser')
+            ])], 'User object that needs to be patched', true),
 
             'Operator' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewOperator')
@@ -2439,6 +2537,17 @@ class SchemaBuilder
                     'phone' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Phone']),
                 ];
                 break;
+            case 'PatchUser':
+                $schema->title = 'PatchUser';
+                $schema->type = 'object';
+                $schema->properties = [
+                    'first_name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'First name']),
+                    'last_name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Last name']),
+                    'email' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Email', 'format' => 'email']),
+                    'fiscal_code' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Fiscal Code']),
+                    'phone' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Phone']),
+                ];
+                break;
 
             case 'OperatorCollection':
                 $schema->title = 'OperatorCollection';
@@ -2638,6 +2747,25 @@ class SchemaBuilder
                             'comment_count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64']),
                         ]]),
                     ]]]),
+                ];
+                break;
+
+            case 'TypeCollection':
+                $schema->title = 'TypeCollection';
+                $schema->type = 'object';
+                $schema->properties = [
+                    'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['ref' => '#/components/schemas/Type']]),
+                    'self' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Current pagination cursor']),
+                    'next' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Next pagination cursor', 'nullable' => true]),
+                    'count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int32', 'description' => 'Total number of items available']),
+                ];
+                break;
+            case 'Type':
+                $schema->title = 'Type';
+                $schema->type = 'object';
+                $schema->properties = [
+                    'id' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Identifier']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
                 ];
                 break;
         }

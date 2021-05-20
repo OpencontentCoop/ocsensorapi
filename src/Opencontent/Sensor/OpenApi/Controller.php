@@ -5,6 +5,7 @@ namespace Opencontent\Sensor\OpenApi;
 use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
+use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Values\Post\Field\GeoLocation;
 use Opencontent\Sensor\Api\Values\Post\Field\Image;
 use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
@@ -665,12 +666,29 @@ class Controller
         return $this->updateUser($user, $payload);
     }
 
+    public function patchUserById()
+    {
+        $userData = $this->repository->getUserService()->searchOne('id = ' . $this->restController->userId);
+        $user = $this->repository->getUserService()->loadUser($userData['metadata']['id']);
+        $payload = $this->restController->getPayload();
+
+        return $this->patchUser($user, $payload);
+    }
+
     public function updateCurrentUser()
     {
         $user = $this->repository->getCurrentUser();
         $payload = $this->restController->getPayload();
 
         return $this->updateUser($user, $payload);
+    }
+
+    public function patchCurrentUser()
+    {
+        $user = $this->repository->getCurrentUser();
+        $payload = $this->restController->getPayload();
+
+        return $this->patchUser($user, $payload);
     }
 
     private function updateUser($user, $payload)
@@ -689,6 +707,24 @@ class Controller
             throw new InvalidInputException("Invalid email address");
         }
         if (\eZUser::fetchByEmail($payload['email']) && $user->email != $payload['email']) {
+            throw new InvalidInputException("Email address already exists");
+        }
+
+        $result = new ezpRestMvcResult();
+        $result->variables = $this->serializer->serializeItem($this->repository->getUserService()->updateUser($user, $payload));
+        return $result;
+    }
+
+    private function patchUser($user, $payload)
+    {
+        $payload = $this->restController->getPayload();
+        if (empty($payload)) {
+            throw new InvalidInputException("Payload is empty");
+        }
+        if (isset($payload['email']) && !empty($payload['email']) && !MailValidator::validate($payload['email'])) {
+            throw new InvalidInputException("Invalid email address");
+        }
+        if (isset($payload['email']) && !empty($payload['email']) && \eZUser::fetchByEmail($payload['email']) && $user->email != $payload['email']) {
             throw new InvalidInputException("Email address already exists");
         }
 
@@ -1177,6 +1213,36 @@ class Controller
         $result->variables = $this->repository->getFaqService()->updateFaq($faq, $payload);
 
         return $result;
+    }
+
+    public function loadTypes()
+    {
+        $types = $this->repository->getPostTypeService()->loadPostTypes();
+        $results = [
+            'self' => $this->restController->getBaseUri() . "/types",
+            'next' => null,
+            'items' => $types,
+            'count' => count($types),
+        ];
+
+        $result = new ezpRestMvcResult();
+        $result->variables = $results;
+
+        return $result;
+    }
+
+    public function getTypeByIdentifier()
+    {
+        foreach ($this->repository->getPostTypeService()->loadPostTypes() as $type){
+            if ($this->restController->typeIdentifier == $type->identifier){
+                $result = new ezpRestMvcResult();
+                $result->variables = $type->jsonSerialize();
+
+                return $result;
+            }
+        }
+
+        throw new NotFoundException();
     }
 
     private function loadPost()

@@ -30,6 +30,11 @@ class UserSerializer extends AbstractSerializer
             'phone' => $item->phone,
         ];
 
+        if (get_class($item) === User::class){
+            $user['first_name'] = $item->firstName;
+            $user['last_name'] = $item->lastName;
+        }
+
         return $user;
     }
 

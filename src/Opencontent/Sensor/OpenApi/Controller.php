@@ -1326,17 +1326,26 @@ class Controller
         }
 
         if (isset($payload['images'])) {
+            $imagePaths = [];
             foreach ($payload['images'] as $image) {
-                $this->isValidImage($image);
+                if (!empty($image)) {
+                    $this->isValidImage($image);
+                }
             }
             foreach ($payload['images'] as $image) {
-                $imagePaths[] = $this->downloadImage($image);
+                if (!empty($image)) {
+                    $imagePaths[] = $this->downloadImage($image);
+                }
             }
-            $postCreateStruct->imagePaths = $imagePaths;
+            if (!empty($imagePaths)) {
+                $postCreateStruct->imagePaths = $imagePaths;
+            }
 
         }elseif (isset($payload['image'])) {
-            $this->isValidImage($payload['image']);
-            $postCreateStruct->imagePath = $this->downloadImage($payload['image']);
+            if (!empty($payload['image'])) {
+                $this->isValidImage($payload['image']);
+                $postCreateStruct->imagePath = $this->downloadImage($payload['image']);
+            }
         }
 
         if (isset($payload['meta'])) {

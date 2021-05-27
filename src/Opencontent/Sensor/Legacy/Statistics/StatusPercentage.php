@@ -55,12 +55,14 @@ class StatusPercentage extends StatisticFactory
 
             $data = [];
             $total = $search->totalCount;
-            foreach ($search->facets[0]['data'] as $status => $count) {
-                $data[] = [
-                    'status' => $this->repository->getSensorPostStates('sensor')['sensor.' . $status]->attribute('current_translation')->attribute('name'),
-                    'percentage' => floatval(number_format($count * 100 / $total, 2)),
-                    'count' => $count
-                ];
+            if (isset($search->facets[0])) {
+                foreach ($search->facets[0]['data'] as $status => $count) {
+                    $data[] = [
+                        'status' => $this->repository->getSensorPostStates('sensor')['sensor.' . $status]->attribute('current_translation')->attribute('name'),
+                        'percentage' => floatval(number_format($count * 100 / $total, 2)),
+                        'count' => $count
+                    ];
+                }
             }
             $this->data['intervals'] = [];
             $this->data['series'] = $data;

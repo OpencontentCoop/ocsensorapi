@@ -350,7 +350,7 @@ class PostBuilder
             $image->apiUrl = 'api/sensor/file/'
                 . $attribute->attribute('id') . '-' . $attribute->attribute('version') . '-' . $attribute->attribute('language_code')
                 . '/' . base64_encode($image->fileName)
-                . '/' . $image->fileName;
+                . '/' . urlencode($image->fileName);
 
             $data[] = $image;
         }
@@ -379,7 +379,7 @@ class PostBuilder
                 $image->apiUrl = 'api/sensor/file/'
                     . $attribute->attribute('id') . '-' . $attribute->attribute('version') . '-' . $attribute->attribute('language_code')
                     . '/' . base64_encode($file->attribute('filename'))
-                    . '/' . $file->attribute('original_filename');
+                    . '/' . urlencode($file->attribute('original_filename'));
 
                 $url = 'ocmultibinary/download/' . $attribute->attribute('contentobject_id')
                     . '/' . $attribute->attribute('id')

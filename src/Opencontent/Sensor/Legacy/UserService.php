@@ -408,6 +408,9 @@ class UserService extends UserServiceBase
     public function setLastAccessDateTime(User $user, Post $post)
     {
         $timestamp = time() + 1;
+        if (!eZCollaborationItemStatus::fetch($post->internalId, $user->id)){
+            eZCollaborationItemStatus::create($post->internalId, $user->id)->store();
+        }
         eZCollaborationItemStatus::setLastRead($post->internalId, $user->id, $timestamp);
         eZCollaborationItemParticipantLink::setLastRead($post->internalId, $user->id, $timestamp);
     }

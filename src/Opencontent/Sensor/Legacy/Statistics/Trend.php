@@ -59,6 +59,7 @@ class Trend extends StatisticFactory
                 "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter} limit 1 facets [raw[{$byStartInterval}],raw[{$byEndInterval}]|alpha|100]",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
+
             $series = [
                 0 => [
 //                    'name' => $this->hasParameter('group') ? 'assegnate' : 'aperte',
@@ -76,12 +77,12 @@ class Trend extends StatisticFactory
             foreach ($facets as $facet) {
                 foreach (array_keys($facet['data']) as $value) {
                     if (!isset($intervals[$value])) {
-                        $intervals[$value] = is_callable($intervalNameParser) ? $intervalNameParser($value) : $value;
+                        $intervals[$value] = is_callable($intervalNameParser) ? (int)$intervalNameParser($value) : (int)$value;
                     }
                 }
             }
-            ksort($intervals);
 
+            asort($intervals);
             foreach ($intervals as $intervalId => $intervalName) {
                 $hasSerie = [];
                 foreach ($facets as $index => $facet) {
@@ -109,7 +110,7 @@ class Trend extends StatisticFactory
             $this->data['series'] = $series;
             $this->data['intervals'] = array_values($intervals);
             usort($this->data['series'], function ($a, $b) {
-                return strcmp($a["name"], $b["name"]);
+                return !strcmp($a["name"], $b["name"]);
             });
         }
 

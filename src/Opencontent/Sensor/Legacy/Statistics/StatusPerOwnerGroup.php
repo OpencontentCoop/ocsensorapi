@@ -69,7 +69,7 @@ class StatusPerOwnerGroup extends StatisticFactory
                 'series' => [],
             ];
 
-            $pivotItems = $search->pivot["sensor_status_lk,{$ownerGroupFacetName}"];
+            $pivotItems = isset($search->pivot) ? $search->pivot["sensor_status_lk,{$ownerGroupFacetName}"] : [];
 
             $tree = $this->hasParameter('group') ? $this->getOperatorsTree($this->getParameter('group')) : $this->getGroupTree();
 

@@ -114,12 +114,6 @@ class PostInitializer
                 $roles->getParticipantRoleById(ParticipantRole::ROLE_OBSERVER)
             );
         }
-
-        $event = new Event();
-        $event->identifier = 'on_create';
-        $event->post = $post;
-        $event->user = $this->repository->getCurrentUser();
-        $this->repository->getEventService()->fire($event);
     }
 
     public function refresh()

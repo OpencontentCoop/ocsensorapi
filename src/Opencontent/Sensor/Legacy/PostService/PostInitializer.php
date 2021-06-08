@@ -97,12 +97,6 @@ class PostInitializer
             ->getFirstScenariosByTrigger($post, ScenarioService::INIT_POST, new SearchScenarioParameters(true));
 
         $this->repository->getScenarioService()->applyScenario($scenario, $post, ScenarioService::INIT_POST);
-
-        $event = new Event();
-        $event->identifier = 'on_create';
-        $event->post = $post;
-        $event->user = $this->repository->getCurrentUser();
-        $this->repository->getEventService()->fire($event);
     }
 
     public function refresh()

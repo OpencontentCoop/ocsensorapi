@@ -10,6 +10,10 @@ abstract class StatisticFactory
 
     protected $authorFiscalCode;
 
+    protected $renderSettings = [
+        'use_highstock' => false
+    ];
+
     abstract public function getIdentifier();
 
     abstract public function getName();
@@ -51,7 +55,7 @@ abstract class StatisticFactory
 
     public function attributes()
     {
-        return ['name', 'identifier', 'description'];
+        return ['name', 'identifier', 'description', 'render_settings'];
     }
 
     public function hasAttribute($name)
@@ -71,6 +75,10 @@ abstract class StatisticFactory
 
         if ($name == 'description'){
             return $this->getDescription();
+        }
+
+        if ($name == 'render_settings'){
+            return $this->renderSettings;
         }
 
         return null;

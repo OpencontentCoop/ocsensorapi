@@ -141,4 +141,30 @@ class Utils
     {
         return new \DateTimeZone('Europe/Rome');
     }
+
+    public static function generateDateTimeIndexes(\DateTimeInterface $dateTime)
+    {
+        $month = $dateTime->format('n');
+        if ($month >= 10) $quarter = 4;
+        elseif ($month >= 7) $quarter = 3;
+        elseif ($month >= 4) $quarter = 2;
+        else $quarter = 1;
+
+        if ($month >= 6) $semester = 2;
+        else $semester = 1;
+
+        $data['day'] = $dateTime->format('Yz');
+        $weekNum = $dateTime->format('W');
+        if ($weekNum == 53){
+            $weekNum = $dateTime->format('m') == '01' ? '01' : '52';
+        }
+        $data['week'] = $dateTime->format('Y') . $weekNum;
+        $data['month'] = $dateTime->format('Ym');
+        $data['quarter'] = $dateTime->format('Y') . $quarter;
+        $data['semester'] = $dateTime->format('Y') . $semester;
+        $data['year'] = $dateTime->format('Y');
+
+        return $data;
+    }
+
 }

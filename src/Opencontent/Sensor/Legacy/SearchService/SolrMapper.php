@@ -105,7 +105,7 @@ class SolrMapper
             'user_*_responses' => 'sensor_user_*_responses_i',
 
             'day' => 'sensor_day_i',
-            'month' => 'sensor_week_i',
+            'week' => 'sensor_week_i',
             'month' => 'sensor_month_i',
             'quarter' => 'sensor_quarter_i',
             'semester' => 'sensor_semester_i',
@@ -303,6 +303,14 @@ class SolrMapper
                 $lastAssignmentDate = $message->published;
             }
         }
+
+        //se la segnalazione è ancora aperta non imposta il last_owner se non ci sono operatori incaricati
+        if ($lastOwnerUserId > 0
+            && $this->post->status->identifier == 'open'
+            && empty($this->post->owners->getParticipantIdListByType(Participant::TYPE_USER))){
+            $lastOwnerUserId = 0;
+        }
+
         $data['sensor_history_owner_name_lk'] = implode(',', $ownerHistory);
         $data['sensor_history_owner_id_lk'] = implode(',', array_keys($ownerHistory));
         if ($lastOwnerUserId > 0){
@@ -436,27 +444,7 @@ class SolrMapper
 
     private function generateDateTimeIndexes(\DateTimeInterface $dateTime)
     {
-        $month = $dateTime->format('n');
-        if ($month >= 10) $quarter = 4;
-        elseif ($month >= 7) $quarter = 3;
-        elseif ($month >= 4) $quarter = 2;
-        else $quarter = 1;
-
-        if ($month >= 6) $semester = 2;
-        else $semester = 1;
-
-        $data['day'] = $dateTime->format('Yz');
-        $weekNum = $dateTime->format('W');
-        if ($weekNum == 53){
-            $weekNum = $dateTime->format('m') == '01' ? '01' : '52';
-        }
-        $data['week'] = $dateTime->format('Y') . $weekNum;
-        $data['month'] = $dateTime->format('Ym');
-        $data['quarter'] = $dateTime->format('Y') . $quarter;
-        $data['semester'] = $dateTime->format('Y') . $semester;
-        $data['year'] = $dateTime->format('Y');
-
-        return $data;
+        return Utils::generateDateTimeIndexes($dateTime);
     }
 
     public static function getExecutionTimesMap()

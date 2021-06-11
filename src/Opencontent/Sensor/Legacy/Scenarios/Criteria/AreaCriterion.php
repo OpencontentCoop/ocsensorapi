@@ -49,13 +49,13 @@ class AreaCriterion extends Exportable implements ScenarioCriterion
             return true;
         }
 
-        foreach ($post->areas as $category) {
-            if (!in_array($category->id, $this->idList)) {
-                return false;
+        foreach ($post->areas as $area) {
+            if (in_array($area->id, $this->idList)) {
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 
     public function jsonSerialize()

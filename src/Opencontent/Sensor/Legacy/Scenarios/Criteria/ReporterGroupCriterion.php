@@ -51,12 +51,12 @@ class ReporterGroupCriterion extends Exportable implements ScenarioCriterion
 
         $reporterGroups = $post->reporter->groups;
         foreach ($reporterGroups as $groupId){
-            if (!in_array($groupId, $this->idList)){
-                return false;
+            if (in_array($groupId, $this->idList)){
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 
     public function jsonSerialize()

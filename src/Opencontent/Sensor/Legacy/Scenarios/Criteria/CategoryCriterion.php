@@ -50,12 +50,12 @@ class CategoryCriterion extends Exportable implements ScenarioCriterion
         }
 
         foreach ($post->categories as $category){
-            if (!in_array($category->id, $this->idList)){
-                return false;
+            if (in_array($category->id, $this->idList)){
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 
     public function jsonSerialize()

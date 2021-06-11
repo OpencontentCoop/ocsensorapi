@@ -155,7 +155,7 @@ class AssignAction extends ActionDefinition
         // se ci sono modifiche agli utenti aggiungo un messaggio di timeline
         if (!empty($owners)){
             $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::ASSIGNED);
-            $workflowOwners = array_merge($owners, $groupChanges['already_owners']);
+            $workflowOwners = array_merge($owners, $groupChanges['already_owners'], $userChanges['already_owners']);
             $repository->getLogger()->debug('Set workflow status', $workflowOwners);
             $repository->getMessageService()->addTimelineItemByWorkflowStatus($post, Post\WorkflowStatus::ASSIGNED, $workflowOwners);
             $doRefresh = true;

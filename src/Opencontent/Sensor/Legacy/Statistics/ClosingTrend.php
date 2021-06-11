@@ -46,9 +46,15 @@ class ClosingTrend extends StatisticFactory
     public function getDataFields()
     {
         $repo = new \SensorDailyReportRepository();
-        $fields = ['percentage_sf' => 'Totale'];
+        $fields = ['percentage_sf' => [
+            'label' => 'Totale',
+            'color' => $this->getColor('close')
+        ]];
         foreach ($repo->getCategories() as $id => $category) {
-            $fields['percentage_cat_'. $id .'_sf'] = $category['name'];
+            $fields['percentage_cat_'. $id .'_sf'] = [
+                'label' => $category['name'],
+                'color' => $this->getColor($id)
+            ];
         }
 
         return $fields;
@@ -69,12 +75,13 @@ class ClosingTrend extends StatisticFactory
         $stats = $data['stats']['stats_fields'];
 
         $series = [];
-        foreach ($fields as $percentageField => $name) {
+        foreach ($fields as $percentageField => $values) {
             $percentages = $this->getPercentages($stats, $percentageField);
             if ($percentages) {
                 $series[] = [
-                    'name' => $name,
+                    'name' => $values['label'],
                     'data' => $percentages,
+                    'color' => $values['color'],
                     'visible' => $percentageField === 'percentage_sf',
                 ];
             }

@@ -88,6 +88,7 @@ class PostAging extends StatisticFactory
                 $series[] = [
                     'name' => $tree[$groupId],
                     'data' => $serieData,
+                    'color' => $this->getColor($groupId),
                     'id' => $groupId
                 ];
             }

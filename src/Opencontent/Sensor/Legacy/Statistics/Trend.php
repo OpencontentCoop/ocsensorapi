@@ -64,10 +64,12 @@ class Trend extends StatisticFactory
                 0 => [
 //                    'name' => $this->hasParameter('group') ? 'assegnate' : 'aperte',
                     'name' => 'inserite',
+                    'color' => $this->getColor('open'),
                     'data' => []
                 ],
                 1 => [
                     'name' => 'chiuse',
+                    'color' => $this->getColor('close'),
                     'data' => []
                 ]
             ];

@@ -63,6 +63,7 @@ class PerArea extends StatisticFactory
             foreach ($pivotItems as $pivotItem) {
                 $item = [
                     'name' => trim($this->repository->getAreaService()->loadArea((int)$pivotItem['value'])->name),
+                    'color' => $this->getColor($pivotItem['value']),
                     'data' => []
                 ];
                 $item['data'][] = [

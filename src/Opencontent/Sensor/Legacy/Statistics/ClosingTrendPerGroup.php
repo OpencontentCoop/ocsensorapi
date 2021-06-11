@@ -23,10 +23,16 @@ class ClosingTrendPerGroup extends ClosingTrend
 
     public function getDataFields()
     {
-        $fields = ['percentage_sf' => 'Totale'];
+        $fields = ['percentage_sf' => [
+            'label' => 'Totale',
+            'color' => $this->getColor('close')
+        ]];
         $repo = new \SensorDailyReportRepository();
         foreach ($repo->getGroups() as $id => $group) {
-            $fields['percentage_group_'. $id .'_sf'] = $group['name'];
+            $fields['percentage_group_'. $id .'_sf'] = [
+                'label' => $group['name'],
+                'color' => $this->getColor($id)
+            ];
         }
 
         return $fields;

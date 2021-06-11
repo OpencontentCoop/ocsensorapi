@@ -98,11 +98,13 @@ class StatusPerCategory extends StatisticFactory
                 0 => [
                     'name' => 'Chiusa',
                     'data' => $serie,
+                    'color' => $this->getColor('close'),
                     'id' => 0
                 ],
                 1 => [
                     'name' => 'Aperta',
                     'data' => $serie,
+                    'color' => $this->getColor('open'),
                     'id' => 1
                 ],
             ];
@@ -149,7 +151,8 @@ class StatusPerCategory extends StatisticFactory
             $series[2] = [
                 'name' => 'Totale',
                 'data' => $totals,
-                'id' => 2
+                'id' => 2,
+                'color' => $this->getColor('pareto'),
             ];
 
             $this->data['series'] = $series;

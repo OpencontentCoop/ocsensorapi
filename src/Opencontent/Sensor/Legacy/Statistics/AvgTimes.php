@@ -62,6 +62,7 @@ class AvgTimes extends StatisticFactory
             foreach ($search->stats['stats_fields'] as $name => $values) {
                 $item = [
                     'name' => $this->getTimeName($name),
+                    'color' => $this->getColor($name),
                     'data' => []
                 ];
                 $item['data'][] = [

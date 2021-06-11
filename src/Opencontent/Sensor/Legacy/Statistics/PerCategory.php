@@ -66,6 +66,7 @@ class PerCategory extends StatisticFactory
             foreach ($pivotItems as $pivotItem) {
                 $item = [
                     'name' => (int)$pivotItem['value'],
+                    'color' => $this->getColor($pivotItem['value']),
                     'data' => []
                 ];
                 $item['data'][] = [

@@ -129,6 +129,7 @@ class StatusPerOwnerGroup extends StatisticFactory
                 $series[2] = [
                     'name' => 'Totale',
                     'data' => $totals,
+                    'color' => $this->getColor('pareto'),
                     'id' => 2
                 ];
             }
@@ -220,11 +221,13 @@ class StatusPerOwnerGroup extends StatisticFactory
             0 => [
                 'name' => 'Chiusa',
                 'data' => $serie,
+                'color' => $this->getColor('close'),
                 'id' => 0
             ],
             1 => [
                 'name' => 'Aperta',
                 'data' => $serie,
+                'color' => $this->getColor('open'),
                 'id' => 1
             ],
         ];

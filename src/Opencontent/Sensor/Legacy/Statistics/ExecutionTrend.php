@@ -94,6 +94,7 @@ class ExecutionTrend extends StatisticFactory
                 }
                 $series[] = [
                     'name' => $tree[$groupId],
+                    'color' => $this->getColor($groupId),
                     'data' => $serieData,
                     'id' => $groupId
                 ];

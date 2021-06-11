@@ -49,23 +49,23 @@ class StatusPercentage extends StatisticFactory
             $typeFilter = $this->getTypeFilter();
 
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter} facets [status] limit 1",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter} facets [status|alpha] limit 1",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
 
-            $data = [];
             $total = $search->totalCount;
             if (isset($search->facets[0])) {
                 foreach ($search->facets[0]['data'] as $status => $count) {
-                    $data[] = [
+                    $data[$status] = [
                         'status' => $this->repository->getSensorPostStates('sensor')['sensor.' . $status]->attribute('current_translation')->attribute('name'),
                         'percentage' => floatval(number_format($count * 100 / $total, 2)),
-                        'count' => $count
+                        'count' => $count,
+                        'color' => $this->getColor($status)
                     ];
                 }
             }
             $this->data['intervals'] = [];
-            $this->data['series'] = $data;
+            $this->data['series'] = array_values($data);
         }
 
         return $this->data;

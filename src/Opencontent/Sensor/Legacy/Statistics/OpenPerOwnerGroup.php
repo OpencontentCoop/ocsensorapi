@@ -27,6 +27,7 @@ class OpenPerOwnerGroup extends StatusPerOwnerGroup
             1 => [
                 'name' => 'Aperta',
                 'data' => $serie,
+                'color' => $this->getColor('open'),
                 'id' => 1
             ],
         ];

@@ -289,6 +289,8 @@ class SolrMapper
         $lastAssignmentDate = false;
         if ($assignedList) {
             foreach ($assignedList->messages as $message) {
+                $lastOwnerUserId = 0;
+                $lastOwnerGroupId = 0;
                 foreach ($message->extra as $id) {
                     $participant = $this->post->participants->getParticipantById($id);
                     if ($participant) {
@@ -304,21 +306,22 @@ class SolrMapper
             }
         }
 
-        //se la segnalazione è ancora aperta non imposta il last_owner se non ci sono operatori incaricati
+        //se la segnalazione è ancora aperta non imposta il last_owner* se non ci sono assegnatari
         if ($lastOwnerUserId > 0
             && $this->post->status->identifier == 'open'
             && empty($this->post->owners->getParticipantIdListByType(Participant::TYPE_USER))){
             $lastOwnerUserId = 0;
         }
+        if ($lastOwnerGroupId > 0
+            && $this->post->status->identifier == 'open'
+            && empty($this->post->owners->getParticipantIdListByType(Participant::TYPE_GROUP))){
+            $lastOwnerGroupId = 0;
+        }
 
         $data['sensor_history_owner_name_lk'] = implode(',', $ownerHistory);
         $data['sensor_history_owner_id_lk'] = implode(',', array_keys($ownerHistory));
-        if ($lastOwnerUserId > 0){
-            $data['sensor_last_owner_user_id_i'] = $lastOwnerUserId;
-        }
-        if ($lastOwnerGroupId > 0){
-            $data['sensor_last_owner_group_id_i'] = $lastOwnerGroupId;
-        }
+        $data['sensor_last_owner_user_id_i'] = $lastOwnerUserId;
+        $data['sensor_last_owner_group_id_i'] = $lastOwnerGroupId;
 
         $areaList = array();
         foreach ($this->post->areas as $area)

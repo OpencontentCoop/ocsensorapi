@@ -53,7 +53,6 @@ class StatusPerOwnerGroup extends StatisticFactory
             $groupFilter = $this->getOwnerGroupFilter();
             $typeFilter = $this->getTypeFilter();
 
-            //$ownerGroupFacetName = 'sensor_history_owner_id_lk';
             $ownerGroupFacetName = 'sensor_last_owner_group_id_i';
             if ($this->hasParameter('group')) {
                 $ownerGroupFacetName = 'sensor_last_owner_user_id_i';
@@ -143,6 +142,10 @@ class StatusPerOwnerGroup extends StatisticFactory
     private function getGroupTree()
     {
         $tree = [];
+        $tree[0] = [
+            'name' => 'Nessun gruppo incaricato',
+            'children' => []
+        ];
         $groupTree = $this->repository->getGroupsTree();
         if ($this->hasParameter('taggroup')){
             $groupTagCounter = [];
@@ -185,6 +188,10 @@ class StatusPerOwnerGroup extends StatisticFactory
     private function getOperatorsTree($groupIdList)
     {
         $tree = [];
+        $tree[0] = [
+            'name' => 'Nessun operatore incaricato',
+            'children' => []
+        ];
         foreach ($groupIdList as $groupId) {
             $group = $this->repository->getGroupService()->loadGroup($groupId);
             if ($group instanceof Group) {

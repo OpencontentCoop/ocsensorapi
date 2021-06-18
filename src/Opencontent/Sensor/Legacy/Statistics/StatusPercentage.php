@@ -53,6 +53,7 @@ class StatusPercentage extends StatisticFactory
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
 
+            $data = [];
             $total = $search->totalCount;
             if (isset($search->facets[0])) {
                 foreach ($search->facets[0]['data'] as $status => $count) {

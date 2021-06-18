@@ -31,7 +31,7 @@ class StatisticsService extends \Opencontent\Sensor\Core\StatisticsService
             $accessibleChartIdentifiers = [];
             $policies = $accessArray[$module][$function];
             foreach ($policies as $policyIdentifier => $limitationArray) {
-                foreach ($limitationArray as $limitationIdentifier => $limitationValues) {
+                foreach ((array)$limitationArray as $limitationIdentifier => $limitationValues) {
                     switch ($limitationIdentifier) {
                         case '*':
                             if ($limitationValues == '*') {

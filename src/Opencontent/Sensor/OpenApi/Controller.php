@@ -95,13 +95,13 @@ class Controller
             $result->variables = $searchResults;
         }else {
             $postSearchResults = [
-                'self' => $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->query, $this->getRequestParameters(), $parameters),
+                'self' => $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->query, $parameters),
                 'next' => null,
                 'items' => $this->serializer->setEmbedFields($this->getRequestParameter('embed'))->serializeItems($searchResults->searchHits),
                 'count' => (int)$searchResults->totalCount,
             ];
             if ($searchResults->nextPageQuery) {
-                $postSearchResults['next'] = $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->nextPageQuery, $this->getRequestParameters(), $parameters);
+                $postSearchResults['next'] = $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->nextPageQuery, $parameters);
             }
             $result->variables = $postSearchResults;
         }
@@ -1396,11 +1396,6 @@ class Controller
         return $imagePath;
     }
 
-    private function getRequestParameters()
-    {
-        return $this->restController->getRequest()->variables;
-    }
-
     private function getRequestParameter($name)
     {
         $parameters = array_merge(
@@ -1424,7 +1419,7 @@ class Controller
         return false;
     }
 
-    private function convertQueryInQueryParameters($query, $parameters = array(), $extraParameters = array())
+    private function convertQueryInQueryParameters($query, $extraParameters = array())
     {
         try {
             $queryBuilder = new QueryBuilder($this->repository->getPostApiClass());
@@ -1442,10 +1437,18 @@ class Controller
 
             $convertedQuery = $convertedQuery->getArrayCopy();
             $data = [];
+
+            $parameters = array_merge(
+                $this->restController->getRequest()->variables,
+                $this->restController->getRequest()->get
+            );
             foreach ($parameters as $key => $value) {
                 if (isset($convertedQuery[$key])) {
                     $data[$key] = is_array($convertedQuery[$key]) ? $convertedQuery[$key][0] : $convertedQuery[$key];
                 }
+            }
+            if (isset($parameters['embed'])){
+                $data['embed'] = $parameters['embed'];
             }
 
             foreach ($extraParameters as $key => $value){

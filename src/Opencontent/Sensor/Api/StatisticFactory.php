@@ -10,6 +10,8 @@ abstract class StatisticFactory
 
     protected $authorFiscalCode;
 
+    protected $repository;
+
     protected $renderSettings = [
         'use_highstock' => false
     ];
@@ -102,6 +104,11 @@ abstract class StatisticFactory
 
     protected function getColor($identifier)
     {
+        if ($this->repository instanceof Repository
+            && !$this->repository->getSensorSettings()->get('UseStatCalculatedColor')) {
+            return false;
+        }
+        
         $color = false;
         switch ($identifier) {
             case 'open':

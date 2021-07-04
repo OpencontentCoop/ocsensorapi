@@ -48,16 +48,20 @@ class SolrMapper
             'open_weekday' => 'sensor_open_weekday_si',
             'read_timestamp' => 'sensor_read_timestamp_i',
             'read' => 'sensor_read_dt',
+            'is_read' => 'sensor_is_read_i',
             'reading_time' => 'sensor_reading_time_i',
             'assigned_timestamp' => 'sensor_assigned_timestamp_i',
             'assigned' => 'sensor_assigned_dt',
+            'is_assigned' => 'sensor_is_assigned_i',
             'assigning_time' => 'sensor_assigning_time_i',
             'fix_timestamp' => 'sensor_fix_timestamp_i',
             'fix' => 'sensor_fix_dt',
+            'is_fixed' => 'sensor_is_fixed_i',
             'fixing_time' => 'sensor_fixing_time_i',
             'close_timestamp' => 'sensor_close_timestamp_i',
             'close' => 'sensor_close_dt',
             'closing_time' => 'sensor_closing_time_i',
+            'is_closed' => 'sensor_is_closed_i',
 
             'open_read_time' => 'sensor_open_read_time_i',
             'read_assign_time' => 'sensor_read_assign_time_i',
@@ -174,11 +178,18 @@ class SolrMapper
             $data['sensor_open_weekday_si'] = $this->post->published->format('w');
         }
 
+        $data['sensor_is_read_i'] = 0;
+        $data['sensor_is_assigned_i'] = 0;
+        $data['sensor_is_fixed_i'] = 0;
+        $data['sensor_is_closed_i'] = 0;
+
         $assignedList = false;
         $firstAssignmentDate = false;
         $closingDate = false;
         if ($this->post->timelineItems instanceof \Opencontent\Sensor\Api\Values\Message\TimelineItemCollection) {
-            $read = $this->post->timelineItems->getByType('read')->first();
+            $readList = $this->post->timelineItems->getByType('read');
+            $data['sensor_is_read_i'] = $readList->count();
+            $read = $readList->first();
             if ($read && $read->published instanceof \DateTime) {
                 $data['sensor_read_timestamp_i'] = (int)$read->published->format('U');
                 $data['sensor_read_dt'] = strftime(
@@ -190,6 +201,7 @@ class SolrMapper
             }
 
             $assignedList = $this->post->timelineItems->getByType('assigned');
+            $data['sensor_is_assigned_i'] = $assignedList->count();
             $assigned = $assignedList->first();
             if ($assigned && $assigned->published instanceof \DateTime) {
                 $data['sensor_assigned_timestamp_i'] = (int)$assigned->published->format('U');
@@ -202,7 +214,9 @@ class SolrMapper
                 $firstAssignmentDate = $assigned->published;
             }
 
-            $fix = $this->post->timelineItems->getByType('fixed')->last();
+            $fixList = $this->post->timelineItems->getByType('fixed');
+            $data['sensor_is_fixed_i'] = $fixList->count();
+            $fix = $fixList->last();
             if ($fix && $fix->published instanceof \DateTime) {
                 $data['sensor_fix_timestamp_i'] = (int)$fix->published->format('U');
                 $data['sensor_fix_dt'] = strftime(
@@ -214,7 +228,9 @@ class SolrMapper
                 $data['sensor_fixing_time_i'] = Utils::getDateIntervalSeconds($interval);
             }
 
-            $close = $this->post->timelineItems->getByType('closed')->last();
+            $closeList = $this->post->timelineItems->getByType('closed');
+            $data['sensor_is_closed_i'] = $closeList->count();
+            $close = $closeList->last();
             if ($close && $close->published instanceof \DateTime) {
                 $data['sensor_close_timestamp_i'] = (int)$close->published->format('U');
                 $data['sensor_close_dt'] = strftime(

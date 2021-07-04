@@ -381,6 +381,8 @@ class MessageService extends MessageServiceBase
             $simpleMessage->store();
         }
 
+        $this->repository->getLogger()->debug("Store {$struct->getType()} message #" . $simpleMessage->attribute('id') . ': ' . substr($struct->text, 0, 30) . '...');
+
         return $simpleMessage;
     }
 

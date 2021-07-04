@@ -51,7 +51,7 @@ class MailNotificationListener extends AbstractListener
                         $addresses = array_unique($addresses);
                         if ($mailData && !empty($addresses)) {
                             if ($this->sendMail($addresses, $mailData['subject'], $mailData['body'], $mailData['parameters'])) {
-                                $this->repository->getLogger()->info("Prepared notification mail to {$role->name} addresses: " . implode(',', $addresses));
+                                $this->repository->getLogger()->info("Prepare notification mail to {$role->name} addresses: " . implode(',', $addresses));
                                 $auditMessages[] = "Invio notifica '{$notificationType->name}' a utenti con ruolo '{$role->name}': " . implode(', ', $addresses);
                             }
                         }

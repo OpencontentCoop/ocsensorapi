@@ -25,4 +25,11 @@ class MessageStruct
     public $text;
 
     public $id;
+
+    public function getType()
+    {
+        $classNameWithNamespace = get_class($this);
+        $name = substr($classNameWithNamespace, strrpos($classNameWithNamespace, '\\')+1);
+        return strtolower(str_replace('Struct', '', $name));
+    }
 }

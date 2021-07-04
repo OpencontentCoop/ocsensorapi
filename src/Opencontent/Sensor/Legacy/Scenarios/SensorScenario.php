@@ -2,6 +2,7 @@
 
 namespace Opencontent\Sensor\Legacy\Scenarios;
 
+use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Values\Group;
 use Opencontent\Sensor\Api\Values\Operator;
 use Opencontent\Sensor\Api\Values\Post;
@@ -41,7 +42,10 @@ class SensorScenario extends Scenario
             $this->ownersIdList = array_map( 'intval', explode('-', $dataMap['owner']->toString()));
         }
         if (isset($dataMap['observer']) && $dataMap['observer']->hasContent()) {
-            $this->observersIdList = array_map( 'intval', explode('-', $dataMap['observer']->toString()));
+            $this->observersIdList = array_map('intval', explode('-', $dataMap['observer']->toString()));
+        }
+        if (isset($dataMap['category']) && $dataMap['category']->hasContent()) {
+            $this->category = (int)$dataMap['category']->toString();
         }
 
         if (isset($dataMap['criterion_type']) && $dataMap['criterion_type']->hasContent()) {
@@ -216,17 +220,24 @@ class SensorScenario extends Scenario
     public function jsonSerialize()
     {
         $data = parent::jsonSerialize();
-        foreach ($data['assignments'] as $role => $idList){
-            $users = [];
-            foreach ($idList as $id){
-                $user = $this->repository->getUserService()->loadUser($id);
-                //$user = $this->repository->getOperatorService()->loadOperator($id, []);
-                if (!$user->email){
-                    $user = $this->repository->getGroupService()->loadGroup($id, []);
+        foreach ($data['assignments'] as $role => $assignments){
+            if ($role === 'category'){
+                if ($assignments){
+                    try {
+                        $data['assignments'][$role] = $this->repository->getCategoryService()->loadCategory($assignments);
+                    }catch (NotFoundException $e){}
                 }
-                $users[] = $user;
+            }elseif (in_array($role, ['approver', 'owner_group', 'owner', 'observer'])){
+                $users = [];
+                foreach ($assignments as $id) {
+                    $user = $this->repository->getUserService()->loadUser($id);
+                    if (!$user->email) {
+                        $user = $this->repository->getGroupService()->loadGroup($id, []);
+                    }
+                    $users[] = $user;
+                }
+                $data['assignments'][$role] = $users;
             }
-            $data['assignments'][$role] =  $users;
         }
         $data['assignments']['reporter_as_approver'] = $this->makeReporterAsApprover;
         $data['assignments']['reporter_as_owner'] = $this->makeReporterAsOwner;
@@ -261,7 +272,7 @@ class SensorScenario extends Scenario
         $data = $this->jsonSerialize();
         $assignments = $data['assignments'];
         $details = [];
-        foreach ($assignments as $role => $users){
+        foreach ($assignments as $role => $data){
             $roleName = false;
             if ($role == 'approver'){
                 $roleName = 'Riferimento';
@@ -271,12 +282,15 @@ class SensorScenario extends Scenario
                 $roleName = 'Incaricato';
             }elseif ($role == 'observer'){
                 $roleName = 'Osservatore';
+            }elseif ($role == 'category'){
+                $roleName = 'Categoria';
             }
-
             if ($roleName){
                 $nameList = [];
-                foreach ($users as $user){
-                    $nameList[] = $user->name;
+                if (is_array($data)) {
+                    foreach ($data as $item) {
+                        $nameList[] = $item->name;
+                    }
                 }
                 if ($role == 'approver' && $assignments['reporter_as_approver']){
                     $nameList[] = 'Operatore segnalatore';
@@ -289,6 +303,8 @@ class SensorScenario extends Scenario
                     }
                 }elseif ($role == 'observer' && $assignments['reporter_as_observer']){
                     $nameList[] = 'Operatore segnalatore';
+                }elseif ($role == 'category' && $data instanceof Post\Field\Category){
+                    $nameList[] = $data->name;
                 }
                 if (!empty($nameList)) {
                     $details[] = ' • ' . $roleName . ': ' . implode(', ', $nameList);

@@ -20,6 +20,8 @@ abstract class ScenarioService implements ScenarioServiceInterface
 
     protected $roles;
 
+    private static $avoidRecursion = [];
+
     /**
      * @param Repository $repository
      */
@@ -40,6 +42,20 @@ abstract class ScenarioService implements ScenarioServiceInterface
 
         try {
             $this->repository->getLogger()->debug("Start apply scenario $scenario->id on post $post->id in trigger $trigger");
+
+            if (isset(self::$avoidRecursion[$scenario->id][$post->id])){
+                $this->repository->getLogger()->error("Avoid recursion applying scenario $scenario->id on post $post->id in trigger $trigger: abort the execution!");
+                $auditStruct = new AuditStruct();
+                $auditStruct->createdDateTime = new \DateTime();
+                $auditStruct->creator = $this->repository->getUserService()->loadUser(\eZINI::instance()->variable("UserSettings", "UserCreatorID")); //@todo
+                $auditStruct->post = $post;
+                $auditStruct->text = "Error! A recursive execution detected: abort the scenario #{$scenario->id} execution!";
+                $this->repository->getMessageService()->createAudit($auditStruct);
+                $this->repository->getPostService()->refreshPost($post);
+
+                return false;
+            }
+            self::$avoidRecursion[$scenario->id][$post->id] = true;
 
             if ($trigger === self::INIT_POST) {
 
@@ -95,6 +111,14 @@ abstract class ScenarioService implements ScenarioServiceInterface
                 if ($scenario->getExpiry() > 0){
                     $this->repository->getActionService()->runAction(
                         new Action('set_expiry', ['expiry_days' => $scenario->getExpiry()], true),
+                        $post
+                    );
+                    $post = $this->repository->getPostService()->loadPost($post->id);
+                }
+
+                if ($scenario->hasCategory()){
+                    $this->repository->getActionService()->runAction(
+                        new Action('add_category', ['category_id' => [$scenario->getCategory()]], true),
                         $post
                     );
                     $post = $this->repository->getPostService()->loadPost($post->id);

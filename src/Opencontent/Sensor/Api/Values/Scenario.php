@@ -25,24 +25,29 @@ class Scenario extends Exportable
     /**
      * @var integer[]
      */
-    protected $approversIdList = array();
+    protected $approversIdList = [];
 
     /**
      * @var integer[]
      */
-    protected $ownersIdList = array();
+    protected $ownersIdList = [];
 
     /**
      * @var integer[]
      */
-    protected $ownerGroupsIdList = array();
+    protected $ownerGroupsIdList = [];
 
     /**
      * @var integer[]
      */
-    protected $observersIdList = array();
+    protected $observersIdList = [];
 
     protected $expiry;
+
+    /**
+     * @var integer
+     */
+    protected $category;
 
     /**
      * @var Post
@@ -128,6 +133,22 @@ class Scenario extends Exportable
     /**
      * @return integer
      */
+    public function getCategory()
+    {
+        return $this->category;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasCategory()
+    {
+        return intval($this->category) > 0;
+    }
+
+    /**
+     * @return integer
+     */
     public function getExpiry()
     {
         return (int)$this->expiry;
@@ -147,6 +168,7 @@ class Scenario extends Exportable
             'owner_group' => $this->getOwnerGroups(),
             'owner' => $this->getOwners(),
             'observer' => $this->getObservers(),
+            'category' => $this->getCategory(),
         ];
         $objectVars['expiry'] = $this->getExpiry() > 0 ? $this->getExpiry() : null;
 

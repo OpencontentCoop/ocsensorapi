@@ -170,15 +170,15 @@ class StatusPercentage extends StatisticFactory
                 }
                 $series[2]['data'][] = [
                     'interval' => 'all',
-                    'count' => $global['pending']
+                    'count' => isset($global['pending']) ? $global['pending'] : 0
                 ];
                 $series[1]['data'][] = [
                     'interval' => 'all',
-                    'count' => $global['open']
+                    'count' => isset($global['open']) ? $global['open'] : 0
                 ];
                 $series[0]['data'][] = [
                     'interval' => 'all',
-                    'count' => $global['close']
+                    'count' => isset($global['close']) ? $global['close'] : 0
                 ];
 
                 $this->data['series'] = $series;

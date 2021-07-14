@@ -10,6 +10,8 @@ use Opencontent\Sensor\Api\Values\Post\Field\Area;
 use Opencontent\Sensor\Api\Values\Post\Field\GeoBounding;
 use Opencontent\Sensor\Api\Values\Post\Field\GeoLocation;
 use eZContentObject;
+use Location\Coordinate;
+use Location\Polygon;
 
 class AreaService extends \Opencontent\Sensor\Core\AreaService
 {
@@ -20,10 +22,12 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
      */
     protected $repository;
 
-    public function loadArea($areaId)
+    private $polygons;
+
+    public function loadArea($areaId, $limitations = null)
     {
         try {
-            $content = $this->searchOne("id = '$areaId'");
+            $content = $this->searchOne("id = '$areaId'", $limitations);
 
             return $this->internalLoadArea($content);
         } catch (\Exception $e) {
@@ -138,4 +142,42 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
         return $this->repository->getAreasRootNode()->attribute('node_id');
     }
 
+    public function findAreaByGeoLocation(GeoLocation $geoLocation)
+    {
+        if ($this->polygons === null) {
+            $areas = $this->repository->getAreasTree()->toArray();
+            $this->polygons = [];
+            foreach ($areas['children'][0]['children'] as $area) {
+                $geoJson = json_decode($area['bounding_box']['geo_json'], true);
+                $this->polygons[$area['id']] = [];
+                foreach ($geoJson['features'] as $feature) {
+                    if ($feature['geometry']['type'] === 'Polygon' || $feature['geometry']['type'] === 'MultiPolygon') {
+                        $geofence = new Polygon();
+                        foreach ($feature['geometry']['coordinates'] as $coordinates) {
+                            foreach ($coordinates as $coordinate) {
+                                if (is_numeric($coordinate[0])) { //Polygon
+                                    $geofence->addPoint(new Coordinate($coordinate[1], $coordinate[0]));
+                                } else { // MultiPolygon
+                                    foreach ($coordinate as $coordinate_) {
+                                        $geofence->addPoint(new Coordinate($coordinate_[1], $coordinate_[0]));
+                                    }
+                                }
+                            }
+                        }
+                        $this->polygons[(int)$area['id']][] = $geofence;
+                    }
+                }
+            }
+        }
+        $point = new Coordinate($geoLocation->latitude, $geoLocation->longitude);
+        foreach ($this->polygons as $areaId => $geofences){
+            foreach ($geofences as $geofence){
+                if ($geofence->contains($point)){
+                    return $this->loadArea($areaId, []);
+                }
+            }
+        }
+
+        return null;
+    }
 }

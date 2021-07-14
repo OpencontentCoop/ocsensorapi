@@ -8,6 +8,7 @@ use Opencontent\Sensor\Legacy\Repository;
 use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
+use Opencontent\Sensor\Api\Values\Post;
 
 class PostUpdateStructValidator extends BasePostUpdateStructValidator
 {
@@ -48,13 +49,25 @@ class PostUpdateStructValidator extends BasePostUpdateStructValidator
             throw new InvalidInputException("Privacy {$updateStruct->privacy} is invalid");
         }
 
+        $area = false;
         if (!empty($updateStruct->areas)) {
             foreach ($updateStruct->areas as $areaId) {
                 try {
-                    $this->repository->getAreaService()->loadArea((int)$areaId);
+                    $area = $this->repository->getAreaService()->loadArea((int)$areaId);
                 } catch (NotFoundException $e) {
                     throw new InvalidInputException("Area {$areaId} is invalid");
                 }
+            }
+        }
+
+        if ($updateStruct->geoLocation instanceof Post\Field\GeoLocation){
+            $areaByGeolocation = $this->repository->getAreaService()->findAreaByGeoLocation($updateStruct->geoLocation);
+            if ($areaByGeolocation instanceof Post\Field\Area){
+                if ($area instanceof Post\Field\Area && $area->id != $areaByGeolocation->id){
+                    throw new InvalidInputException("Area {$area->id} is not consistent with the imputed geolocation");
+                }
+            }elseif ($this->repository->getSensorSettings()->get('MarkerMustBeInArea')){
+                throw new InvalidInputException($this->repository->getSensorSettings()->get('MarkerOutOfBoundsAlert'));
             }
         }
 

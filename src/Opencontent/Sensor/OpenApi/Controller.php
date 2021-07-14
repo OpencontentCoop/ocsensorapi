@@ -6,6 +6,7 @@ use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
+use Opencontent\Sensor\Api\Values\Post\Field\Area;
 use Opencontent\Sensor\Api\Values\Post\Field\GeoLocation;
 use Opencontent\Sensor\Api\Values\Post\Field\Image;
 use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
@@ -1303,10 +1304,21 @@ class Controller
             $postCreateStruct->geoLocation = $geoLocation;
         }
 
-        if (isset($payload['area']) && is_array($payload['area'])) {
-            $postCreateStruct->areas = [(int)$payload['area'][0]];
-        }elseif (isset($payload['areas']) && is_array($payload['areas'])) {
+        if (isset($payload['area'])) {
+            if (is_array($payload['area'])) {
+                $postCreateStruct->areas = [(int)$payload['area'][0]];
+            } elseif (is_numeric($payload['area'])) {
+                $postCreateStruct->areas = [(int)$payload['area']];
+            }
+        } elseif (isset($payload['areas']) && is_array($payload['areas'])) {
             $postCreateStruct->areas = (array)$payload['areas'];
+        }
+
+        if (empty($postCreateStruct->areas) && $postCreateStruct->geoLocation instanceof GeoLocation){
+            $area = $this->repository->getAreaService()->findAreaByGeoLocation($postCreateStruct->geoLocation);
+            if ($area instanceof Area){
+                $postCreateStruct->areas = [(int)$area->id];
+            }
         }
 
         if (isset($payload['category']) && !empty($payload['category'])) {

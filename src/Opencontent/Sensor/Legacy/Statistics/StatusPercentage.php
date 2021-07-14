@@ -154,7 +154,29 @@ class StatusPercentage extends StatisticFactory
                     ],
                 ];
 
+                $start = $this->hasParameter('start') ? $this->getParameter('start') : null;
+                if ($start && $start != '*') {
+                    $time = new \DateTime($start, new \DateTimeZone('UTC'));
+                    if (!$time instanceof \DateTime) {
+                        throw new \Exception("Problem with date $start");
+                    }
+                    $start = $time->format('U');
+                }
+
+                $end = $this->hasParameter('end') ? $this->getParameter('end') : null;
+                if ($end && $end != '*') {
+                    $time = new \DateTime($end, new \DateTimeZone('UTC'));
+
+                    if (!$time instanceof \DateTime) {
+                        throw new \Exception("Problem with date $end");
+                    }
+                    $end = $time->format('U');
+                }
+
                 foreach ($data as $interval => $datum){
+                    if ($start && $end && ($interval < $start || $interval > $end)){
+                        continue;
+                    }
                     $series[2]['data'][] = [
                         'interval' => $interval,
                         'count' => $datum['pending']

@@ -205,7 +205,8 @@ class SchemaBuilder
                         'tags' => [self::$tags['posts']],
                         'parameters' => array_merge(
                             $this->buildSearchParameters(['q', 'limit', 'offset', 'cursor', 'authorFiscalCode']),
-                            $this->buildEmbedParameters()
+                            $this->buildEmbedParameters(),
+                            $this->buildSortParameters()
                         ),
                     ]
                 ),
@@ -2050,6 +2051,35 @@ class SchemaBuilder
                     'owners',
                     'observers',
                 ]],
+                'nullable' => true,
+            ]),
+            'style' =>  'form',
+            'explode' =>  false,
+        ]);
+
+        return $parameters;
+    }
+
+    private function buildSortParameters()
+    {
+        $parameters = [];
+        $sortFields = array_keys(Controller::getSortFieldMap());
+        $parameters[] = new OA\Parameter('sortField', OA\Parameter::IN_QUERY, 'Sort results by field', [
+            'schema' => $this->buildSchemaProperty([
+                'type' => 'string',
+                'enum' => $sortFields,
+                'nullable' => true,
+            ]),
+            'style' =>  'form',
+            'explode' =>  false,
+        ]);
+        $parameters[] = new OA\Parameter('sortDirection', OA\Parameter::IN_QUERY, 'Sort direction', [
+            'schema' => $this->buildSchemaProperty([
+                'type' => 'string',
+                'enum' => [
+                    'asc',
+                    'desc',
+                ],
                 'nullable' => true,
             ]),
             'style' =>  'form',

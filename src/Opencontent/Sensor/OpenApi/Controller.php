@@ -51,6 +51,17 @@ class Controller
         $this->serializer = new Serializer($this->apiSettings);
     }
 
+    public static function getSortFieldMap()
+    {
+        return [
+            'id' => 'id',
+            'published_at' => 'published',
+            'modified_at' => 'modified',
+            'subject' => 'subject',
+            'type' => 'type',
+        ];
+    }
+
     public function loadPosts($authorId = null)
     {
         $q = $this->getRequestParameter('q');
@@ -58,7 +69,29 @@ class Controller
         $offset = $this->getRequestParameter('offset');
         $cursor = $this->getRequestParameter('cursor');
         $authorFiscalCode = $this->getRequestParameter('authorFiscalCode');
+
         $parameters = [];
+
+        $sortMap = self::getSortFieldMap();
+        $sortField = 'id';
+        if ($this->getRequestParameter('sortField')){
+            $sortField = $this->getRequestParameter('sortField');
+            $parameters['sortField'] = $sortField;
+        }
+        if ($sortField && !isset($sortMap[$sortField])){
+            throw new InvalidArgumentException("Invalid sort field: $sortField");
+        }
+        $sortField = $sortMap[$sortField];
+
+        $sortDirection = 'asc';
+        if ($this->getRequestParameter('sortDirection')){
+            $sortDirection = $this->getRequestParameter('sortDirection');
+            $parameters['sortDirection'] = $sortDirection;
+        }
+        if ($sortDirection != 'asc' && $sortDirection != 'desc'){
+            throw new InvalidArgumentException("Invalid sort direction: $sortDirection");
+        }
+
         if ($authorFiscalCode){
             $parameters['authorFiscalCode'] = $authorFiscalCode;
         }
@@ -78,10 +111,15 @@ class Controller
         if ($authorId){
             $query .= 'author_id = "' . (int)$authorId . '" ';
         }
+
         if ($offset !== null) {
-            $query .= "limit $limit offset $offset sort [id=>asc]";
+            $query .= "limit $limit offset $offset ";
         } else {
-            $query .= "limit $limit cursor [$cursor] sort [id=>asc]";
+            $query .= "limit $limit cursor [$cursor] ";
+        }
+
+        if ($sortField && $sortDirection){
+            $query .= "sort [$sortField=>$sortDirection] ";
         }
 
         $result = new ezpRestMvcResult();

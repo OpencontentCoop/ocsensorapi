@@ -75,6 +75,7 @@ class ExecutionTrend extends StatisticFactory
 
             $groupTree = $this->repository->getGroupsTree();
             $tree = [];
+            $tree[0] = 'Nessun gruppo incaricato';
             foreach ($groupTree->attribute('children') as $groupTreeItem) {
                 $tree[$groupTreeItem->attribute('id')] = $groupTreeItem->attribute('name');
             }

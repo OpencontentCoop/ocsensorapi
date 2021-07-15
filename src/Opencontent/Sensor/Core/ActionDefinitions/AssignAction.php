@@ -59,7 +59,7 @@ class AssignAction extends ActionDefinition
                 }
             }
             if ($type == Participant::TYPE_GROUP) {
-                if ($repository->getGroupService()->loadGroup($participantId) instanceof Group) {
+                if ($repository->getGroupService()->loadGroup($participantId, []) instanceof Group) {
                     $participantIds[] = $participantId;
                 }
             }

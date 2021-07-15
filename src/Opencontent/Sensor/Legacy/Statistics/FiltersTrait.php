@@ -2,11 +2,19 @@
 
 namespace Opencontent\Sensor\Legacy\Statistics;
 
+use Opencontent\Sensor\Api\Repository;
 use Opencontent\Sensor\Api\StatisticFactory;
+use Opencontent\Sensor\Api\Values\Group;
+use Opencontent\Sensor\Legacy\SearchService;
 use Opencontent\Sensor\Legacy\Utils;
 
 trait FiltersTrait
 {
+    /**
+     * @var Repository
+     */
+    protected $repository;
+
     protected function getCategoryFilter()
     {
         $categoryFilter = '';
@@ -224,6 +232,7 @@ trait FiltersTrait
 
         return $groupFilter;
     }
+
     protected function getTypeFilter()
     {
         $typeFilter = '';
@@ -238,5 +247,124 @@ trait FiltersTrait
         }
 
         return $typeFilter;
+    }
+
+    protected function getGroupTree($groupedByTag = false)
+    {
+        $tree = [];
+        $tree[0] = [
+            'name' => 'Nessun gruppo incaricato',
+            'children' => []
+        ];
+        $groupTree = $this->repository->getGroupsTree();
+        if ($groupedByTag){
+            $groupTagCounter = [];
+            foreach ($groupTree->attribute('children') as $groupTreeItem) {
+                $groupTag = $groupTreeItem->attribute('group');
+                if (empty($groupTag)) {
+                    $tree[$groupTreeItem->attribute('id')] = [
+                        'name' => $groupTreeItem->attribute('name'),
+                        'children' => []
+                    ];
+                }else{
+                    if (isset($groupTagCounter[$groupTag])){
+                        $groupTagId = $groupTagCounter[$groupTag];
+                    }else{
+                        $groupTagId = $groupTagCounter[$groupTag] = count($groupTagCounter) + 1;
+                    }
+
+                    if (isset($tree[$groupTagId])){
+                        $tree[$groupTagId]['children'][] = $groupTreeItem->attribute('id');
+                    }else{
+                        $tree[$groupTagId] = [
+                            'name' => $groupTag,
+                            'children' => [$groupTreeItem->attribute('id')]
+                        ];
+                    }
+                }
+            }
+        }else {
+            foreach ($groupTree->attribute('children') as $groupTreeItem) {
+                $tree[$groupTreeItem->attribute('id')] = [
+                    'name' => $groupTreeItem->attribute('name'),
+                    'children' => []
+                ];
+            }
+        }
+
+        return $tree;
+    }
+
+    protected function getOperatorsTree($groupIdList)
+    {
+        $tree = [];
+        $tree[0] = [
+            'name' => 'Nessun operatore incaricato',
+            'children' => []
+        ];
+        foreach ($groupIdList as $groupId) {
+            $group = $this->repository->getGroupService()->loadGroup($groupId);
+            if ($group instanceof Group) {
+                $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*');
+                $operators = $operatorResult['items'];
+                $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
+
+                foreach ($operators as $operator) {
+                    $tree[$operator->attribute('id')] = [
+                        'name' => $operator->attribute('name'),
+                        'children' => []
+                    ];
+                }
+            }
+        }
+
+        return $tree;
+    }
+
+    private function recursiveLoadOperatorsByGroup(Group $group, $operatorResult, &$operators)
+    {
+        if ($operatorResult['next']) {
+            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next']);
+            $operators = array_merge($operatorResult['items'], $operators);
+            $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
+        }
+
+        return $operators;
+    }
+
+    protected function getGapFilter()
+    {
+        $interval = $this->hasParameter('interval') ? $this->getParameter('interval') : StatisticFactory::DEFAULT_INTERVAL;
+        $intervalNameParser = false;
+        switch ($interval) {
+            case 'daily':
+                $byInterval = '1DAY';
+                break;
+
+            case 'weekly':
+                $byInterval = '7DAY';
+                break;
+
+            case 'monthly':
+                $byInterval = '1MONTH';
+                break;
+
+            case 'quarterly':
+                $byInterval = '3MONTH';
+                break;
+
+            case 'half-yearly':
+                $byInterval = '6MONTH';
+                break;
+
+            case 'yearly':
+                $byInterval = '1YEAR';
+                break;
+
+            default:
+                $byInterval = '1YEAR';
+        }
+
+        return $byInterval;
     }
 }

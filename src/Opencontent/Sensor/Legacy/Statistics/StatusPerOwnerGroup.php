@@ -70,7 +70,7 @@ class StatusPerOwnerGroup extends StatisticFactory
 
             $pivotItems = isset($search->pivot) ? $search->pivot["sensor_status_lk,{$ownerGroupFacetName}"] : [];
 
-            $tree = $this->hasParameter('group') ? $this->getOperatorsTree($this->getParameter('group')) : $this->getGroupTree();
+            $tree = $this->hasParameter('group') ? $this->getOperatorsTree($this->getParameter('group')) : $this->getGroupTree($this->hasParameter('taggroup'));
 
             $serie = [];
             foreach ($tree as $treeId => $treeItem) {
@@ -137,89 +137,6 @@ class StatusPerOwnerGroup extends StatisticFactory
         }
 
         return $this->data;
-    }
-
-    private function getGroupTree()
-    {
-        $tree = [];
-        $tree[0] = [
-            'name' => 'Nessun gruppo incaricato',
-            'children' => []
-        ];
-        $groupTree = $this->repository->getGroupsTree();
-        if ($this->hasParameter('taggroup')){
-            $groupTagCounter = [];
-            foreach ($groupTree->attribute('children') as $groupTreeItem) {
-                $groupTag = $groupTreeItem->attribute('group');
-                if (empty($groupTag)) {
-                    $tree[$groupTreeItem->attribute('id')] = [
-                        'name' => $groupTreeItem->attribute('name'),
-                        'children' => []
-                    ];
-                }else{
-                    if (isset($groupTagCounter[$groupTag])){
-                        $groupTagId = $groupTagCounter[$groupTag];
-                    }else{
-                        $groupTagId = $groupTagCounter[$groupTag] = count($groupTagCounter) + 1;
-                    }
-
-                    if (isset($tree[$groupTagId])){
-                        $tree[$groupTagId]['children'][] = $groupTreeItem->attribute('id');
-                    }else{
-                        $tree[$groupTagId] = [
-                            'name' => $groupTag,
-                            'children' => [$groupTreeItem->attribute('id')]
-                        ];
-                    }
-                }
-            }
-        }else {
-            foreach ($groupTree->attribute('children') as $groupTreeItem) {
-                $tree[$groupTreeItem->attribute('id')] = [
-                    'name' => $groupTreeItem->attribute('name'),
-                    'children' => []
-                ];
-            }
-        }
-
-        return $tree;
-    }
-
-    private function getOperatorsTree($groupIdList)
-    {
-        $tree = [];
-        $tree[0] = [
-            'name' => 'Nessun operatore incaricato',
-            'children' => []
-        ];
-        foreach ($groupIdList as $groupId) {
-            $group = $this->repository->getGroupService()->loadGroup($groupId);
-            if ($group instanceof Group) {
-                $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*');
-                $operators = $operatorResult['items'];
-                $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
-
-                foreach ($operators as $operator) {
-                    $tree[$operator->attribute('id')] = [
-                        'name' => $operator->attribute('name'),
-                        'children' => []
-                    ];
-                }
-            }
-        }
-
-        return $tree;
-    }
-
-    private function recursiveLoadOperatorsByGroup(Group $group, $operatorResult, &$operators)
-    {
-        if ($operatorResult['next']) {
-            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next']);
-            $operators = array_merge($operatorResult['items'], $operators);
-            $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
-        }
-
-        return $operators;
     }
 
     protected function generateSeries($serie)

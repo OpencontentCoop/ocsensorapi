@@ -86,7 +86,7 @@ class ClosingTrend extends StatisticFactory
                     'name' => $values['label'],
                     'data' => $percentages,
                     'color' => $values['color'],
-                    'visible' => $percentageField === 'percentage_sf',
+                    'visible' => $percentageField === 'percentage_sf' || $this->hasParameter('category') || $this->hasParameter('group'),
                 ];
             }
         }

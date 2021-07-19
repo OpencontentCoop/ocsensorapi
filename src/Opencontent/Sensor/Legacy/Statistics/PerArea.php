@@ -98,7 +98,7 @@ class PerArea extends StatisticFactory
         foreach ($data['series'] as $serie){
             $item = [
                 'name' => $serie['name'],
-                'color' => $serie['color'],
+                'color' => isset($serie['color']) ? $serie['color'] : null,
                 'data' => []
             ];
             foreach ($serie['data'] as $datum){
@@ -110,7 +110,7 @@ class PerArea extends StatisticFactory
                 }else{
                     $pieSeries[] = [
                         'name' => $serie['name'],
-                        'color' => $serie['color'],
+                        'color' => isset($serie['color']) ? $serie['color'] : null,
                         'y' => $datum['count']
                     ];
                 }

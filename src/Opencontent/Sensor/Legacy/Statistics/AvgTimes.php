@@ -119,7 +119,7 @@ class AvgTimes extends StatisticFactory
         foreach ($data['series'] as $serie){
             $item = [
                 'name' => $serie['name'],
-                'color' => $serie['color'],
+                'color' => isset($serie['color']) ? $serie['color'] : null,
                 'data' => []
             ];
             foreach ($serie['data'] as $datum){

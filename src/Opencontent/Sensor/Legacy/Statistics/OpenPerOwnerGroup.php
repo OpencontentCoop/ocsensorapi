@@ -54,7 +54,7 @@ class OpenPerOwnerGroup extends StatusPerOwnerGroup
             if ($serie['name'] == 'Aperta') {
                 $item = [
                     'name' => $serie['name'],
-                    'color' => $serie['color'],
+                    'color' => isset($serie['color']) ? $serie['color'] : null,
                     'type' => 'column',
                     'yAxis' => 0,
                     'zIndex' => 2,

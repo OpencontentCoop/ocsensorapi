@@ -177,7 +177,7 @@ class StatusPerOwnerGroup extends StatisticFactory
         foreach ($data['series'] as $serie){
             $item = [
                 'name' => $serie['name'],
-                'color' => $serie['color'],
+                'color' => isset($serie['color']) ? $serie['color'] : null,
                 'type' => 'column',
                 'yAxis' => 0,
                 'zIndex' => 2,

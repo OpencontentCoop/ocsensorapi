@@ -40,13 +40,36 @@ class StatusPercentage extends StatisticFactory
         return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni per stato');
     }
 
+    public function getData()
+    {
+        if ($this->data === null) {
+            $this->data = [
+                'intervals' => [],
+                'series' => [],
+            ];
+            $categoryFilter = $this->getCategoryFilter();
+            $areaFilter = $this->getAreaFilter();
+            $groupFilter = $this->getOwnerGroupFilter();
+            $typeFilter = $this->getTypeFilter();
+            $this->data = $this->getStatusHistory(
+                "{$categoryFilter}{$areaFilter}{$groupFilter}{$typeFilter}",
+                $this->getGapFilter(),
+                $this->getParameter('start'),
+                $this->getParameter('end')
+            );
+
+        }
+
+        return $this->data;
+    }
+
     protected function getStatusHistory($query, $gap, $start = null, $end = null)
     {
         $result = [
             'intervals' => [],
             'series' => [],
         ];
-        
+
         try {
             $dateBounds = \SensorOperator::getPostsDateBounds();
             $startRange = $dateBounds['first']->format('Y') . '-01-01';
@@ -119,11 +142,11 @@ class StatusPercentage extends StatisticFactory
                 'close' => 0,
             ];
             $intervals = [];
-            foreach ($availableDates as $date){
+            foreach ($availableDates as $date) {
                 $new = isset($newCounts[$date]) ? $newCounts[$date] : 0;
                 $closed = isset($closeCounts[$date]) ? $closeCounts[$date] : 0;
                 $read = isset($readCounts[$date]) ? $readCounts[$date] : 0;
-                if (isset($onlyAssignedCounts[$date])){
+                if (isset($onlyAssignedCounts[$date])) {
                     $read += $onlyAssignedCounts[$date];
                 }
                 $pending = $new - $read;
@@ -156,8 +179,8 @@ class StatusPercentage extends StatisticFactory
                 ],
             ];
             $intervals = [];
-            foreach ($data as $interval => $datum){
-                if ($hasBounds && ($interval < $start || $interval > $end)){
+            foreach ($data as $interval => $datum) {
+                if ($hasBounds && ($interval < $start || $interval > $end)) {
                     continue;
                 }
                 $intervals[] = $interval;
@@ -191,34 +214,117 @@ class StatusPercentage extends StatisticFactory
             ];
 
             $result['series'] = $series;
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             $this->repository->getLogger()->error($e->getMessage());
         }
 
         return $result;
     }
 
-    public function getData()
+    protected function getHighchartsFormatData()
     {
-        if ($this->data === null) {
-            $this->data = [
-                'intervals' => [],
-                'series' => [],
+        $data = $this->getData();
+        $series = [];
+        $pieSeries = [];
+        foreach ($data['series'] as $serie){
+            $item = [
+                'name' => $serie['name'],
+                'color' => $serie['color'],
+                'data' => []
             ];
-            $categoryFilter = $this->getCategoryFilter();
-            $areaFilter = $this->getAreaFilter();
-            $groupFilter = $this->getOwnerGroupFilter();
-            $typeFilter = $this->getTypeFilter();
-            $this->data = $this->getStatusHistory(
-                "{$categoryFilter}{$areaFilter}{$groupFilter}{$typeFilter}",
-                $this->getGapFilter(),
-                $this->getParameter('start'),
-                $this->getParameter('end')
-            );
-
+            foreach ($serie['data'] as $datum){
+                if ($datum['interval'] !== 'all'){
+                    $item['data'][] = [
+                        $datum['interval'] * 1000,
+                        $datum['count']
+                    ];
+                }else{
+                    $pieSeries[] = [
+                        'name' => $serie['name'],
+                        'color' => $serie['color'],
+                        'y' => $datum['count']
+                    ];
+                }
+            }
+            $series[] = $item;
         }
-
-        return $this->data;
+        return [
+            [
+                'type' => 'highcharts',
+                'config' => [
+                    'chart' => [
+                        'plotBackgroundColor' => null,
+                        'plotBorderWidth' => null,
+                        'plotShadow' => false,
+                        'type' => 'pie'
+                    ],
+                    'title' => [
+                        'text' => $this->getDescription(),
+                    ],
+                    'accessibility' => [
+                        'point' => [
+                            'valueSuffix' => '%'
+                        ]
+                    ],
+                    'tooltip' => [
+                        'headerFormat' => '<span style="font-size:11px">{series.name}</span><br>',
+                        'pointFormat' => '<span style="color:{point.color}">{point.name}</span>: <b>{point.y} - {point.percentage:.1f}%</b><br/>'
+                    ],
+                    'plotOptions' => [
+                        'pie' => [
+                            'allowPointSelect' => true,
+                            'cursor' => 'pointer',
+                            'dataLabels' => [
+                                'enabled' => true,
+                                'format' => '<b>{point.name}:</b> {point.y} - {point.percentage:.1f}%'
+                            ]
+                        ]
+                    ],
+                    'series' => [[
+                        'name' => $this->getName(),
+                        'colorByPoint' => true,
+                        'data' => $pieSeries
+                    ]],
+                ]
+            ],
+            [
+                'type' => 'highcharts',
+                'config' => [
+                    'chart' => [
+                        'type' => 'column'
+                    ],
+                    'xAxis' => [
+                        'type' => 'datetime',
+                        'ordinal' => false,
+                        'tickmarkPlacement' => 'on'
+                    ],
+                    'yAxis' => [
+                        'allowDecimals' => false,
+                        'min' => 0,
+                        'title' => [
+                            'text' => 'Numero'
+                        ]
+                    ],
+                    'tooltip' => [
+                        'shared' => true,
+                        'dateTimeLabelFormats' => [
+                            'day' => '%b %e, %Y',
+                            'hour' => '%b %e %Y',
+                            'millisecond' => '%b %e %Y',
+                            'minute' => '%b %e %Y',
+                            'month' => '%B %Y',
+                            'second' => '%b %e %Y',
+                            'week' => '%b %e, %Y',
+                            'year' => '%Y'
+                        ],
+                        'pointFormat' => '<span style="color:{point.color}">{series.name}</span>: <b>{point.y}</b><br/>'
+                    ],
+                    'title' => [
+                        'text' => ''
+                    ],
+                    'series' => $series
+                ]
+            ]
+        ];
     }
-
 }

@@ -97,4 +97,63 @@ class Users extends StatisticFactory
 
         return $contentSearch->search($query, array());
     }
+
+    protected function getHighchartsFormatData()
+    {
+        $data = $this->getData();
+        $series = [];
+        foreach ($data['series'] as $serie){
+            $item = [
+                'name' => $this->getDescription(),
+                'data' => []
+            ];
+            foreach ($serie['data'] as $datum){
+                $item['data'][] = [
+                    $datum['interval'] * 1000,
+                    $datum['count']
+                ];
+            }
+            $series[] = $item;
+        }
+        return [
+            [
+                'type' => 'highcharts',
+                'config' => [
+                    'chart' => [
+                        'type' => 'column'
+                    ],
+                    'xAxis' => [
+                        'type' => 'datetime',
+                        'ordinal' => false
+                    ],
+                    'yAxis' => [
+                        'allowDecimals' => false,
+                        'min' => 0,
+                        'title' => [
+                            'text' => 'Numero'
+                        ]
+                    ],
+                    'plotOptions' => [
+                        'column' => [
+                            'dataLabels' => [
+                                'enabled' => true,
+                            ]
+                        ],
+                        'series' => [
+                            'marker' => [
+                                'enabled' => true,
+                            ]
+                        ]
+                    ],
+                    'title' => [
+                        'text' => $this->getDescription()
+                    ],
+                    'legend' => [
+                        'enabled' => false,
+                    ],
+                    'series' => $series
+                ]
+            ]
+        ];
+    }
 }

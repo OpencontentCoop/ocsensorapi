@@ -62,7 +62,7 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
                     $nameAndQueryList[$operator['name']] =
                         "{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}raw[sensor_last_owner_user_id_i] = '$id' and";
                 }
-            }elseif ($this->hasParameter('group') && $hasGroupingFlag) {
+            } elseif ($this->hasParameter('group') && $hasGroupingFlag) {
                 $groupIdList = $this->getParameter('group');
                 foreach ($groupIdList as $groupId) {
                     $group = $this->repository->getGroupService()->loadGroup($groupId);
@@ -74,7 +74,7 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
                 }
             } else {
                 $groups = $this->getGroupTree($hasGroupingFlag);
-                foreach ($groups as $id => $group){
+                foreach ($groups as $id => $group) {
                     $idList = array_merge(["'$id'"], $group['children']);
                     $groupFilter = 'raw[sensor_last_owner_group_id_i] in [' . implode(',', $idList) . '] and ';
                     $nameAndQueryList[$group['name']] =
@@ -85,7 +85,7 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
 
             $intervals = [];
             $data = [];
-            foreach ($nameAndQueryList as $name => $query){
+            foreach ($nameAndQueryList as $name => $query) {
                 $datum = $this->getOpenHistory(
                     $query,
                     $this->getGapFilter(),
@@ -100,8 +100,8 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
             $intervals = array_unique($intervals);
             sort($intervals);
             $this->data['intervals'] = $intervals;
-            foreach ($data as $name => $datum){
-                $serie = $this->formatHistory($datum['serie'],$name, $this->getColor($name), $intervals);
+            foreach ($data as $name => $datum) {
+                $serie = $this->formatHistory($datum['serie'], $name, $this->getColor($name), $intervals);
                 $this->data['series'][] = $serie;
             }
         }
@@ -143,7 +143,7 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
                 "{$query}
                     facets [raw[sensor_status_lk]|alpha] facet_range [field=>meta_published_dt,start=>{$startRange},end=>{$endRange},gap=>{$gap}] limit 1"
             );
-            if (array_sum($newSearch->facets[0]['data']) === 0){
+            if (array_sum($newSearch->facets[0]['data']) === 0) {
                 return false;
             }
             $newCounts = $newSearch->facet_range['meta_published_dt']['counts'];
@@ -152,7 +152,7 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
 
             $serie = [];
             $intervals = [];
-            foreach ($availableDates as $date){
+            foreach ($availableDates as $date) {
                 $count = isset($newCounts[$date]) ? $newCounts[$date] : 0;
                 $timestamp = (new \DateTime($date, Utils::getDateTimeZone()))->format('U');
                 $serie[] = [
@@ -165,7 +165,7 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
                 'intervals' => $intervals,
                 'serie' => $serie,
             ];
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             $this->repository->getLogger()->error($e->getMessage());
         }
 
@@ -175,10 +175,10 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
 
     private function formatHistory($data, $name, $color, $intervals = null)
     {
-        if (is_array($intervals)){
+        if (is_array($intervals)) {
             $data = array_combine(array_column($data, 'interval'), array_column($data, 'count'));
             $fullfilledData = [];
-            foreach ($intervals as $interval){
+            foreach ($intervals as $interval) {
                 $fullfilledData[] = [
                     'interval' => $interval,
                     'count' => isset($data[$interval]) ? $data[$interval] : 0
@@ -193,4 +193,81 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
         ];
     }
 
+    protected function getHighchartsFormatData()
+    {
+        $data = $this->getData();
+        $series = [];
+        foreach ($data['series'] as $serie) {
+            $item = [
+                'name' => $serie['name'],
+                'color' => $serie['color'],
+                'data' => []
+            ];
+            foreach ($serie['data'] as $datum) {
+                if ($datum['interval'] !== 'all') {
+                    $item['data'][] = [
+                        $datum['interval'] * 1000,
+                        $datum['count']
+                    ];
+                }
+            }
+            $series[] = $item;
+        }
+
+        return [
+            [
+                'type' => 'highcharts',
+                'config' => [
+                    'chart' => [
+                        'type' => 'column'
+                    ],
+                    'xAxis' => [
+                        'type' => 'datetime',
+                        'ordinal' => false,
+                        'tickmarkPlacement' => 'on'
+                    ],
+                    'yAxis' => [
+                        'min' => 0,
+                        'title' => [
+                            'text' => 'Numero'
+                        ],
+                        'allowDecimals' => false,
+                    ],
+                    'legend' => [
+                        'enabled' => true,
+                        'alignColumns' => false
+                    ],
+                    'tooltip' => [
+                        'shared' => true,
+                        'dateTimeLabelFormats' => [
+                            'day' => '%b %e, %Y',
+                            'hour' => '%b %e %Y',
+                            'millisecond' => '%b %e %Y',
+                            'minute' => '%b %e %Y',
+                            'month' => '%B %Y',
+                            'second' => '%b %e %Y',
+                            'week' => '%b %e, %Y',
+                            'year' => '%Y'
+                        ],
+                        'pointFormat' => '<span style="color:{point.color}">{series.name}</span>: <b>{point.y}</b><br/>'
+                    ],
+                    'plotOptions' => [
+                        'column' => [
+                            'dataLabels' => [
+                                'enabled' => true,
+                                'color' => 'white',
+                                'style' => [
+                                    'textShadow' => '0 0 3px black'
+                                ]
+                            ]
+                        ],
+                    ],
+                    'title' => [
+                        'text' => $this->getDescription()
+                    ],
+                    'series' => $series
+                ]
+            ]
+        ];
+    }
 }

@@ -87,4 +87,73 @@ class PerType extends StatisticFactory
 
         return $this->data;
     }
+
+    protected function getHighchartsFormatData()
+    {
+        $data = $this->getData();
+        $series = [];
+        foreach ($data['series'] as $serie){
+            $item = [
+                'name' => $serie['name'],
+                'data' => []
+            ];
+            foreach ($serie['data'] as $datum){
+                if ($datum['interval'] !== 'all'){
+                    $item['data'][] = [
+                        $datum['interval'] * 1000,
+                        $datum['count']
+                    ];
+                }
+            }
+            $series[] = $item;
+        }
+        return [
+            [
+                'type' => 'highcharts',
+                'config' => [
+                    'chart' => [
+                        'type' => 'column'
+                    ],
+                    'xAxis' => [
+                        'type' => 'datetime',
+                        'ordinal' => false,
+                        'tickmarkPlacement' => 'on'
+                    ],
+                    'yAxis' => [
+                        'allowDecimals' => false,
+                        'min' => 0,
+                        'title' => [
+                            'text' => 'Numero'
+                        ],
+                        'stackLabels' => [
+                            'enabled' => true,
+                            'style' => [
+                                'fontWeight' => 'bold',
+                                'color' => 'gray'
+                            ]
+                        ]
+                    ],
+                    'tooltip' => [
+                        'shared' => true,
+                    ],
+                    'plotOptions' => [
+                        'column' => [
+                            'stacking' => 'normal',
+                            'dataLabels' => [
+                                'enabled' => true,
+                                'color' => 'white',
+                                'style' => [
+                                    'textShadow' => '0 0 3px black'
+                                ]
+                            ]
+                        ]
+                    ],
+                    'title' => [
+                        'text' => $this->getDescription()
+                    ],
+                    'series' => $series
+                ]
+            ]
+        ];
+    }
 }

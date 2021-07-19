@@ -111,4 +111,77 @@ class AvgTimes extends StatisticFactory
     {
         return round($seconds / 3600 / 24, 1);
     }
+
+    protected function getHighchartsFormatData()
+    {
+        $data = $this->getData();
+        $series = [];
+        foreach ($data['series'] as $serie){
+            $item = [
+                'name' => $serie['name'],
+                'color' => $serie['color'],
+                'data' => []
+            ];
+            foreach ($serie['data'] as $datum){
+                if ($datum['interval'] !== 'all'){
+                    $item['data'][] = [
+                        $datum['interval'] * 1000,
+                        $datum['avg']
+                    ];
+                }
+            }
+            $series[] = $item;
+        }
+        return [
+            [
+                'type' => 'highcharts',
+                'config' => [
+                    'chart' => [
+                        'type' => 'column'
+                    ],
+                    'xAxis' => [
+                        'type' => 'datetime',
+                        'ordinal' => false,
+                    ],
+                    'yAxis' => [
+                        'min' => 0,
+                        'title' => [
+                            'text' => 'Giorni'
+                        ],
+                        'stackLabels' => [
+                            'enabled' => true,
+                            'style' => [
+                                'fontWeight' => 'bold',
+                                'color' => 'gray'
+                            ]
+                        ]
+                    ],
+                    'tooltip' => [
+                        'shared' => true,
+                    ],
+                    'plotOptions' => [
+                        'column' => [
+                            'stacking' => 'normal',
+                            'dataLabels' => [
+                                'enabled' => true,
+                                'color' => 'white',
+                                'style' => [
+                                    'textShadow' => '0 0 3px black'
+                                ]
+                            ]
+                        ]
+                    ],
+                    'title' => [
+                        'text' => $this->getDescription()
+                    ],
+                    'series' => $series
+                ]
+            ]
+        ];
+    }
+
+    protected function getTableColumnField()
+    {
+        return 'avg';
+    }
 }

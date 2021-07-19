@@ -89,4 +89,118 @@ class PerArea extends StatisticFactory
 
         return $this->data;
     }
+
+    protected function getHighchartsFormatData()
+    {
+        $data = $this->getData();
+        $series = [];
+        $pieSeries = [];
+        foreach ($data['series'] as $serie){
+            $item = [
+                'name' => $serie['name'],
+                'color' => $serie['color'],
+                'data' => []
+            ];
+            foreach ($serie['data'] as $datum){
+                if ($datum['interval'] !== 'all'){
+                    $item['data'][] = [
+                        $datum['interval'] * 1000,
+                        $datum['count']
+                    ];
+                }else{
+                    $pieSeries[] = [
+                        'name' => $serie['name'],
+                        'color' => $serie['color'],
+                        'y' => $datum['count']
+                    ];
+                }
+            }
+            $series[] = $item;
+        }
+        return [
+            [
+                'type' => 'highcharts',
+                'config' => [
+                    'chart' => [
+                        'plotBackgroundColor' => null,
+                        'plotBorderWidth' => null,
+                        'plotShadow' => false,
+                        'type' => 'pie'
+                    ],
+                    'title' => [
+                        'text' => $this->getDescription(),
+                    ],
+                    'accessibility' => [
+                        'point' => [
+                            'valueSuffix' => '%'
+                        ]
+                    ],
+                    'tooltip' => [
+                        'pointFormat' => '{series.name}: <b>{point.percentage:.1f}%</b>'
+                    ],
+                    'plotOptions' => [
+                        'pie' => [
+                            'allowPointSelect' => true,
+                            'cursor' => 'pointer',
+                            'dataLabels' => [
+                                'enabled' => true,
+                                'format' => '<b>{point.name}:</b> {point.y} - {point.percentage:.1f}%'
+                            ]
+                        ]
+                    ],
+                    'series' => [[
+                        'name' => $this->getName(),
+                        'colorByPoint' => true,
+                        'data' => $pieSeries
+                    ]],
+                ]
+            ],
+            [
+                'type' => 'highcharts',
+                'config' => [
+                    'chart' => [
+                        'type' => 'column'
+                    ],
+                    'xAxis' => [
+                        'type' => 'datetime',
+                        'ordinal' => false,
+                        'tickmarkPlacement' => 'on'
+                    ],
+                    'yAxis' => [
+                        'allowDecimals' => false,
+                        'min' => 0,
+                        'title' => [
+                            'text' => 'Numero'
+                        ],
+                        'stackLabels' => [
+                            'enabled' => true,
+                            'style' => [
+                                'fontWeight' => 'bold',
+                                'color' => 'gray'
+                            ]
+                        ]
+                    ],
+                    'tooltip' => [
+                        'shared' => true,
+                    ],
+                    'plotOptions' => [
+                        'column' => [
+                            'stacking' => 'normal',
+                            'dataLabels' => [
+                                'enabled' => true,
+                                'color' => 'white',
+                                'style' => [
+                                    'textShadow' => '0 0 3px black'
+                                ]
+                            ]
+                        ]
+                    ],
+                    'title' => [
+                        'text' => ''
+                    ],
+                    'series' => $series
+                ]
+            ]
+        ];
+    }
 }

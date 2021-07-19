@@ -28,7 +28,14 @@ class ClosingTrendPerGroup extends ClosingTrend
             'color' => $this->getColor('close')
         ]];
         $repo = new \SensorDailyReportRepository();
+        $selectedGroups = [];
+        if ($this->hasParameter('group')) {
+            $selectedGroups = (array)$this->getParameter('group');
+        }
         foreach ($repo->getGroups() as $id => $group) {
+            if (!empty($selectedGroups) && !in_array($id, $selectedGroups)){
+                continue;
+            }
             $fields['percentage_group_'. $id .'_sf'] = [
                 'label' => $group['name'],
                 'color' => $this->getColor($id)

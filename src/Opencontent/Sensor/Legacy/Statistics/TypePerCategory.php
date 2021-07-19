@@ -151,4 +151,86 @@ class TypePerCategory extends StatisticFactory
 
         return $this->data;
     }
+
+    protected function getHighchartsFormatData()
+    {
+        $data = $this->getData();
+        $series = [];
+        foreach ($data['series'] as $serie){
+            $item = [
+                'name' => $serie['name'],
+                'type' => 'column',
+                'yAxis' => 0,
+                'zIndex' => 2,
+                'visible' => $serie['name'] != 'Totale',
+                'showInLegend' => $serie['name'] != 'Totale',
+                'data' => []
+            ];
+            foreach ($serie['data'] as $datum){
+                if ($datum['interval'] !== 'all'){
+                    $item['data'][] = [
+                        $datum['interval'],
+                        $datum['count']
+                    ];
+                }
+            }
+            $series[] = $item;
+        }
+        return [
+            [
+                'type' => 'highcharts',
+                'config' => [
+                    'chart' => [
+                        'type' => 'column'
+                    ],
+                    'xAxis' => [
+                        'categories' => $data['intervals'],
+                        'tickmarkPlacement' => 'on',
+                        'title' => [
+                            'enabled' => false,
+                        ],
+                    ],
+                    'yAxis' => [
+                        'min' => 0,
+                        'title' => [
+                            'text' => 'Numero'
+                        ],
+                        'alignTicks' => false,
+                        'gridLineWidth' => 0,
+                        'stackLabels' => [
+                            'enabled' => true,
+                            'style' => [
+                                'fontWeight' => 'bold',
+                                'color' => 'gray'
+                            ]
+                        ]
+                    ],
+                    'tooltip' => [
+                        'shared' => true,
+                    ],
+                    'plotOptions' => [
+                        'column' => [
+                            'stacking' => 'normal',
+                            'dataLabels' => [
+                                'enabled' => true,
+                                'color' => 'white',
+                                'style' => [
+                                    'textShadow' => '0 0 3px black'
+                                ]
+                            ]
+                        ]
+                    ],
+                    'title' => [
+                        'text' => $this->getDescription()
+                    ],
+                    'series' => $series
+                ]
+            ]
+        ];
+    }
+
+    protected function getTableIntervalName()
+    {
+        return 'Categoria';
+    }
 }

@@ -159,7 +159,7 @@ trait FiltersTrait
             case 'daily':
                 $intervalNameParser = function ($value) use ($format) {
                     $dateTime = date_create_from_format('Yz', $value, Utils::getDateTimeZone());
-                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
+                    return $dateTime instanceof \DateTime ? (int)$dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 
@@ -169,7 +169,7 @@ trait FiltersTrait
                     $week = substr($value, 4);
                     $dateTime = new \DateTime();
                     $dateTime->setISODate($year,$week);
-                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
+                    return $dateTime instanceof \DateTime ? (int)$dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 
@@ -178,7 +178,7 @@ trait FiltersTrait
                     $year = substr($value, 0, 4);
                     $month = substr($value, -2);
                     $dateTime = \DateTime::createFromFormat('d m Y', "01 $month $year", Utils::getDateTimeZone());
-                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
+                    return $dateTime instanceof \DateTime ? (int)$dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 
@@ -191,7 +191,7 @@ trait FiltersTrait
                     elseif ($part == 3) $month = '07';
                     else $month = '10';
                     $dateTime = date_create_from_format('d/m/Y', "01/$month/$year", Utils::getDateTimeZone());
-                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
+                    return $dateTime instanceof \DateTime ? (int)$dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 
@@ -201,14 +201,14 @@ trait FiltersTrait
                     $part = substr($value, -1);
                     $month = $part == 2 ? '07' : '01';
                     $dateTime = date_create_from_format('d/m/Y', "01/$month/$year", Utils::getDateTimeZone());
-                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
+                    return $dateTime instanceof \DateTime ? (int)$dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 
             case 'yearly':
                 $intervalNameParser = function ($value) use ($format) {
                     $dateTime = date_create_from_format('d/m/Y', "01/01/$value", Utils::getDateTimeZone());
-                    return $dateTime instanceof \DateTime ? $dateTime->setTime(0,0)->format($format) : $value;
+                    return $dateTime instanceof \DateTime ? (int)$dateTime->setTime(0,0)->format($format) : $value;
                 };
                 break;
 

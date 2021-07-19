@@ -1816,6 +1816,11 @@ class SchemaBuilder
 
     private function buildStatisticPaths()
     {
+        $factories = [];
+        foreach ($this->apiSettings->getRepository()->getStatisticsService()->getStatisticFactories(true) as $factory) {
+            $factories[] = $factory->getIdentifier();
+        }
+
         return [
             '/stats' => new OA\PathItem([
                 'get' => new OA\Operation(
@@ -1856,7 +1861,7 @@ class SchemaBuilder
                         'tags' => [self::$tags['stat']],
                         'parameters' => [
                             new OA\Parameter('statIdentifier', OA\Parameter::IN_PATH, 'ID of stat', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'string']),
+                                'schema' => $this->buildSchemaProperty(['type' => 'string', 'enum' => $factories]),
                                 'required' => true,
                             ]),
                             new OA\Parameter('interval', OA\Parameter::IN_QUERY, 'Time interval of stat data', [
@@ -1867,6 +1872,9 @@ class SchemaBuilder
                             ]),
                             new OA\Parameter('area', OA\Parameter::IN_QUERY, 'Area id', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                            ]),
+                            new OA\Parameter('format', OA\Parameter::IN_QUERY, 'Stat data view format', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'string', 'default' => 'default', 'enum' => StatisticFactory::getAvailableFormats()]),
                             ]),
                         ]
                     ]

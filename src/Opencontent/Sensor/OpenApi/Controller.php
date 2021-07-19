@@ -1138,16 +1138,11 @@ class Controller
     {
         $result = new ezpRestMvcResult();
         $factory = $this->repository->getStatisticsService()->getStatisticFactoryByIdentifier($this->restController->statIdentifier);
-        $factory->setParameter('interval', $this->getRequestParameter('interval'));
-        $factory->setParameter('category', $this->getRequestParameter('category'));
-        $factory->setParameter('area', $this->getRequestParameter('area'));
-        $factoryItem = [
-            'identifier' => $factory->getIdentifier(),
-            'name' => $factory->getName(),
-            'description' => $factory->getDescription(),
-            'data' => $factory->getData()
-        ];
-        $result->variables = $factoryItem;
+        $parameters = $this->restController->getRequest()->get;
+        $factory->setParameters($parameters);
+        $format = isset($parameters['format']) ? $parameters['format'] : 'default';
+        $result->variables = $factory->getDataByFormat($format);
+
         return $result;
     }
 

@@ -2,6 +2,8 @@
 
 namespace Opencontent\Sensor\Api;
 
+use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
+
 abstract class StatisticFactory
 {
     const DEFAULT_INTERVAL = 'yearly';
@@ -13,7 +15,8 @@ abstract class StatisticFactory
     protected $repository;
 
     protected $renderSettings = [
-        'use_highstock' => false
+        'engine' => 'highcharts',
+        'highcharts' => ['use_highstock' => false]
     ];
 
     abstract public function getData();
@@ -148,5 +151,98 @@ abstract class StatisticFactory
         }
 
         return $color;
+    }
+
+    public static function getAvailableFormats()
+    {
+        return [
+            'default',
+            'highcharts',
+            'table',
+            'data',
+        ];
+    }
+
+    public function getDataByFormat($formatIdentifier)
+    {
+        if ($formatIdentifier == 'default'){
+            return $this->getDefaultFormatData();
+        }elseif ($formatIdentifier == 'highcharts'){
+            return $this->getHighchartsformatData();
+        }elseif ($formatIdentifier == 'table'){
+            return $this->getTableformatData();
+        }elseif ($formatIdentifier == 'data'){
+            return $this->getData();
+        }
+
+        throw new InvalidArgumentException("Stat $formatIdentifier not handled");
+    }
+
+    protected function getDefaultFormatData()
+    {
+        return [
+            'identifier' => $this->getIdentifier(),
+            'name' => $this->getName(),
+            'description' => $this->getDescription(),
+            'data' => $this->getData()
+        ];
+    }
+
+    protected function getHighchartsFormatData()
+    {
+        return [];
+    }
+
+    protected function getTableFormatData()
+    {
+        $data = $this->getData();
+        $all = [];
+        $columns = array_column($data['series'], 'name');
+        array_unshift($columns, $this->getTableIntervalName());
+        $rows = [];
+        foreach ($data['series'] as $i => $serie){
+            foreach ($serie['data'] as $o => $datum){
+                if ($datum['interval'] == 'all'){
+                    $all[] = [$serie['name'], $datum[$this->getTableColumnField()]];
+                }else {
+                    if (!isset($rows[$o][0])) {
+                        $rows[$o][] = $this->formatTableIntervalTimestamp($datum['interval']);
+                    }
+                    $rows[$o][] = $datum[$this->getTableColumnField()];
+                }
+            }
+
+        }
+
+        $table = [];
+        if (!empty($all)){
+            $table[] = $all;
+        }
+        $table[] = array_merge([$columns], $rows);
+
+        return $table;
+    }
+
+    protected function getTableColumnField()
+    {
+        return 'count';
+    }
+
+    protected function getTableIntervalName()
+    {
+        return ['label' => 'Data', 'type' => 'date'];
+    }
+
+    protected function formatTableIntervalTimestamp($interval)
+    {
+        try {
+            $date = \DateTime::createFromFormat('U', $interval);
+            if ($date instanceof \DateTime) {
+                return 'Date(' . $date->format('Y, m, d, H, i') . ')';
+            }
+            return $interval;
+        } catch (\Exception $e) {
+            return $interval;
+        }
     }
 }

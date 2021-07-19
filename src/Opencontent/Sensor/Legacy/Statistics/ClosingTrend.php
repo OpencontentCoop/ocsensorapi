@@ -16,16 +16,13 @@ class ClosingTrend extends StatisticFactory
 
     private $data;
 
-    protected $renderSettings = [
-        'use_highstock' => true
-    ];
-
     /**
      * @param Repository $repository
      */
     public function __construct($repository)
     {
         $this->repository = $repository;
+        $this->renderSettings['highcharts']['use_highstock'] = true;
     }
 
     public function getIdentifier()
@@ -50,7 +47,14 @@ class ClosingTrend extends StatisticFactory
             'label' => 'Totale',
             'color' => $this->getColor('close')
         ]];
+        $selectedCategories = [];
+        if ($this->hasParameter('category')) {
+            $selectedCategories = (array)$this->getParameter('category');
+        }
         foreach ($repo->getCategories() as $id => $category) {
+            if (!empty($selectedCategories) && !in_array($id, $selectedCategories)){
+                continue;
+            }
             $fields['percentage_cat_'. $id .'_sf'] = [
                 'label' => $category['name'],
                 'color' => $this->getColor($id)
@@ -112,5 +116,105 @@ class ClosingTrend extends StatisticFactory
         });
 
         return $percentages;
+    }
+
+    protected function getHighchartsFormatData()
+    {
+        $data = $this->getData();
+        return [
+            [
+                'type' => 'stockChart',
+                'config' => [
+                    'tooltip' => [
+                        'pointFormat' => '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}%</b><br/>',
+                        'valueDecimals' => 0
+                    ],
+                    'rangeSelector' => [
+                        'selected' => 5,
+                        'buttons' => [[
+                            'type' => 'week',
+                            'count' => 1,
+                            'text' => '1w',
+                            'title' => '1 settimana'
+                        ],[
+                            'type' => 'month',
+                            'count' => 1,
+                            'text' => '1m',
+                            'title' => '1 mese'
+                        ], [
+                            'type' => 'month',
+                            'count' => 3,
+                            'text' => '3m',
+                            'title' => '3 mesi'
+                        ], [
+                            'type' => 'month',
+                            'count' => 6,
+                            'text' => '6m',
+                            'title' => '6 mesi'
+                        ], [
+                            'type' => 'year',
+                            'count' => 1,
+                            'text' => '1a',
+                            'title' => '1 anno'
+                        ], [
+                            'type' => 'all',
+                            'text' => 'Tutto',
+                            'title' => 'Tutto'
+                        ]]
+                    ],
+                    'plotOptions' => [
+                        'line' => [
+                            'dataLabels' => [
+                                'enabled' => true,
+                                'color' => 'black'
+                            ]
+                        ],
+                        'series' => [
+                            'showInNavigator' => true
+                        ]
+                    ],
+                    'legend' => [
+                        'enabled' => true,
+                        'alignColumns' => false
+                    ],
+                    'title' => [
+                        'text' => $this->getDescription()
+                    ],
+                    'yAxis' => [
+                        'max' => 100,
+                        'min' => 0,
+
+                        'plotLines' => [[
+                            'value' => 0,
+                            'width' => 2,
+                            'color' => 'silver'
+                        ]]
+                    ],
+                    'scrollbar' => [
+                        'enabled' => false
+                    ],
+                    'series' => $data['series']
+                ]
+            ]
+        ];
+    }
+
+    protected function getTableFormatData()
+    {
+        $data = $this->getData();
+
+        $columns = array_column($data['series'], 'name');
+        array_unshift($columns, $this->getTableIntervalName());
+        $rows = [];
+        foreach ($data['series'] as $i => $serie){
+            foreach ($serie['data'] as $o => $datum){
+                if (!isset($rows[$o][0])){
+                    $rows[$o][] = $this->formatTableIntervalTimestamp($datum[0]);
+                }
+                $rows[$o][] = $datum[1];
+            }
+
+        }
+        return [array_merge($columns, $rows)];
     }
 }

@@ -118,4 +118,65 @@ class Trend extends StatisticFactory
 
         return $this->data;
     }
+
+    protected function getHighchartsFormatData()
+    {
+        $data = $this->getData();
+        $series = [];
+        foreach ($data['series'] as $serie){
+            $item = [
+                'name' => $serie['name'],
+                'color' => $serie['color'],
+                'type' => 'column',
+                'data' => []
+            ];
+            foreach ($serie['data'] as $datum){
+                if ($datum['interval'] !== 'all'){
+                    $item['data'][] = [
+                        $datum['interval'] * 1000,
+                        $datum['count']
+                    ];
+                }
+            }
+            $series[] = $item;
+        }
+        return [[
+            'type' => 'highcharts',
+            'config' => [
+                'chart' => [
+                    'type' => 'column'
+                ],
+                'xAxis' => [
+                    'type' => 'datetime',
+                    'ordinal' => false,
+                    'tickmarkPlacement' => 'on'
+                ],
+                'yAxis' => [
+                    'allowDecimals' => false,
+                    'min' => 0,
+                    'title' => [
+                        'text' => 'Numero'
+                    ],
+                ],
+                'tooltip' => [
+                    'shared' => true,
+                ],
+                'plotOptions' => [
+                    'column' => [
+                        'dataLabels' => [
+                            'enabled' => true,
+                            'color' => 'white',
+                            'style' => [
+                                'textShadow' => '0 0 3px black'
+                            ]
+                        ]
+                    ]
+                ],
+                'title' => [
+                    'text' => $this->getDescription()
+                ],
+                'series' => $series
+            ]
+        ]];
+    }
 }

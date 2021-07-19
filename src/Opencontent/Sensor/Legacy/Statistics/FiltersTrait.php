@@ -303,9 +303,9 @@ trait FiltersTrait
             'children' => []
         ];
         foreach ($groupIdList as $groupId) {
-            $group = $this->repository->getGroupService()->loadGroup($groupId);
+            $group = $this->repository->getGroupService()->loadGroup($groupId, []);
             if ($group instanceof Group) {
-                $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*');
+                $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*', []);
                 $operators = $operatorResult['items'];
                 $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
 
@@ -324,7 +324,7 @@ trait FiltersTrait
     private function recursiveLoadOperatorsByGroup(Group $group, $operatorResult, &$operators)
     {
         if ($operatorResult['next']) {
-            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next']);
+            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next'], []);
             $operators = array_merge($operatorResult['items'], $operators);
             $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
         }

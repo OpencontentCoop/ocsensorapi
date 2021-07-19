@@ -65,7 +65,7 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
             } elseif ($this->hasParameter('group') && $hasGroupingFlag) {
                 $groupIdList = $this->getParameter('group');
                 foreach ($groupIdList as $groupId) {
-                    $group = $this->repository->getGroupService()->loadGroup($groupId);
+                    $group = $this->repository->getGroupService()->loadGroup($groupId, []);
                     if ($group instanceof Group) {
                         $groupFilter = "raw[sensor_last_owner_group_id_i] in ['{$group->id}'] and ";
                         $nameAndQueryList[$group->name] =

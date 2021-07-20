@@ -33,12 +33,12 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
 
     public function getName()
     {
-        return \ezpI18n::tr('sensor/chart', 'Storico aperte per gruppo');
+        return \ezpI18n::tr('sensor/chart', 'Aperte nel tempo');
     }
 
     public function getDescription()
     {
-        return \ezpI18n::tr('sensor/chart', 'Storico delle segnalazioni aperte per gruppi di incaricati coinvolti');
+        return \ezpI18n::tr('sensor/chart', 'Segnalazioni aperte per data di inserimento');
     }
 
     public function getData()
@@ -54,13 +54,14 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
             $groupFilter = $this->getOwnerGroupFilter();
             $rangeFilter = $this->getRangeFilter();
             $hasGroupingFlag = $this->hasParameter('taggroup');
+            $statusFilter = " raw[sensor_status_lk] = 'open' and ";
 
             $nameAndQueryList = [];
             if ($this->hasParameter('group') && !$hasGroupingFlag) {
                 $operators = $this->getOperatorsTree($this->getParameter('group'));
                 foreach ($operators as $id => $operator) {
                     $nameAndQueryList[$operator['name']] =
-                        "{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}raw[sensor_last_owner_user_id_i] = '$id' and";
+                        "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}raw[sensor_last_owner_user_id_i] = '$id' and";
                 }
             } elseif ($this->hasParameter('group') && $hasGroupingFlag) {
                 $groupIdList = $this->getParameter('group');
@@ -69,7 +70,7 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
                     if ($group instanceof Group) {
                         $groupFilter = "raw[sensor_last_owner_group_id_i] in ['{$group->id}'] and ";
                         $nameAndQueryList[$group->name] =
-                            "{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}";
+                            "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}";
                     }
                 }
             } else {
@@ -78,9 +79,8 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
                     $idList = array_merge(["'$id'"], $group['children']);
                     $groupFilter = 'raw[sensor_last_owner_group_id_i] in [' . implode(',', $idList) . '] and ';
                     $nameAndQueryList[$group['name']] =
-                        "{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}";
+                        "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}";
                 }
-                //$nameAndQueryList['Tutti i gruppi'] = "{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}";
             }
 
             $intervals = [];

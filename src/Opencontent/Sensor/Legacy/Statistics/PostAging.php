@@ -34,12 +34,12 @@ class PostAging extends StatisticFactory
 
     public function getName()
     {
-        return \ezpI18n::tr('sensor/chart', 'Segnalazioni aperte');
+        return \ezpI18n::tr('sensor/chart', 'Anzianità segnalazioni');
     }
 
     public function getDescription()
     {
-        return \ezpI18n::tr('sensor/chart', 'Segnalazioni aperte per periodo');
+        return \ezpI18n::tr('sensor/chart', 'Numero di segnalazioni aperte per periodi di anzianità');
     }
 
     public function getData()

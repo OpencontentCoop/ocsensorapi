@@ -14,12 +14,22 @@ abstract class StatisticFactory
 
     protected $repository;
 
+    protected $data;
+
     protected $renderSettings = [
         'engine' => 'highcharts',
         'highcharts' => ['use_highstock' => false]
     ];
 
     abstract public function getData();
+
+    public function init()
+    {
+        $this->data = null;
+        $this->parameters = [];
+
+        return $this;
+    }
 
     /**
      * @return mixed

@@ -10,10 +10,6 @@ class TypePerCategory extends StatisticFactory
     use FiltersTrait;
     use AccessControlTrait;
 
-    protected $repository;
-
-    protected $data;
-
     protected $minCount = 0;
 
     /**

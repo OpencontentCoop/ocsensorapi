@@ -12,10 +12,6 @@ class ClosingTrend extends StatisticFactory
 {
     use FiltersTrait;
 
-    protected $repository;
-
-    private $data;
-
     /**
      * @param Repository $repository
      */

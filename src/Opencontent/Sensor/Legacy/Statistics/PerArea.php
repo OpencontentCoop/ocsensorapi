@@ -11,10 +11,6 @@ class PerArea extends StatisticFactory
     use FiltersTrait;
     use AccessControlTrait;
 
-    protected $repository;
-
-    private $data;
-
     /**
      * StatusPercentage constructor.
      * @param Repository $repository

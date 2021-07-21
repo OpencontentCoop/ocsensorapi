@@ -12,10 +12,6 @@ class StatusPerOwnerGroup extends StatisticFactory
     use FiltersTrait;
     use AccessControlTrait;
 
-    protected $repository;
-
-    protected $data;
-
     protected $minCount = 1;
     
     protected $addTotals = true;

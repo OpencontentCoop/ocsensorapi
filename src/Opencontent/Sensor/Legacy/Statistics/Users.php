@@ -12,10 +12,6 @@ class Users extends StatisticFactory
     use FiltersTrait;
     use AccessControlTrait;
 
-    protected $repository;
-
-    private $data;
-
     /**
      * @param Repository $repository
      */

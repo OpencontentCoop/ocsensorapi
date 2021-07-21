@@ -12,10 +12,6 @@ class StatusPercentage extends StatisticFactory
     use FiltersTrait;
     use AccessControlTrait;
 
-    protected $repository;
-
-    protected $data;
-
     /**
      * StatusPercentage constructor.
      * @param Repository $repository

@@ -79,7 +79,8 @@ class StatisticsService extends \Opencontent\Sensor\Core\StatisticsService
     {
         foreach ($this->getStatisticFactories() as $factory){
             if ($factory->getIdentifier() == $identifier){
-                return $factory;
+
+                return $factory->init();
             }
         }
 

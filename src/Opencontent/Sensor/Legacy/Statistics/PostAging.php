@@ -12,10 +12,6 @@ class PostAging extends StatisticFactory
     use AccessControlTrait;
     use BucketsTrait;
 
-    protected $repository;
-
-    protected $data;
-
     protected $minCount = 0;
 
     /**

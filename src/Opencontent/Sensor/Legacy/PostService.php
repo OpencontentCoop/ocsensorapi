@@ -81,7 +81,7 @@ class PostService extends PostServiceBase
         if (!$collaborationItem instanceof eZCollaborationItem){
             throw new NotFoundException("eZCollaborationItem $type not found for object $postId");
         }
-        if (!$contentObject instanceof eZContentObject || empty($contentObject->mainNodeID())){
+        if (!$contentObject instanceof eZContentObject){
             throw new NotFoundException("eZContentObject not found for object $postId");
         }
 

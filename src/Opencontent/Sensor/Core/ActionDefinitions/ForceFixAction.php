@@ -31,6 +31,14 @@ class ForceFixAction extends ActionDefinition
             );
         }
 
+        if (!$this->currentUserIsObserver($post, $user)){
+            $repository->getParticipantService()->addPostParticipant(
+                $post,
+                $user->id,
+                $roleObserver
+            );
+        }
+
         $repository->getPostService()->setPostWorkflowStatus($post, Post\WorkflowStatus::FIXED);
         $repository->getMessageService()->addTimelineItemByWorkflowStatus($post, Post\WorkflowStatus::FIXED);
 
@@ -49,5 +57,17 @@ class ForceFixAction extends ActionDefinition
         $event->post = $post;
         $event->user = $user;
         $repository->getEventService()->fire($event);
+    }
+
+    private function currentUserIsObserver($post, $user)
+    {
+        $observers = $post->participants->getParticipantsByRole(ParticipantRole::ROLE_OBSERVER);
+        foreach ($observers as $participant){
+            if ($participant->id == $user->id){
+                return true;
+            }
+        }
+
+        return false;
     }
 }

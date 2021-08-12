@@ -8,6 +8,8 @@ use eZContentObject;
 use eZContentObjectState;
 use eZPersistentObject;
 use eZSearch;
+use Opencontent\Sensor\Api\Action\Action;
+use Opencontent\Sensor\Api\Exception\DuplicateUuidException;
 use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
@@ -29,6 +31,7 @@ use Opencontent\Sensor\Legacy\PostService\PostBuilder;
 use Opencontent\Sensor\Legacy\Utils\ExpiryTools;
 use Opencontent\Sensor\Legacy\Validators\PostCreateStructValidator;
 use Opencontent\Sensor\Legacy\Validators\PostUpdateStructValidator;
+use Ramsey\Uuid\Uuid;
 
 class PostService extends PostServiceBase
 {
@@ -78,7 +81,7 @@ class PostService extends PostServiceBase
         if (!$collaborationItem instanceof eZCollaborationItem){
             throw new NotFoundException("eZCollaborationItem $type not found for object $postId");
         }
-        if (!$contentObject instanceof eZContentObject){
+        if (!$contentObject instanceof eZContentObject || empty($contentObject->mainNodeID())){
             throw new NotFoundException("eZContentObject not found for object $postId");
         }
 
@@ -89,6 +92,19 @@ class PostService extends PostServiceBase
         $this->setUserPostAware($post);
 
         return $post;
+    }
+
+    public function loadPostByUuid($postUuid)
+    {
+        $postUuid = \eZDB::instance()->escapeString($postUuid);
+        $whereSql = "ezcontentobject.remote_id='$postUuid'";
+        $fetchSQLString = "SELECT ezcontentobject.id FROM ezcontentobject WHERE $whereSql";
+        $resArray = \eZDB::instance()->arrayQuery($fetchSQLString);
+        if (count($resArray) == 1 && $resArray !== false) {
+            return $this->loadPost($resArray[0]['id']);
+        }
+
+        throw new NotFoundException("Post not found for uuid $postUuid");
     }
 
     /**
@@ -290,50 +306,71 @@ class PostService extends PostServiceBase
     public function createPost(PostCreateStruct $post)
     {
         $validator = new PostCreateStructValidator($this->repository);
-        $validator->validate($post);
+        try {
+            $validator->validate($post);
 
-        $author = $post->author ? (int)$post->author : (int)$this->repository->getCurrentUser()->id;
-        $reporter = $author != (int)$this->repository->getCurrentUser()->id ? (int)$this->repository->getCurrentUser()->id : null;
-        $class = $this->repository->getPostContentClass();
+            $author = $post->author ? (int)$post->author : (int)$this->repository->getCurrentUser()->id;
+            $reporter = $author != (int)$this->repository->getCurrentUser()->id ? (int)$this->repository->getCurrentUser()->id : null;
+            $class = $this->repository->getPostContentClass();
 
-        $privacyAttributeType = isset($class->dataMap()['privacy']) ? $class->dataMap()['privacy']->attribute('data_type_string') : \eZBooleanType::DATA_TYPE_STRING;
-        if ($privacyAttributeType == \eZSelectionType::DATA_TYPE_STRING) {
-            $privacy = $post->privacy === 'public' ? 'Si' : 'No';
-        }else{
-            $privacy = $post->privacy === 'public' ? '1' : '0';
-        }
+            $privacyAttributeType = isset($class->dataMap()['privacy']) ? $class->dataMap()['privacy']->attribute('data_type_string') : \eZBooleanType::DATA_TYPE_STRING;
+            if ($privacyAttributeType == \eZSelectionType::DATA_TYPE_STRING) {
+                $privacy = $post->privacy === 'public' ? 'Si' : 'No';
+            } else {
+                $privacy = $post->privacy === 'public' ? '1' : '0';
+            }
 
-        $params = [
-            'creator_id' => $author,
-            'class_identifier' => $class->attribute('identifier'),
-            'parent_node_id' => (int)$this->repository->getPostRootNode()->attribute('node_id'),
-            'attributes' => [
-                'subject' => (string)$post->subject,
-                'description' => (string)$post->description,
-                'type' => (string)$post->type,
-                'geo' => (string)$post->geoLocation,
-                'privacy' => $privacy,
-                'meta' => (string)$post->meta,
-                'reporter' => $reporter,
-                'on_behalf_of' => $reporter ? $author : '',
-                'on_behalf_of_mode' => (string)$post->channel,
-            ]
-        ];
-        if (!empty($post->imagePath)){
-            $params['attributes']['image'] = $post->imagePath;
-        }
-        if (count($post->imagePaths) > 0){
-            $params['attributes']['images'] = implode('|', $post->imagePaths);
-        }
-        if (count($post->areas) > 0){
-            $params['attributes']['area'] = implode('|', $post->areas);
-        }
-        if (count($post->categories) > 0){
-            $params['attributes']['category'] = implode('|', $post->categories);
-        }
-        $object = \eZContentFunctions::createAndPublishObject($params);
+            $params = [
+                'creator_id' => $author,
+                'class_identifier' => $class->attribute('identifier'),
+                'parent_node_id' => (int)$this->repository->getPostRootNode()->attribute('node_id'),
+                'attributes' => [
+                    'subject' => (string)$post->subject,
+                    'description' => (string)$post->description,
+                    'type' => (string)$post->type,
+                    'geo' => (string)$post->geoLocation,
+                    'privacy' => $privacy,
+                    'meta' => (string)$post->meta,
+                    'reporter' => $reporter,
+                    'on_behalf_of' => $reporter ? $author : '',
+                    'on_behalf_of_mode' => (string)$post->channel,
+                ]
+            ];
+            if (!empty($post->imagePath)) {
+                $params['attributes']['image'] = $post->imagePath;
+            }
+            if (count($post->imagePaths) > 0) {
+                $params['attributes']['images'] = implode('|', $post->imagePaths);
+            }
+            if (count($post->areas) > 0) {
+                $params['attributes']['area'] = implode('|', $post->areas);
+            }
+            if (count($post->categories) > 0) {
+                $params['attributes']['category'] = implode('|', $post->categories);
+            }
+            $remoteId = !empty($post->uuid) ? $post->uuid : Uuid::uuid4();
+            $params['remote_id'] = $remoteId;
 
-        return $this->loadPost($object->attribute('id'));
+            $object = \eZContentFunctions::createAndPublishObject($params);
+
+            return $this->loadPost($object->attribute('id'));
+
+        }catch (DuplicateUuidException $e){
+
+            $existingPost = $e->getPost();
+            if (isset($existingPost->meta['pingback_url'])){
+                if ($existingPost->workflowStatus->is(Post\WorkflowStatus::CLOSED)){
+                    $this->repository->getActionService()->runAction(
+                        new Action('reopen', [], true),
+                        $existingPost
+                    );
+                }
+
+                return $this->loadPost($existingPost->id);
+            }
+
+            throw $e;
+        }
     }
 
     public function updatePost(PostUpdateStruct $post)

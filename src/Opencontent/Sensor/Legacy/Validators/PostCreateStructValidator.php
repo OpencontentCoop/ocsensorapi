@@ -2,6 +2,7 @@
 
 namespace Opencontent\Sensor\Legacy\Validators;
 
+use Opencontent\Sensor\Api\Exception\DuplicateUuidException;
 use Opencontent\Sensor\Api\Validators\PostCreateStructValidator as BasePostCreateStructValidator;
 use Opencontent\Sensor\Api\Values\PostCreateStruct;
 use Opencontent\Sensor\Legacy\Repository;
@@ -25,6 +26,17 @@ class PostCreateStructValidator extends BasePostCreateStructValidator
         }
 
         parent::validate($createStruct);
+
+        if (is_string($createStruct->uuid) && !empty($createStruct->uuid)){
+            try{
+                $post = $this->repository->getPostService()->loadPostByUuid($createStruct->uuid);
+                if ($post instanceof Post){
+                    $duplicateException = new DuplicateUuidException($createStruct->uuid);
+                    $duplicateException->setPost($post);
+                    throw $duplicateException;
+                }
+            }catch (NotFoundException $e){}
+        }
 
         /** @var \eZContentClassAttribute $typeClassAttribute */
         $typeClassAttribute = $this->repository->getPostContentClassAttribute('type');

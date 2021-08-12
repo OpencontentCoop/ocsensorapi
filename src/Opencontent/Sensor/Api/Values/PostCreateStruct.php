@@ -71,6 +71,11 @@ class PostCreateStruct
      */
     public $channel;
 
+    /**
+     * @var string
+     */
+    public $uuid;
+
     public static function fromArray(array $data)
     {
         $object = new static();

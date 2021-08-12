@@ -18,6 +18,14 @@ interface PostService
     public function loadPost($postId);
 
     /**
+     * @param $postUuid
+     *
+     * @return Post
+     * @throw \Exception
+     */
+    public function loadPostByUuid($postUuid);
+
+    /**
      * @param $query
      * @param $limit
      * @param $offset

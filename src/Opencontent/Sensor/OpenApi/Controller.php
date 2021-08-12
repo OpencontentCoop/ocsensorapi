@@ -1408,6 +1408,10 @@ class Controller
             $postCreateStruct->channel = (string)$payload['channel'];
         }
 
+        if (isset($payload['uuid']) && $postCreateStruct instanceof PostCreateStruct) {
+            $postCreateStruct->uuid = $payload['uuid'];
+        }
+
         return $postCreateStruct;
     }
 

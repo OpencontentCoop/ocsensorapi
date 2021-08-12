@@ -20,6 +20,7 @@ class PostSerializer extends AbstractSerializer
 
         return $this->apiSettings->replacePlaceholders([
             'id' => (int)$post->id,
+            'uuid' => $post->uuid,
             'published_at' => $this->formatDate($post->published),
             'modified_at' => $this->formatDate($post->modified),
             'expiry_at' => $this->formatDate(@$post->expirationInfo->expirationDateTime),

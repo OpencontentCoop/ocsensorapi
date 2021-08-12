@@ -301,7 +301,7 @@ class SchemaBuilder
                                 'required' => true,
                             ]),
                         ],
-                        'requestBody' => new OA\Reference('#/components/requestBodies/Post')
+                        'requestBody' => new OA\Reference('#/components/requestBodies/UpdatePost')
                     ]
                 ),
             ]),
@@ -2113,6 +2113,7 @@ class SchemaBuilder
             'PostCollection' => $this->buildSchema('PostCollection'),
             'FeatureCollection' => $this->buildSchema('FeatureCollection'),
             'NewPost' => $this->buildSchema('NewPost'),
+            'UpdatePost' => $this->buildSchema('UpdatePost'),
             'Post' => $this->buildSchema('Post'),
 
             'Address' => $this->buildSchema('Address'),
@@ -2172,7 +2173,11 @@ class SchemaBuilder
         $components->requestBodies = [
             'Post' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewPost')
-            ])], 'Post object that needs to be added or updated', true),
+            ])], 'Post object that needs to be created', true),
+
+            'UpdatePost' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/UpdatePost')
+            ])], 'Post object that needs to be updated', true),
 
             'User' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewUser')
@@ -2273,8 +2278,10 @@ class SchemaBuilder
                     'count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int32', 'description' => 'Total number of items available']),
                 ];
                 break;
+
             case 'NewPost':
-                $schema->title = 'NewPost';
+            case 'UpdatePost':
+                $schema->title = $schemaName;
                 $attributeList = $this->apiSettings->getRepository()->getPublicPostContentClassAttributes();
 
                 foreach ($attributeList as $identifier => $attribute) {
@@ -2352,12 +2359,20 @@ class SchemaBuilder
                     'format' => 'email'
                 ]);
 
+                if ($schemaName == 'NewPost'){
+                    $schema->properties['uuid'] = $this->buildSchemaProperty([
+                        'type' => 'string',
+                        'description' => 'Universal unique identifier',
+                    ]);
+                }
+
                 break;
             case 'Post':
                 $schema->title = 'Post';
                 $schema->type = 'object';
                 $schema->properties = [
                     'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'Post ID', 'description' => 'Unique identifier']),
+                    'uuid' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Universal unique identifier']),
                     'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Publication date']),
                     'modified_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Last modification date']),
                     'expiry_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Expiration date', 'nullable' => true]),

@@ -26,4 +26,11 @@ interface AreaService
      * @return Area|null
      */
     public function findAreaByGeoLocation(GeoLocation $geoLocation);
+
+    /**
+     * @param Area $area
+     * @param $categoryIdList
+     * @return bool
+     */
+    public function disableCategories(Area $area, $categoryIdList);
 }

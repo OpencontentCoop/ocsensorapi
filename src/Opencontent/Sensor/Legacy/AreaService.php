@@ -12,6 +12,7 @@ use Opencontent\Sensor\Api\Values\Post\Field\GeoLocation;
 use eZContentObject;
 use Location\Coordinate;
 use Location\Polygon;
+use Opencontent\Sensor\Legacy\Utils\TreeNode;
 
 class AreaService extends \Opencontent\Sensor\Core\AreaService
 {
@@ -179,5 +180,45 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
         }
 
         return null;
+    }
+
+    public function disableCategories(Area $area, $categoryIdList)
+    {
+        $contentObject = \eZContentObject::fetch((int)$area->id);
+        if ($contentObject instanceof eZContentObject && !$contentObject->canEdit()) {
+            throw new ForbiddenException("Current user can not update area");
+        }
+
+        $needClearCache = false;
+        $categories = $this->repository->getCategoryService()->loadAllCategories();
+        foreach ($categories as $category) {
+            $object = eZContentObject::fetch((int)$category->id);
+            $dataMap = $object->dataMap();
+            if (isset($dataMap['disabled_areas'])) {
+                $stringValue = $dataMap['disabled_areas']->toString();
+                $idList = array_fill_keys(explode('-', $stringValue), true);
+                unset($idList['']);
+                ksort($idList);
+                if (in_array($category->id, $categoryIdList)) {
+                    $idList[$area->id] = true;
+                } else {
+                    unset($idList[$area->id]);
+                }
+                $newStringValue = implode('-', array_keys($idList));
+                if ($stringValue != $newStringValue) {
+                    $dataMap['disabled_areas']->fromString($newStringValue);
+                    $dataMap['disabled_areas']->store();
+                    $this->repository->getLogger()->debug(
+                        'Update category disable zones',
+                        ['category' => $category->id, 'area' => $area->id]
+                    );
+                    $needClearCache = true;
+                }
+            }
+        }
+        if ($needClearCache) {
+            TreeNode::clearCache($this->repository->getCategoriesRootNode()->attribute('node_id'));
+        }
+        return true;
     }
 }

@@ -32,6 +32,8 @@ class TreeNodeItem implements \JsonSerializable
 
     protected $languages;
 
+    protected $disabled_relations;
+
     /**
      * @var TreeNodeItem[]
      */
@@ -53,6 +55,7 @@ class TreeNodeItem implements \JsonSerializable
         $this->can_edit = $data['can_edit'];
         $this->can_create = $data['can_create'];
         $this->languages = $data['languages'];
+        $this->disabled_relations = isset($data['disabled_relations']) ? $data['disabled_relations'] : [];
     }
 
     public static function walk(eZContentObjectTreeNode $node, $parameters = array(), $level = -1)
@@ -72,6 +75,7 @@ class TreeNodeItem implements \JsonSerializable
         $data['languages'] = $node->object()->availableLanguages();
         $level++;
         $data['children'] = self::children($node, $parameters, $level);
+        $data['disabled_relations'] = self::disabledRelations($node);
         return new TreeNodeItem($data);
     }
 
@@ -200,6 +204,21 @@ class TreeNodeItem implements \JsonSerializable
         return $data;
     }
 
+    public static function disabledRelations(eZContentObjectTreeNode $node)
+    {
+        $list = [];
+        /** @var eZContentObjectAttribute[] $dataMap */
+        $dataMap = $node->attribute('data_map');
+        if ($node->attribute('class_identifier') == 'sensor_category'){
+            if (isset($dataMap['disabled_areas'])){
+                $stringValue = $dataMap['disabled_areas']->toString();
+                $list = empty($stringValue) ? [] : explode('-', $stringValue);
+            }
+        }
+        $list = array_map('intval', $list);
+        return $list;
+    }
+
     public function attributes()
     {
         return array(
@@ -210,6 +229,7 @@ class TreeNodeItem implements \JsonSerializable
             'group',
             'children',
             'level',
+            'disabled_relations',
         );
     }
 
@@ -239,6 +259,8 @@ class TreeNodeItem implements \JsonSerializable
             return $this->children;
         elseif ($name == 'level')
             return $this->level;
+        elseif ($name == 'disabled_relations')
+            return $this->disabled_relations;
 
         return false;
     }
@@ -258,6 +280,7 @@ class TreeNodeItem implements \JsonSerializable
             'can_edit' => $this->can_edit,
             'can_create' => $this->can_create,
             'languages' => $this->languages,
+            'disabled_relations' => $this->disabled_relations,
             'children' => []
         ];
 
@@ -283,6 +306,7 @@ class TreeNodeItem implements \JsonSerializable
         $data['can_edit'] = $this->can_edit;
         $data['can_create'] = $this->can_create;
         $data['languages'] = $this->languages;
+        $data['disabled_relations'] = $this->disabled_relations;
         $data['children'] = [];
         foreach ($this->children as $child){
             $data['children'][] = $child->toArray();

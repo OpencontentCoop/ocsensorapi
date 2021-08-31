@@ -19,4 +19,9 @@ interface CategoryService
     public function updateCategory(Category $category, $struct);
 
     public function removeCategory($categoryId);
+
+    /**
+     * @return Category[]
+     */
+    public function loadAllCategories();
 }

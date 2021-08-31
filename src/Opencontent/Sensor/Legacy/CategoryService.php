@@ -208,4 +208,24 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
     {
         return $this->repository->getCategoriesRootNode()->attribute('node_id');
     }
+
+    public function loadAllCategories()
+    {
+        $result = $this->loadCategories(null, SearchService::MAX_LIMIT, '*');
+        $categories = $result['items'];
+        $this->recursiveLoadCategories($result, $categories);
+
+        return $categories;
+    }
+
+    private function recursiveLoadCategories($prevResult, &$categories)
+    {
+        if ($prevResult['next']) {
+            $result = $this->loadCategories(null, SearchService::MAX_LIMIT, $prevResult['next']);
+            $categories = array_merge($result['items'], $categories);
+            $this->recursiveLoadCategories($result, $categories);
+        }
+
+        return $categories;
+    }
 }

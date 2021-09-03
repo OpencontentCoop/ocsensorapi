@@ -1066,7 +1066,9 @@ class Controller
             throw new InvalidArgumentException('Max limit allowed is ' . SearchService::MAX_LIMIT);
         }
 
-        $searchResults = $this->repository->getAreaService()->loadAreas($q, $limit, $cursor);
+        // il controller openapi non espone la main area
+        $excludeMainArea = $this->restController instanceof \SensorOpenApiController;
+        $searchResults = $this->repository->getAreaService()->loadAreas($q, $limit, $cursor, $excludeMainArea);
         $parameters = [
             'limit' => $limit,
             'cursor' => $searchResults['current'],
@@ -1075,8 +1077,8 @@ class Controller
         $results = [
             'self' => $this->restController->getBaseUri() . "/areas?" . http_build_query($parameters),
             'next' => null,
-            'items' => $this->serializer->serializeItems($searchResults['items']),
             'count' => (int)$searchResults['count'],
+            'items' => $this->serializer->serializeItems($searchResults['items']),
         ];
         if ($searchResults['next']) {
             $parameters['cursor'] = $searchResults['next'];

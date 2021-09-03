@@ -13,7 +13,7 @@ interface AreaService
      */
     public function loadArea($areaId);
 
-    public function loadAreas($query, $limit, $offset);
+    public function loadAreas($query, $limit, $offset, $excludeMainArea = false);
 
     public function createArea($struct);
 

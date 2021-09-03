@@ -2,7 +2,9 @@
 
 namespace Opencontent\Sensor\Api\Values\Post\Field;
 
-class GeoBounding
+use Opencontent\Sensor\Api\Exportable;
+
+class GeoBounding extends Exportable
 {
     public $color;
 
@@ -27,5 +29,12 @@ class GeoBounding
         if (isset($data['geoJson'])){
             $this->geoJson = $data['geoJson'];
         }
+    }
+
+    public function jsonSerialize()
+    {
+        $data = (array)$this;
+
+        return empty($data) ? null : $data;
     }
 }

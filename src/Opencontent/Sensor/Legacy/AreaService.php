@@ -57,13 +57,16 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
         return $area;
     }
 
-    public function loadAreas($query, $limit, $cursor)
+    public function loadAreas($query, $limit, $cursor, $excludeMainArea = false)
     {
         if ($limit > \Opencontent\Sensor\Api\SearchService::MAX_LIMIT) {
             throw new InvalidInputException('Max limit allowed is ' . \Opencontent\Sensor\Api\SearchService::MAX_LIMIT);
         }
 
-        $searchQuery = $query ? 'q = "' . $query . '"' : '';
+        $searchQuery = $query ? 'q = "' . $query . '" and' : '';
+        if ($excludeMainArea) {
+            $searchQuery .= ' raw[meta_main_parent_node_id_si] != ' . $this->repository->getRootNode()->attribute('node_id');
+        }
         $result = $this->search("$searchQuery sort [name=>asc] limit $limit cursor [$cursor]");
         $items = [];
         foreach ($result->searchHits as $item) {

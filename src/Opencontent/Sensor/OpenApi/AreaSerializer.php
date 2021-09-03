@@ -17,6 +17,16 @@ class AreaSerializer extends AbstractSerializer
     {
         $area = $item->jsonSerialize();
 
+        if ($item instanceof Area && isset($area['geoBounding']['geoJson']['features'][0]['properties'])) {
+            $area['geoBounding']['geoJson']['features'][0]['properties'] = array_merge(
+                $area['geoBounding']['geoJson']['features'][0]['properties'],
+                [
+                    'name' => $item->name,
+                    'link' => rtrim($this->apiSettings->siteUrl, '/') . '/?area=' . $item->id,
+                ]
+            );
+        }
+
         return $area;
     }
 }

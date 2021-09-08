@@ -34,7 +34,11 @@ class SearchService extends BaseSearchService
      */
     public function searchPost($postId, $parameters = array())
     {
-        $result = $this->internalSearchPosts('id = ' . $postId . ' limit 1', $parameters);
+        if (is_numeric($postId)) {
+            $result = $this->internalSearchPosts('id = ' . $postId . ' limit 1', $parameters);
+        }else{
+            $result = $this->internalSearchPosts('remote_id = ' . $postId . ' limit 1', $parameters);
+        }
         if ($result->totalCount > 0) {
             return $result->searchHits[0];
         }

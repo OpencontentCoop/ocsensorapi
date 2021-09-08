@@ -261,12 +261,7 @@ class SchemaBuilder
                     [
                         'tags' => [self::$tags['posts']],
                         'parameters' => array_merge(
-                            [
-                                new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                    'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                    'required' => true,
-                                ]),
-                            ],
+                            $this->buildInPathPostParameters(),
                             $this->buildEmbedParameters()
                         ),
                     ]
@@ -295,12 +290,7 @@ class SchemaBuilder
                     'Update single post',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\Reference('#/components/requestBodies/UpdatePost')
                     ]
                 ),
@@ -320,12 +310,7 @@ class SchemaBuilder
                     'Get post approvers',
                     [
                         'tags' => [self::$tags['post-operators']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters()
                     ]
                 ),
                 'put' => new OA\Operation(
@@ -343,12 +328,7 @@ class SchemaBuilder
                     'Set post approvers',
                     [
                         'tags' => [self::$tags['post-operators']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['participant_ids' => $this->buildSchemaProperty(['type' => 'array', 'maximum' => 1, 'items' => $this->buildSchemaProperty(['type' => 'integer'])])]])
                         ])], 'User id', true)
@@ -370,12 +350,7 @@ class SchemaBuilder
                     'Get post owners',
                     [
                         'tags' => [self::$tags['post-operators']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters()
                     ]
                 ),
                 'put' => new OA\Operation(
@@ -393,12 +368,7 @@ class SchemaBuilder
                     'Set post owners',
                     [
                         'tags' => [self::$tags['post-operators']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['participant_ids' => $this->buildSchemaProperty(['type' => 'array', 'maximum' => 1, 'items' => $this->buildSchemaProperty(['type' => 'integer'])])]])
                         ])], 'User id', true)
@@ -420,12 +390,7 @@ class SchemaBuilder
                     'Get post observers',
                     [
                         'tags' => [self::$tags['post-operators']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters()
                     ]
                 ),
                 'put' => new OA\Operation(
@@ -443,12 +408,7 @@ class SchemaBuilder
                     'Set post observers',
                     [
                         'tags' => [self::$tags['post-operators']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['participant_ids' => $this->buildSchemaProperty(['type' => 'array', 'maximum' => 1, 'items' => $this->buildSchemaProperty(['type' => 'integer'])])]])
                         ])], 'User id', true)
@@ -470,12 +430,7 @@ class SchemaBuilder
                     'Get all participants',
                     [
                         'tags' => [self::$tags['post-operators']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters()
                     ]
                 ),
             ]),
@@ -494,16 +449,7 @@ class SchemaBuilder
                     'Get user in participant',
                     [
                         'tags' => [self::$tags['post-operators']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                            new OA\Parameter('participantId', OA\Parameter::IN_PATH, 'ID of participant', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters()
                     ]
                 ),
             ]),
@@ -522,12 +468,7 @@ class SchemaBuilder
                     'Get post comments',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters()
                     ]
                 ),
                 'post' => new OA\Operation(
@@ -545,12 +486,7 @@ class SchemaBuilder
                     'Add post comment',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text'])]])
                         ])], 'Comment text', true)
@@ -573,16 +509,12 @@ class SchemaBuilder
                     'Edit post comment',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
+                        'parameters' => array_merge($this->buildInPathPostParameters(), [
                             new OA\Parameter('commentId', OA\Parameter::IN_PATH, 'ID of comment to edit', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
                                 'required' => true,
                             ]),
-                        ],
+                        ]),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text'])]])
                         ])], 'Comment text', true)
@@ -604,12 +536,7 @@ class SchemaBuilder
                     'Get post private messages',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters(),
                     ]
                 ),
                 'post' => new OA\Operation(
@@ -627,12 +554,7 @@ class SchemaBuilder
                     'Add post private message',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => [
                                 'text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text']),
@@ -658,16 +580,12 @@ class SchemaBuilder
                     'Edit post private message',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
+                        'parameters' => array_merge($this->buildInPathPostParameters(), [
                             new OA\Parameter('privateMessageId', OA\Parameter::IN_PATH, 'ID of private message to edit', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
                                 'required' => true,
                             ]),
-                        ],
+                        ]),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text'])]])
                         ])], 'Message text', true)
@@ -689,12 +607,7 @@ class SchemaBuilder
                     'Get post responses',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters(),
                     ]
                 ),
                 'post' => new OA\Operation(
@@ -712,12 +625,7 @@ class SchemaBuilder
                     'Add post response',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text'])]])
                         ])], 'Response text', true)
@@ -740,16 +648,12 @@ class SchemaBuilder
                     'Edit post response',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
+                        'parameters' => array_merge($this->buildInPathPostParameters(), [
                             new OA\Parameter('responseId', OA\Parameter::IN_PATH, 'ID of response to edit', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'integer']),
                                 'required' => true,
                             ]),
-                        ],
+                        ]),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['text' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Text'])]])
                         ])], 'Response text', true)
@@ -771,12 +675,7 @@ class SchemaBuilder
                     'Get post attachments',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters(),
                     ]
                 ),
                 'post' => new OA\Operation(
@@ -794,12 +693,7 @@ class SchemaBuilder
                     'Add post attachment',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['files' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['ref' => '#/components/schemas/Attachment']])]])
                         ])], 'Attachments', true)
@@ -818,16 +712,12 @@ class SchemaBuilder
                     'Delete post attachment',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
+                        'parameters' => array_merge($this->buildInPathPostParameters(), [
                             new OA\Parameter('filename', OA\Parameter::IN_PATH, 'Filename of attachment to remove', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'string']),
                                 'required' => true,
                             ]),
-                        ]
+                        ])
                     ]
                 ),
             ]),
@@ -846,12 +736,7 @@ class SchemaBuilder
                     'Get post timeline',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters(),
                     ]
                 ),
             ]),
@@ -870,12 +755,7 @@ class SchemaBuilder
                     'Get post areas',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters(),
                     ]
                 ),
                 'put' => new OA\Operation(
@@ -893,12 +773,7 @@ class SchemaBuilder
                     'Set post areas',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['area_id' => $this->buildSchemaProperty(['type' => 'array', 'maximum' => 1, 'items' => $this->buildSchemaProperty(['type' => 'integer'])])]])
                         ])], 'Area id list', true)
@@ -920,12 +795,7 @@ class SchemaBuilder
                     'Get post categories',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters(),
                     ]
                 ),
                 'put' => new OA\Operation(
@@ -943,12 +813,7 @@ class SchemaBuilder
                     'Set post categories',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['category_id' => $this->buildSchemaProperty(['type' => 'array', 'maximum' => 1, 'items' => $this->buildSchemaProperty(['type' => 'integer'])])]])
                         ])], 'User id', true)
@@ -970,12 +835,7 @@ class SchemaBuilder
                     'Get post status',
                     [
                         'tags' => [self::$tags['post-statuses']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters(),
                     ]
                 ),
             ]),
@@ -994,12 +854,7 @@ class SchemaBuilder
                     'Get post workflow status',
                     [
                         'tags' => [self::$tags['post-statuses']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters(),
                     ]
                 ),
                 'put' => new OA\Operation(
@@ -1017,12 +872,7 @@ class SchemaBuilder
                     'Set post workflow status',
                     [
                         'tags' => [self::$tags['post-statuses']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string', 'enum' => ['read', 'fixed', 'closed', 'reopened']])]])
                         ])], 'Workflow status identifier', true)
@@ -1044,12 +894,7 @@ class SchemaBuilder
                     'Get post privacy status',
                     [
                         'tags' => [self::$tags['post-statuses']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters(),
                     ]
                 ),
                 'put' => new OA\Operation(
@@ -1067,12 +912,7 @@ class SchemaBuilder
                     'Set post privacy status',
                     [
                         'tags' => [self::$tags['post-statuses']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string', 'enum' => ['public', 'private']])]])
                         ])], 'Privacy status identifier', true)
@@ -1094,12 +934,7 @@ class SchemaBuilder
                     'Get post moderation status',
                     [
                         'tags' => [self::$tags['post-statuses']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ]
+                        'parameters' => $this->buildInPathPostParameters(),
                     ]
                 ),
                 'put' => new OA\Operation(
@@ -1117,12 +952,7 @@ class SchemaBuilder
                     'Set post moderation status',
                     [
                         'tags' => [self::$tags['post-statuses']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'object', 'properties' => ['identifier' => $this->buildSchemaProperty(['type' => 'string', 'enum' => ['waiting', 'accepted', 'refused']])]])
                         ])], 'Moderation status identifier', true)
@@ -1145,12 +975,7 @@ class SchemaBuilder
                     'Set post expiration date',
                     [
                         'tags' => [self::$tags['posts']],
-                        'parameters' => [
-                            new OA\Parameter('postId', OA\Parameter::IN_PATH, 'ID of post', [
-                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
-                                'required' => true,
-                            ]),
-                        ],
+                        'parameters' => $this->buildInPathPostParameters(),
                         'requestBody' => new OA\RequestBody(['application/json' => new OA\MediaType([
                             'schema' => $this->buildSchemaProperty(['type' => 'integer', 'minimum' => 1])
                         ])], 'Expiration days since post creation date', true)
@@ -2039,6 +1864,21 @@ class SchemaBuilder
             ]);
         }
         return $parameters;
+    }
+
+    private function buildInPathPostParameters()
+    {
+        return [
+            new OA\Parameter('postId', OA\Parameter::IN_PATH, ' ID (integer) or GUID (string) of post', [
+                'schema' => $this->buildSchemaProperty([
+                    'oneOf' => [
+                        $this->buildSchemaProperty(['type' => 'integer']),
+                        $this->buildSchemaProperty(['type' => 'string']),
+                    ]
+                ]),
+                'required' => true,
+            ]),
+        ];
     }
 
     private function buildEmbedParameters()

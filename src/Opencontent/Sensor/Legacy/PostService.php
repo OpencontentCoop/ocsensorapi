@@ -186,7 +186,7 @@ class PostService extends PostServiceBase
         $comments = new CommentCollection();
         foreach ($post->comments->messages as $message){
             $userIsCreator = $message->creator->id == $this->repository->getCurrentUser()->id;
-            if ((!$message->needModeration && !$message->isRejected) || $userIsCreator || $userIsModerator){
+            if ((!$message->needModeration && !$message->isRejected) || $userIsCreator || $userIsModerator || $userCanSendPrivateMessage){
                 $comments->addMessage($message);
             }
         }

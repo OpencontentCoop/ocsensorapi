@@ -179,12 +179,12 @@ class MailNotificationListener extends AbstractListener
             }
         } elseif ($participant->type == Participant::TYPE_GROUP && in_array(Participant::TYPE_GROUP, $targets)) {
             try {
-                $group = $this->repository->getGroupService()->loadGroup($participant->id);
+                $group = $this->repository->getGroupService()->loadGroup($participant->id, []);
                 if ($group instanceof Group) {
                     if (MailValidator::validate($group->email)) {
                         $addresses[] = $group->email;
                     }
-                    $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*');
+                    $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*', []);
                     $operators = $operatorResult['items'];
                     $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
                     foreach ($operators as $operator) {
@@ -214,7 +214,7 @@ class MailNotificationListener extends AbstractListener
     private function recursiveLoadOperatorsByGroup(Group $group, $operatorResult, &$operators)
     {
         if ($operatorResult['next']) {
-            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next']);
+            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next'], []);
             $operators = array_merge($operatorResult['items'], $operators);
             $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
         }

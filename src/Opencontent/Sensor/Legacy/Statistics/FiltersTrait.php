@@ -249,7 +249,7 @@ trait FiltersTrait
         return $typeFilter;
     }
 
-    protected function getGroupTree($groupedByTag = false)
+    protected function getGroupTree($groupedByTag = false, $onlyGroups = [])
     {
         $tree = [];
         $tree[0] = [
@@ -289,6 +289,14 @@ trait FiltersTrait
                     'name' => $groupTreeItem->attribute('name'),
                     'children' => []
                 ];
+            }
+        }
+
+        if (count($onlyGroups) > 0){
+            foreach ($tree as $id => $item){
+                if (!in_array($id, $onlyGroups) || $id == 0){
+                    unset($tree[$id]);
+                }
             }
         }
 

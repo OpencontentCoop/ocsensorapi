@@ -50,7 +50,7 @@ class StatusPerOwnerGroup extends StatisticFactory
             $typeFilter = $this->getTypeFilter();
 
             $ownerGroupFacetName = 'sensor_last_owner_group_id_i';
-            if ($this->hasParameter('group')) {
+            if ($this->hasParameter('group') && !$this->hasParameter('taggroup')) {
                 $ownerGroupFacetName = 'sensor_last_owner_user_id_i';
             }
 
@@ -66,7 +66,17 @@ class StatusPerOwnerGroup extends StatisticFactory
 
             $pivotItems = isset($search->pivot) ? $search->pivot["sensor_status_lk,{$ownerGroupFacetName}"] : [];
 
-            $tree = $this->hasParameter('group') ? $this->getOperatorsTree($this->getParameter('group')) : $this->getGroupTree($this->hasParameter('taggroup'));
+            if ($this->hasParameter('taggroup') || !$this->hasParameter('group')){
+                $hasTagGroup = $this->hasParameter('taggroup');
+                $onlyGroups = [];
+                if ($this->hasParameter('group')){
+                    $hasTagGroup = false;
+                    $onlyGroups = $this->getParameter('group');
+                }
+                $tree = $this->getGroupTree($hasTagGroup, $onlyGroups);
+            }else{
+                $tree = $this->getOperatorsTree($this->getParameter('group'));
+            }
 
             $serie = [];
             foreach ($tree as $treeId => $treeItem) {

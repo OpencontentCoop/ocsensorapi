@@ -13,6 +13,11 @@ class ClosingTrend extends StatisticFactory
     use FiltersTrait;
 
     /**
+     * @var \SensorDailyReportRepository
+     */
+    protected $dailyReportRepository;
+
+    /**
      * @param Repository $repository
      */
     public function __construct($repository)
@@ -38,7 +43,7 @@ class ClosingTrend extends StatisticFactory
 
     public function getDataFields()
     {
-        $repo = new \SensorDailyReportRepository();
+        $this->dailyReportRepository = new \SensorDailyReportRepository();
         $fields = ['percentage_sf' => [
             'label' => 'Totale',
             'color' => $this->getColor('close')
@@ -47,7 +52,7 @@ class ClosingTrend extends StatisticFactory
         if ($this->hasParameter('category')) {
             $selectedCategories = (array)$this->getParameter('category');
         }
-        foreach ($repo->getCategories() as $id => $category) {
+        foreach ($this->dailyReportRepository->getCategories() as $id => $category) {
             if (!empty($selectedCategories) && !in_array($id, $selectedCategories)){
                 continue;
             }
@@ -190,9 +195,19 @@ class ClosingTrend extends StatisticFactory
                         'enabled' => false
                     ],
                     'series' => $data['series']
-                ]
+                ],
+                'filterLegend' => $this->getFilterLegend(),
             ]
         ];
+    }
+
+    protected function getFilterLegend()
+    {
+        $categories = [];
+        foreach ($this->dailyReportRepository->getCategories() as $index => $category){
+            $categories[] = ['id' => $index, 'name' => $category['name']];
+        }
+        return ['categories' => $categories];
     }
 
     protected function getTableFormatData()

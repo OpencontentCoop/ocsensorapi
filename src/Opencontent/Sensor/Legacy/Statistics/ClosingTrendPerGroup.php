@@ -27,12 +27,12 @@ class ClosingTrendPerGroup extends ClosingTrend
             'label' => 'Totale',
             'color' => $this->getColor('close')
         ]];
-        $repo = new \SensorDailyReportRepository();
+        $this->dailyReportRepository = new \SensorDailyReportRepository();
         $selectedGroups = [];
         if ($this->hasParameter('group')) {
             $selectedGroups = (array)$this->getParameter('group');
         }
-        foreach ($repo->getGroups() as $id => $group) {
+        foreach ($this->dailyReportRepository->getGroups() as $id => $group) {
             if (!empty($selectedGroups) && !in_array($id, $selectedGroups)){
                 continue;
             }
@@ -43,5 +43,14 @@ class ClosingTrendPerGroup extends ClosingTrend
         }
 
         return $fields;
+    }
+
+    protected function getFilterLegend()
+    {
+        $groups = [];
+        foreach ($this->dailyReportRepository->getGroups() as $index => $group){
+            $groups[] = ['id' => $index, 'name' => $group['name']];
+        }
+        return ['groups' => $groups];
     }
 }

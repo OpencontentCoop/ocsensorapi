@@ -15,18 +15,20 @@ interface UserService
     public function loadUser($id);
 
     /**
-     * @param mixed $id
+     * @param mixed $user
      * @param Post $post
      *
      * @return User
      */
-    public function setUserPostAware($id, Post $post);
+    public function setUserPostAware($user, Post $post);
 
     public function setBlockMode(User $user, $enable = true);
 
     public function setCommentMode(User $user, $enable = true);
 
     public function setBehalfOfMode(User $user, $enable = true);
+
+    public function setModerationMode(User $user, $enable = true);
 
     public function getAlerts(User $user);
 

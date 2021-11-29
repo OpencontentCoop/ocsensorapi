@@ -98,6 +98,8 @@ class SearchService extends BaseSearchService
 
     private function internalSearchPosts($query, $parameters = array(), $policies = null)
     {
+        $currentUser = $this->repository->getCurrentUser();
+        $currentUserId = $currentUser->id;
         $parameters = array_merge([
             'executionTimes' => false,
             'readingStatuses' => false,
@@ -106,6 +108,10 @@ class SearchService extends BaseSearchService
             'format' => 'json',
             'authorFiscalCode' => false
         ], $parameters);
+
+        if ($currentUser->restrictMode){
+            $parameters['currentUserInParticipants'] = true;
+        }
 
         if (!empty($parameters['authorFiscalCode'])) {
             $authorIdList = $this->getUserIdListByFiscalCode($parameters['authorFiscalCode']);
@@ -139,8 +145,6 @@ class SearchService extends BaseSearchService
             throw new Exception\UnexpectedException("Inconsistent query");
         }
         $ezFindQuery = $ezFindQueryObject->getArrayCopy();
-
-        $currentUserId = $this->repository->getCurrentUser()->id;
 
         // boost geojson query fetching single fields
         if ($parameters['format'] == 'geojson'){

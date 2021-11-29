@@ -15,7 +15,6 @@ use eZCollaborationItem;
 use Opencontent\Sensor\Legacy\PostService;
 use Opencontent\Sensor\Legacy\Utils\ExpiryTools;
 use Opencontent\Sensor\Api\Values\Post;
-use SensorUserInfo;
 use eZUser;
 
 class PostInitializer

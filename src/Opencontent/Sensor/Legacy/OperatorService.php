@@ -108,7 +108,7 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
 
         $object = \eZContentFunctions::createAndPublishObject($params);
 
-        return $this->fromUser($this->repository->getUserService()->loadUser($object->attribute('id')));
+        return self::fromUser($this->repository->getUserService()->loadUser($object->attribute('id')));
     }
 
     public function updateOperator(Operator $operator, array $payload)
@@ -133,7 +133,7 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
 
                 $this->repository->getUserService()->refreshUser($operator);
 
-                return $this->fromUser($this->repository->getUserService()->loadUser($contentObject->attribute('id')));
+                return self::fromUser($this->repository->getUserService()->loadUser($contentObject->attribute('id')));
             }
         }
 
@@ -149,5 +149,4 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
     {
         return $this->repository->getAreasRootNode()->attribute('node_id');
     }
-
 }

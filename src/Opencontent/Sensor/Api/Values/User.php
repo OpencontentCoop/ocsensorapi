@@ -96,6 +96,16 @@ class User extends Exportable
      */
     public $phone;
 
+    /**
+     * @var string
+     */
+    public $language = 'ita-IT';
+
+    /**
+     * @var bool
+     */
+    public $restrictMode;
+
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);

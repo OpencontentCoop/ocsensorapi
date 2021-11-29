@@ -235,6 +235,7 @@ class TreeNodeItem implements \JsonSerializable
         return array(
             'id',
             'name',
+            'node_id',
             'geo',
             'bounding_box',
             'group',
@@ -260,6 +261,8 @@ class TreeNodeItem implements \JsonSerializable
             return $this->id;
         elseif ($name == 'name')
             return $this->name;
+        elseif ($name == 'node_id')
+            return $this->node_id;
         elseif ($name == 'geo')
             return $this->geo;
         elseif ($name == 'bounding_box')

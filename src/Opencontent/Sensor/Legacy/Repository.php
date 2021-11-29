@@ -5,6 +5,7 @@ namespace Opencontent\Sensor\Legacy;
 use League\Event\ListenerAcceptorInterface;
 use League\Event\ListenerInterface;
 use League\Event\ListenerProviderInterface;
+use Opencontent\Opendata\Api\Values\ContentClass;
 use Opencontent\Sensor\Core\Repository as CoreRepository;
 use Opencontent\Sensor\Legacy\PostService\ScenarioInterface;
 use Opencontent\Sensor\Legacy\Utils\Logger;
@@ -62,7 +63,7 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
     abstract public function getPostContentClassIdentifier();
 
     /**
-     * @return string
+     * @return ContentClass
      */
     abstract public function getPostApiClass();
 

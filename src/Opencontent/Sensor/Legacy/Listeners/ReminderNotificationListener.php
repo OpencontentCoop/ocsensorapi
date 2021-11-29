@@ -68,7 +68,7 @@ class ReminderNotificationListener extends AbstractListener
                             }
                             $this->repository->getLogger()->info("Notify '{$event->getName()}' to user {$user->name}");
 
-                            $currentLanguage = $this->repository->getUserService()->getSensorUser($user->id)->attribute('default_notification_language');
+                            $currentLanguage = $this->repository->getUserService()->loadUser($user->id)->language;
                             $notificationTexts = $notificationType->template[ParticipantRole::ROLE_AUTHOR][$currentLanguage];
 
                             $tpl = \eZTemplate::factory();

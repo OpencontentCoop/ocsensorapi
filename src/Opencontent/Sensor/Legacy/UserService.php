@@ -20,6 +20,8 @@ class UserService extends UserServiceBase
 {
     use ContentSearchTrait;
 
+    const ADDITIONAL_FIELD_PREFIX = 'sensoruser_';
+
     /**
      * @var Repository
      */
@@ -28,14 +30,15 @@ class UserService extends UserServiceBase
     /**
      * @var User[]
      */
-    protected $users = array();
+    protected $users = [];
+
+    protected $additionalInfo = [];
 
     private $userContentClass;
 
     /**
      * @param $id
      * @return Post|User
-     * @throws \Exception
      */
     public function loadUser($id)
     {
@@ -44,27 +47,7 @@ class UserService extends UserServiceBase
             $user->id = $id;
             $ezUser = $this->getEzUser($id);
             if ($ezUser instanceof eZUser) {
-                $userObject = $ezUser->contentObject();
-                if ($userObject instanceof \eZContentObject) {
-                    $user->email = $ezUser->Email;
-                    $user->name = $userObject->name(false, $this->repository->getCurrentLanguage());
-                    $user->firstName = $this->loadUserFirstName($userObject);
-                    $user->lastName = $this->loadUserLastName($userObject);
-                    $user->description = $this->loadUserDescription($userObject);
-                    $user->fiscalCode = $this->loadUserFiscalCode($userObject);
-                    $user->phone = $this->loadUserPhone($userObject);
-                    $user->isEnabled = $ezUser->isEnabled();
-                    $userVisitArray = \eZDB::instance()->arrayQuery("SELECT last_visit_timestamp FROM ezuservisit WHERE user_id=$ezUser->ContentObjectID");
-                    if (isset($userVisitArray[0])) {
-                        $user->lastAccessDateTime = Utils::getDateTimeFromTimestamp($userVisitArray[0]['last_visit_timestamp']);
-                    }
-                    $socialUser = \SensorUserInfo::instance($ezUser);
-                    $user->behalfOfMode = $socialUser->hasCanBehalfOfMode();
-                    $user->commentMode = !$socialUser->hasDenyCommentMode();
-                    $user->moderationMode = $socialUser->hasModerationMode();
-                    $user->type = $userObject->attribute('class_identifier');
-                    $user->groups = $this->loadUserGroups($userObject);
-                }
+                return $this->loadFromEzUser($ezUser);
             }
             $this->users[$id] = $user;
         }
@@ -210,17 +193,61 @@ class UserService extends UserServiceBase
                     $user->lastName = $this->loadUserLastName($userObject);
                     $user->description = $this->loadUserDescription($userObject);
                     $user->fiscalCode = $this->loadUserFiscalCode($userObject);
+                    $user->phone = $this->loadUserPhone($userObject);
                     $user->isEnabled = $ezUser->isEnabled();
-                    $socialUser = $this->getSensorUser($ezUser);
-                    $user->commentMode = !$socialUser->hasDenyCommentMode();
-                    $user->moderationMode = $socialUser->hasModerationMode();
+                    $userVisitArray = \eZDB::instance()->arrayQuery("SELECT last_visit_timestamp FROM ezuservisit WHERE user_id={$ezUser->id()}");
+                    if (isset($userVisitArray[0])) {
+                        $user->lastAccessDateTime = Utils::getDateTimeFromTimestamp($userVisitArray[0]['last_visit_timestamp']);
+                    }
+                    $user->behalfOfMode = $this->loadUserCanBehalfOf($ezUser);
+                    $user->commentMode = !$this->loadUserCanComment($ezUser);
+                    $user->moderationMode = $this->loadUserIsModerated($ezUser);
                     $user->type = $userObject->attribute('class_identifier');
                     $user->groups = $this->loadUserGroups($userObject);
+                    $user->language = $userObject->attribute('initial_language_code');
+                    $user->restrictMode = $this->loadUserHasRestrictMode($ezUser);
                 }
             }
             $this->users[$id] = $user;
         }
         return $this->users[$id];
+    }
+
+    private function getAdditionalInfo($userId)
+    {
+        if (!isset($this->additionalInfo[$userId])) {
+            $name = self::ADDITIONAL_FIELD_PREFIX . $userId;
+            $siteData = \eZSiteData::fetchByName($name);
+            if (!$siteData instanceof \eZSiteData) {
+                $row = array(
+                    'name' => $name,
+                    'value' => serialize(['moderate' => 0])
+                );
+                $siteData = new \eZSiteData($row);
+                $siteData->store();
+            }
+            $this->additionalInfo[$userId] = unserialize($siteData->attribute('value'));
+        }
+
+        return $this->additionalInfo[$userId];
+    }
+
+    private function setAdditionalInfo($userId, $key, $value)
+    {
+        $name = self::ADDITIONAL_FIELD_PREFIX . $userId;
+        $siteData = \eZSiteData::fetchByName($name);
+        if (!$siteData instanceof \eZSiteData) {
+            $row = array(
+                'name' => $name,
+                'value' => serialize(['moderate' => 0])
+            );
+            $siteData = new \eZSiteData($row);
+        }
+        $data = $this->getAdditionalInfo($userId);
+        $data[$key] = $value;
+        $siteData->setAttribute('value', serialize($data));
+        $siteData->store();
+        $this->additionalInfo[$userId] = $data;
     }
 
     private function getUserContentClass()
@@ -333,10 +360,37 @@ class UserService extends UserServiceBase
         return trim($administrativeRole . ' ' . implode(', ', $administrativeLocations));
     }
 
+    private function loadUserCanBehalfOf(eZUser $user)
+    {
+        $result = $user->hasAccessTo( 'sensor', 'behalf' );
+        return $result['accessWord'] != 'no';
+    }
+
+    private function loadUserCanComment(eZUser $user)
+    {
+        if ($user->isAnonymous()) {
+            return false;
+        }
+        return $this->getEzPreferenceValue('sensor_deny_comment', $user->id()) != 1;
+    }
+
+    private function loadUserIsModerated(eZUser $user)
+    {
+        $info = $this->getAdditionalInfo($user->id());
+        return isset($info['moderate']) && $info['moderate'] == 1;
+    }
+
+    private function loadUserHasRestrictMode(eZUser $user)
+    {
+        return $this->getEzPreferenceValue('sensor_restrict_access', $user->id()) == 1;
+    }
+
     public function refreshUser($user)
     {
         eZContentObject::clearCache();
         unset($this->users[$user->id]);
+        unset($this->additionalInfo[$user->id]);
+        eZUser::purgeUserCacheByUserId($user->id);
     }
 
     public function setUserPostAware($user, Post $post)
@@ -355,38 +409,83 @@ class UserService extends UserServiceBase
 
     public function setBlockMode(User $user, $enable = true)
     {
-        $socialUser = SocialUser::instance($this->loadUser($user->id)->ezUser);
-        $socialUser->setBlockMode($enable);
+        \eZUserOperationCollection::setSettings(  $user->id, !$enable, 0 );
         $user->isEnabled = $enable;
         $this->refreshUser($user);
     }
 
     public function setCommentMode(User $user, $enable = true)
     {
-        $socialUser = SocialUser::instance($this->getEzUser($user->id));
-        $socialUser->setDenyCommentMode(!$enable);
+        if ($enable) {
+            \eZPreferences::setValue('sensor_deny_comment', 1, $user->id);
+        } else {
+            /** @var \eZDBInterface $db */
+            $db = \eZDB::instance();
+            $db->query("DELETE FROM ezpreferences WHERE user_id = {$user->id} AND name = 'sensor_deny_comment'");
+        }
         $user->commentMode = $enable;
         $this->refreshUser($user);
     }
 
     public function setBehalfOfMode(User $user, $enable = true)
     {
-        $socialUser = SocialUser::instance($this->getEzUser($user->id));
-        $socialUser->setCanBehalfOfMode($enable);
+        $role = \eZRole::fetchByName('Sensor Assistant');
+        if ($role instanceof \eZRole) {
+            if ($enable) {
+                $role->assignToUser($user->id);
+            } else {
+                $role->removeUserAssignment($user->id);
+            }
+        }
         $user->behalfOfMode = $enable;
+        $this->refreshUser($user);
+    }
+
+    public function setModerationMode(User $user, $enable = true)
+    {
+        $this->setAdditionalInfo($user->id, 'moderate', intval($enable));
+        $user->moderationMode = $enable;
+        $this->refreshUser($user);
+    }
+
+    public function setRestrictMode(User $user, $enable = true)
+    {
+        if ($enable) {
+            \eZPreferences::setValue('sensor_restrict_access', 1, $user->id);
+        } else {
+            /** @var \eZDBInterface $db */
+            $db = \eZDB::instance();
+            $db->query("DELETE FROM ezpreferences WHERE user_id = {$user->id} AND name = 'sensor_restrict_access'");
+        }
+
+        $user->restrictMode = $enable;
         $this->refreshUser($user);
     }
 
     public function getAlerts(User $user)
     {
-        $socialUser = SocialUser::instance($this->getEzUser($user->id));
-        return $socialUser->attribute('alerts');
+        $messages = array();
+        foreach (array('error', 'success', 'info') as $level) {
+            if (\eZHTTPTool::instance()->hasSessionVariable('FlashAlert_' . $level)) {
+                $messages = array_merge(
+                    $messages,
+                    \eZHTTPTool::instance()->sessionVariable('FlashAlert_' . $level)
+                );
+                \eZHTTPTool::instance()->removeSessionVariable('FlashAlert_' . $level);
+            }
+        }
+        return $messages;
     }
 
     public function addAlert(User $user, $message, $level)
     {
-        $socialUser = SocialUser::instance($this->getEzUser($user->id));
-        $socialUser->addFlashAlert($message, $level);
+        $messages = array();
+        if (\eZHTTPTool::instance()->hasSessionVariable('FlashAlert_' . $level)) {
+            $messages = \eZHTTPTool::instance()->sessionVariable('FlashAlert_' . $level);
+            \eZHTTPTool::instance()->removeSessionVariable('FlashAlert_' . $level);
+        }
+        $messages[] = $message;
+        \eZHTTPTool::instance()->setSessionVariable('FlashAlert_' . $level, $messages);
     }
 
     public function getEzUser($id)
@@ -395,14 +494,6 @@ class UserService extends UserServiceBase
         if (!$user instanceof eZUser)
             $user = new eZUser(array(['contentobject_id' => 0]));
         return $user;
-    }
-
-    public function getSensorUser($id)
-    {
-        if (!$id instanceof eZUser){
-            $id = $this->getEzUser($id);
-        }
-        return SocialUser::instance($id);
     }
 
     public function setLastAccessDateTime(User $user, Post $post)
@@ -423,5 +514,19 @@ class UserService extends UserServiceBase
     public function getSubtreeAsString()
     {
         return $this->repository->getUserRootNode()->attribute('node_id');
+    }
+
+    private function getEzPreferenceValue($name, $userId)
+    {
+        $value = false;
+        /** @var \eZDBInterface $db */
+        $db = \eZDB::instance();
+        $name = $db->escapeString($name);
+        $existingRes = $db->arrayQuery("SELECT value FROM ezpreferences WHERE user_id = $userId AND name = '$name'");
+        if (count($existingRes) == 1) {
+            $value = $existingRes[0]['value'];
+        }
+
+        return $value;
     }
 }

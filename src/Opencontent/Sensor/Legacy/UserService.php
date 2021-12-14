@@ -200,7 +200,7 @@ class UserService extends UserServiceBase
                         $user->lastAccessDateTime = Utils::getDateTimeFromTimestamp($userVisitArray[0]['last_visit_timestamp']);
                     }
                     $user->behalfOfMode = $this->loadUserCanBehalfOf($ezUser);
-                    $user->commentMode = !$this->loadUserCanComment($ezUser);
+                    $user->commentMode = $this->loadUserCanComment($ezUser);
                     $user->moderationMode = $this->loadUserIsModerated($ezUser);
                     $user->type = $userObject->attribute('class_identifier');
                     $user->groups = $this->loadUserGroups($userObject);

@@ -46,16 +46,18 @@ class StatusPerOwnerGroup extends StatisticFactory
             $categoryFilter = $this->getCategoryFilter();
             $rangeFilter = $this->getRangeFilter();
             $areaFilter = $this->getAreaFilter();
-            $groupFilter = $this->getOwnerGroupFilter();
+            $ownerGroupFilter = ''; //$this->getOwnerGroupFilter();
             $typeFilter = $this->getTypeFilter();
+            $hasGroupingFlag = $this->hasParameter('taggroup');
+            $onlyGroups = (array)$this->getParameter('group');
 
             $ownerGroupFacetName = 'sensor_last_owner_group_id_i';
-            if ($this->hasParameter('group') && !$this->hasParameter('taggroup')) {
+            if ($this->hasParameter('group') && !$hasGroupingFlag) {
                 $ownerGroupFacetName = 'sensor_last_owner_user_id_i';
             }
 
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter} limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000] pivot [facet=>[sensor_status_lk,{$ownerGroupFacetName}],mincount=>{$this->minCount}]",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$ownerGroupFilter}{$typeFilter} limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000] pivot [facet=>[sensor_status_lk,{$ownerGroupFacetName}],mincount=>{$this->minCount}]",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
 
@@ -66,16 +68,10 @@ class StatusPerOwnerGroup extends StatisticFactory
 
             $pivotItems = isset($search->pivot) ? $search->pivot["sensor_status_lk,{$ownerGroupFacetName}"] : [];
 
-            if ($this->hasParameter('taggroup') || !$this->hasParameter('group')){
-                $hasTagGroup = $this->hasParameter('taggroup');
-                $onlyGroups = [];
-                if ($this->hasParameter('group')){
-                    $hasTagGroup = false;
-                    $onlyGroups = $this->getParameter('group');
-                }
-                $tree = $this->getGroupTree($hasTagGroup, $onlyGroups);
+            if ($hasGroupingFlag || !$this->hasParameter('group')){
+                $tree = $this->getGroupTree($hasGroupingFlag, $onlyGroups);
             }else{
-                $tree = $this->getOperatorsTree($this->getParameter('group'));
+                $tree = $this->getOperatorsTree($onlyGroups);
             }
 
             $serie = [];

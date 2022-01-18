@@ -282,6 +282,12 @@ trait FiltersTrait
                         ];
                     }
                 }
+                if (in_array($groupTreeItem->attribute('id'), $onlyGroups)){
+                    $tree[$groupTreeItem->attribute('id')] = [
+                        'name' => $groupTreeItem->attribute('name'),
+                        'children' => []
+                    ];
+                }
             }
         }else {
             foreach ($groupTree->attribute('children') as $groupTreeItem) {
@@ -310,8 +316,14 @@ trait FiltersTrait
             'name' => 'Nessun operatore incaricato',
             'children' => []
         ];
+        $retryGroupIdList = [];
         foreach ($groupIdList as $groupId) {
-            $group = $this->repository->getGroupService()->loadGroup($groupId, []);
+            try {
+                $group = $this->repository->getGroupService()->loadGroup($groupId, []);
+            }catch (\Exception $e){
+                $group = false;
+                $retryGroupIdList[] = $groupId;
+            }
             if ($group instanceof Group) {
                 $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*', []);
                 $operators = $operatorResult['items'];
@@ -322,6 +334,22 @@ trait FiltersTrait
                         'name' => $operator->attribute('name'),
                         'children' => []
                     ];
+                }
+            }
+        }
+
+        if (count($retryGroupIdList) > 0){
+            $groups = $this->getGroupTree(true, $retryGroupIdList);
+            $groupIdList = [];
+            foreach ($groups as $group){
+                if (!empty($group['children'])) {
+                    $groupIdList = array_merge($groupIdList, $group['children']);
+                }
+            }
+            $retryTree = $this->getOperatorsTree($groupIdList);
+            foreach ($retryTree as $key => $value){
+                if (!isset($tree[$key])){
+                    $tree[$key] = $value;
                 }
             }
         }

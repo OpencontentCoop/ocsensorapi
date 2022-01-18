@@ -47,32 +47,35 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
             $categoryFilter = $this->getCategoryFilter();
             $areaFilter = $this->getAreaFilter();
             $typeFilter = $this->getTypeFilter();
-            $groupFilter = $this->getOwnerGroupFilter();
+            $ownerGroupFilter = '';//$this->getOwnerGroupFilter();
             $rangeFilter = $this->getRangeFilter();
             $hasGroupingFlag = $this->hasParameter('taggroup');
             $statusFilter = " raw[sensor_status_lk] = 'open' and ";
-
+            $groupIdList = (array)$this->getParameter('group');
             $nameAndQueryList = [];
+
             if ($this->hasParameter('group') && !$hasGroupingFlag) {
-                $operators = $this->getOperatorsTree($this->getParameter('group'));
+                $operators = $this->getOperatorsTree($groupIdList);
                 foreach ($operators as $id => $operator) {
                     $nameAndQueryList[$operator['name']] =
-                        "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}raw[sensor_last_owner_user_id_i] = '$id' and";
+                        "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$ownerGroupFilter}raw[sensor_last_owner_user_id_i] = '$id' and";
                 }
-            } elseif ($this->hasParameter('group') && $hasGroupingFlag) {
-                $groupIdList = $this->getParameter('group');
-                foreach ($groupIdList as $groupId) {
-                    $group = $this->repository->getGroupService()->loadGroup($groupId, []);
-                    if ($group instanceof Group) {
-                        $groupFilter = "raw[sensor_last_owner_group_id_i] in ['{$group->id}'] and ";
-                        $nameAndQueryList[$group->name] =
-                            "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}";
-                    }
-                }
+
+//            } elseif ($this->hasParameter('group') && $hasGroupingFlag) {
+//                foreach ($groupIdList as $groupId) {
+//                    $group = $this->repository->getGroupService()->loadGroup($groupId, []);
+//                    if ($group instanceof Group) {
+//                        $groupFilter = "raw[sensor_last_owner_group_id_i] in ['{$group->id}'] and ";
+//                        $nameAndQueryList[$group->name] =
+//                            "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}";
+//                    }
+//                }
+
             } else {
-                $groups = $this->getGroupTree($hasGroupingFlag);
+                $groups = $this->getGroupTree($hasGroupingFlag, $groupIdList);
                 foreach ($groups as $id => $group) {
-                    $idList = array_merge(["'$id'"], $group['children']);
+                    $id = $id == 0 ? "'$id'" : $id;
+                    $idList = array_merge(["$id"], $group['children']);
                     $groupFilter = 'raw[sensor_last_owner_group_id_i] in [' . implode(',', $idList) . '] and ';
                     $nameAndQueryList[$group['name']] =
                         "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}";
@@ -134,7 +137,6 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
             }
 
             $availableDates = [];
-
             $newSearch = $this->repository->getStatisticsService()->searchPosts(
                 "{$query}
                     facets [raw[sensor_status_lk]|alpha] facet_range [field=>meta_published_dt,start=>{$startRange},end=>{$endRange},gap=>{$gap}] limit 1"

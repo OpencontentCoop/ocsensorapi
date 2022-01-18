@@ -20,12 +20,21 @@ class GroupService extends \Opencontent\Sensor\Core\GroupService
      */
     protected $repository;
 
+    protected static $cache = [];
+
     public function loadGroup($groupId, $limitations = null)
     {
+        if (is_array($limitations) && empty($limitations) && isset(self::$cache[$groupId])){
+            return self::$cache[$groupId];
+        }
         try {
             $content = $this->searchOne("id = '$groupId'", $limitations);
+            $group = $this->internalLoadGroup($content);
+            if (is_array($limitations) && empty($limitations)){
+                self::$cache[$groupId] = $group;
+            }
 
-            return $this->internalLoadGroup($content);
+            return $group;
         } catch (\Exception $e) {
             throw new NotFoundException("Group $groupId not found");
         }

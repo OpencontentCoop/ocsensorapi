@@ -40,6 +40,8 @@ class ParticipantService extends ParticipantServiceBase
      */
     protected $participantRoles;
 
+    protected static $operatorsByGroup = array();
+
     /**
      * @return ParticipantRoleCollection
      */
@@ -299,10 +301,7 @@ class ParticipantService extends ParticipantServiceBase
             } elseif ($participantLink->attribute('participant_type') == eZCollaborationItemParticipantLink::TYPE_USERGROUP) {
 
                 try {
-                    $group = $this->repository->getGroupService()->loadGroup($contentObject->attribute('id'), []);
-                    $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*', []);
-                    $operators = $operatorResult['items'];
-                    $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
+                    $operators = $this->loadOperatorsByGroup($contentObject->attribute('id'));
                     foreach ($operators as $operator) {
                         $participant->addUser($operator);
                     }
@@ -326,6 +325,18 @@ class ParticipantService extends ParticipantServiceBase
         }
 
         return $participant;
+    }
+
+    private function loadOperatorsByGroup($groupId)
+    {
+        if (!isset(self::$operatorsByGroup[$groupId])) {
+            $group = $this->repository->getGroupService()->loadGroup($groupId, []);
+            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*', []);
+            $operators = $operatorResult['items'];
+            $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
+            self::$operatorsByGroup[$groupId] = $operators;
+        }
+        return self::$operatorsByGroup[$groupId];
     }
 
     private function recursiveLoadOperatorsByGroup(Group $group, $operatorResult, &$operators)

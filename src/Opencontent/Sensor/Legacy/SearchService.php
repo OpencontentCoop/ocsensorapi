@@ -381,7 +381,7 @@ class SearchService extends BaseSearchService
                 $currentUserField = str_replace('user_' . $userId . '_', '', $currentUserKey);
                 $data[$currentUserField] = $readingStatuses[$currentUserKey];
             } else {
-                $emptyField = str_replace('user_*_', '', $currentUserKey);
+                $emptyField = str_replace('user_*_', '', $key);
                 $data[$emptyField] = -1;
             }
         }

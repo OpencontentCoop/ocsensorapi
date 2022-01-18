@@ -116,14 +116,14 @@ class SolrMapper
             'year' => 'sensor_year_i',
 
             'first_assignment_day' => 'sensor_first_assignment_day_i',
-            'first_assignment_month' => 'sensor_first_assignment_week_i',
+            'first_assignment_week' => 'sensor_first_assignment_week_i',
             'first_assignment_month' => 'sensor_first_assignment_month_i',
             'first_assignment_quarter' => 'sensor_first_assignment_quarter_i',
             'first_assignment_semester' => 'sensor_first_assignment_semester_i',
             'first_assignment_year' => 'sensor_first_assignment_year_i',
 
             'closing_day' => 'sensor_closing_day_i',
-            'closing_month' => 'sensor_closing_week_i',
+            'closing_week' => 'sensor_closing_week_i',
             'closing_month' => 'sensor_closing_month_i',
             'closing_quarter' => 'sensor_closing_quarter_i',
             'closing_semester' => 'sensor_closing_semester_i',
@@ -274,7 +274,6 @@ class SolrMapper
 
         if ($this->post->owners instanceof \Opencontent\Sensor\Api\Values\Participant\OwnerCollection) {
             $data['sensor_owner_id_list_lk'] = implode(',', $this->post->owners->getUserIdList());
-            $data['sensor_owner_name_list_lk'] = [];
             $participantNameList = array();
             $participantIdList = [];
             $participantGroupIdList = [];
@@ -351,10 +350,11 @@ class SolrMapper
         $data['sensor_category_name_list_lk'] = implode(',', array_values($categoryList));
         $data['sensor_category_id_list_lk'] = implode(',', array_keys($categoryList));
 
-        foreach ($this->generateDateTimeIndexes($this->post->published) as $key => $value){
-            $data['sensor_' .$key . '_i'] = $value;
+        if ($this->post->published instanceof \DateTimeInterface) {
+            foreach ($this->generateDateTimeIndexes($this->post->published) as $key => $value) {
+                $data['sensor_' . $key . '_i'] = $value;
+            }
         }
-
         if ($firstAssignmentDate instanceof \DateTimeInterface){
             foreach ($this->generateDateTimeIndexes($firstAssignmentDate) as $key => $value){
                 $data['sensor_first_assignment_' .$key . '_i'] = $value;

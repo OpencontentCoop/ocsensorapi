@@ -46,33 +46,88 @@ class StatusPerOwnerGroup extends StatisticFactory
             $categoryFilter = $this->getCategoryFilter();
             $rangeFilter = $this->getRangeFilter();
             $areaFilter = $this->getAreaFilter();
-            $ownerGroupFilter = ''; //$this->getOwnerGroupFilter();
+            $ownerGroupFilter = $this->getOwnerGroupFilter();
             $typeFilter = $this->getTypeFilter();
             $hasGroupingFlag = $this->hasParameter('taggroup');
             $onlyGroups = (array)$this->getParameter('group');
+            $groupTagMapper = $this->getOwnerGroupTagMapper();
 
-            $ownerGroupFacetName = 'sensor_last_owner_group_id_i';
-            if ($this->hasParameter('group') && !$hasGroupingFlag) {
-                $ownerGroupFacetName = 'sensor_last_owner_user_id_i';
+            $columns = false;
+            if (!empty($onlyGroups)) {
+                $columns = [
+                    'groups' => [],
+                    'operators' => [],
+                ];
+                foreach ($onlyGroups as $group) {
+                    if (isset($groupTagMapper[$group])) {
+                        if ($hasGroupingFlag) {
+                            $columns['groups'][] = $group;
+                        }else{
+                            $columns['groups'] = array_merge($columns['groups'], $groupTagMapper[$group]);
+                        }
+                    } else {
+                        if ($hasGroupingFlag){
+                            $columns['groups'][] = $group;
+                        }else{
+                            $columns['operators'][] = $group;
+                        }
+
+                    }
+                }
             }
 
-            $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$ownerGroupFilter}{$typeFilter} limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000] pivot [facet=>[sensor_status_lk,{$ownerGroupFacetName}],mincount=>{$this->minCount}]",
-                ['authorFiscalCode' => $this->getAuthorFiscalCode()]
-            );
+            if (!$columns) {
+                $ownerGroupFacetName = 'sensor_last_owner_group_id_i';
+                if ($this->hasParameter('group') && !$hasGroupingFlag) {
+                    $ownerGroupFacetName = 'sensor_last_owner_user_id_i';
+                }
+                $search = $this->repository->getStatisticsService()->searchPosts(
+                    "{$categoryFilter}{$areaFilter}{$rangeFilter}{$ownerGroupFilter}{$typeFilter} limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000] pivot [facet=>[sensor_status_lk,{$ownerGroupFacetName}],mincount=>{$this->minCount}]",
+                    ['authorFiscalCode' => $this->getAuthorFiscalCode()]
+                );
+                $pivotItems = isset($search->pivot) ? $search->pivot["sensor_status_lk,{$ownerGroupFacetName}"] : [];
+
+                if ($hasGroupingFlag || !$this->hasParameter('group')){
+                    $tree = $this->getGroupTree($hasGroupingFlag, $onlyGroups);
+                }else{
+                    $tree = $this->getOperatorsTree($onlyGroups);
+                }
+
+            }else{
+                $pivotItems = [];
+                $tree = [];
+                if (!empty($columns['groups'])){
+                    $ownerGroupFacetName = 'sensor_last_owner_group_id_i';
+                    $search = $this->repository->getStatisticsService()->searchPosts(
+                        "{$categoryFilter}{$areaFilter}{$rangeFilter}{$ownerGroupFilter}{$typeFilter} limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000] pivot [facet=>[sensor_status_lk,{$ownerGroupFacetName}],mincount=>{$this->minCount}]",
+                        ['authorFiscalCode' => $this->getAuthorFiscalCode()]
+                    );
+                    $tempPivotItems = isset($search->pivot) ? $search->pivot["sensor_status_lk,{$ownerGroupFacetName}"] : [];
+                    $pivotItems = array_merge($pivotItems, $tempPivotItems);
+                    $treeTemp = $this->getGroupTree($hasGroupingFlag, $columns['groups']);
+                    foreach ($treeTemp as $index => $item){
+                        $tree[$index] = $item;
+                    }
+                }
+                if (!empty($columns['operators'])){
+                    $ownerGroupFacetName = 'sensor_last_owner_user_id_i';
+                    $search = $this->repository->getStatisticsService()->searchPosts(
+                        "{$categoryFilter}{$areaFilter}{$rangeFilter}{$ownerGroupFilter}{$typeFilter} limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000] pivot [facet=>[sensor_status_lk,{$ownerGroupFacetName}],mincount=>{$this->minCount}]",
+                        ['authorFiscalCode' => $this->getAuthorFiscalCode()]
+                    );
+                    $tempPivotItems = isset($search->pivot) ? $search->pivot["sensor_status_lk,{$ownerGroupFacetName}"] : [];
+                    $pivotItems = array_merge($pivotItems, $tempPivotItems);
+                    $treeTemp = $this->getOperatorsTree($columns['operators']);
+                    foreach ($treeTemp as $index => $item){
+                        $tree[$index] = $item;
+                    }
+                }
+            }
 
             $this->data = [
                 'intervals' => [],
                 'series' => [],
             ];
-
-            $pivotItems = isset($search->pivot) ? $search->pivot["sensor_status_lk,{$ownerGroupFacetName}"] : [];
-
-            if ($hasGroupingFlag || !$this->hasParameter('group')){
-                $tree = $this->getGroupTree($hasGroupingFlag, $onlyGroups);
-            }else{
-                $tree = $this->getOperatorsTree($onlyGroups);
-            }
 
             $serie = [];
             foreach ($tree as $treeId => $treeItem) {

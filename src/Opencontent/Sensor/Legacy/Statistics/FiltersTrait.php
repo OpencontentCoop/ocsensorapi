@@ -217,6 +217,30 @@ trait FiltersTrait
         return $intervalNameParser;
     }
 
+    protected function getOwnerGroupTagMapper()
+    {
+        $map = [];
+        $groupTree = $this->repository->getGroupsTree();
+        $groupTagCounter = [];
+        foreach ($groupTree->attribute('children') as $groupTreeItem) {
+            $groupTag = $groupTreeItem->attribute('group');
+            if (!empty($groupTag)) {
+                if (isset($groupTagCounter[$groupTag])){
+                    $groupTagId = $groupTagCounter[$groupTag];
+                }else{
+                    $groupTagId = $groupTagCounter[$groupTag] = count($groupTagCounter) + 1;
+                }
+
+                if (!isset($map[$groupTagId])) {
+                    $map[$groupTagId] = [];
+                }
+                $map[$groupTagId][] = $groupTreeItem->attribute('id');
+            }
+        }
+
+        return $map;
+    }
+
     protected function getOwnerGroupFilter()
     {
         $groupFilter = '';
@@ -226,7 +250,16 @@ trait FiltersTrait
                 if (!is_array($group)){
                     $group = [$group];
                 }
-                $groupFilter = 'raw[sensor_last_owner_group_id_i] in [' . implode(',', $group) . '] and ';
+                $groupValues = [];
+                $mapper = $this->getOwnerGroupTagMapper();
+                foreach ($group as $item){
+                    if (isset($mapper[$item])){
+                        $groupValues = array_merge($groupValues, $mapper[$item]);
+                    }else{
+                        $groupValues[] = $item;
+                    }
+                }
+                $groupFilter = 'raw[sensor_last_owner_group_id_i] in [' . implode(',', array_unique($groupValues)) . '] and ';
             }
         }
 

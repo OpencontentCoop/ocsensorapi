@@ -49,7 +49,7 @@ class Users extends StatisticFactory
             $intervalNameParser = $this->getIntervalNameParser();
             $userSubtreeString = $this->repository->getUserService()->getSubtreeAsString();
             $search = $this->search(
-                "{$rangeFilter} classes [user] and subtree [{$userSubtreeString}] limit 1 facets [raw[{$byInterval}]|alpha|100] pivot [facet=>[{$byInterval}],mincount=>1]"
+                "{$rangeFilter} classes [user] and subtree [{$userSubtreeString}] limit 1 facets [raw[{$byInterval}]|alpha|1000] pivot [facet=>[{$byInterval}],mincount=>1]"
             );
 
             $series = [];

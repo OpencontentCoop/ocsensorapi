@@ -49,7 +49,7 @@ class PerCategory extends StatisticFactory
             $typeFilter = $this->getTypeFilter();
             
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter} limit 1 facets [raw[submeta_category___id____si]|alpha|100] pivot [facet=>[submeta_category___id____si,{$byInterval}],mincount=>{$this->minCount}]",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter} limit 1 facets [raw[submeta_category___id____si]|alpha|1000] pivot [facet=>[submeta_category___id____si,{$byInterval}],mincount=>{$this->minCount}]",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
             $this->data = [

@@ -155,9 +155,8 @@ class Utils
 
         $data['day'] = $dateTime->format('Yz');
         $weekNum = $dateTime->format('W');
-        if ($weekNum == 53){
-            $weekNum = $dateTime->format('m') == '01' ? '01' : '52';
-        }
+        $weekNum = $weekNum == 53 ? 52 : $weekNum;
+        $weekNum = $weekNum == 52 && intval($month) == 1 ? '01' : $weekNum;
         $data['week'] = $dateTime->format('Y') . $weekNum;
         $data['month'] = $dateTime->format('Ym');
         $data['quarter'] = $dateTime->format('Y') . $quarter;

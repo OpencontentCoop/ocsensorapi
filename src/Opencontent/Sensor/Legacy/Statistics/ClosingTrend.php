@@ -3,7 +3,7 @@
 namespace Opencontent\Sensor\Legacy\Statistics;
 
 use Opencontent\Sensor\Api\StatisticFactory;
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 use Opencontent\Sensor\Legacy\Repository;
 use SensorDailySearchParameters;
 use OCCustomSearchableRepositoryProvider;
@@ -33,12 +33,12 @@ class ClosingTrend extends StatisticFactory
 
     public function getName()
     {
-        return ezpI18n::tr('sensor/chart', 'Trend per categoria');
+        return Translator::translate('Trend by category', 'chart');
     }
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Percentuale di segnalazioni chiuse per categoria');
+        return Translator::translate('Percentage of issues closed by category', 'chart');
     }
 
     public function getDataFields()

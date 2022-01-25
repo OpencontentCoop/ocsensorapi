@@ -4,6 +4,7 @@ namespace Opencontent\Sensor\Legacy;
 
 use Opencontent\Sensor\Api\Values\Post\Channel;
 use Opencontent\Sensor\Core\ChannelService as BaseChannelService;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class ChannelService extends BaseChannelService
 {
@@ -30,7 +31,7 @@ class ChannelService extends BaseChannelService
                 foreach ($channelAttributeContent['options'] as $item) {
                     $channel = new Channel();
                     $channel->id = $item['id'];
-                    $channel->name = $item['name'];
+                    $channel->name = Translator::translate($item['name'], 'channel');
                     $channel->icon = $this->getChannelIcon($item['name']);
                     $this->channels[] = $channel;
                 }

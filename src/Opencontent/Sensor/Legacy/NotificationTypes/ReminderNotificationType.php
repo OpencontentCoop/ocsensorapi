@@ -3,7 +3,7 @@
 namespace Opencontent\Sensor\Legacy\NotificationTypes;
 
 use Opencontent\Sensor\Api\Values\NotificationType;
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class ReminderNotificationType extends NotificationType implements TemplateAwareNotificationTypeInterface
 {
@@ -12,7 +12,7 @@ class ReminderNotificationType extends NotificationType implements TemplateAware
     public function __construct()
     {
         $this->identifier = 'reminder';
-        $this->name = ezpI18n::tr('sensor/notification', 'Notifica di aggiornamento');
-        $this->description = ezpI18n::tr('sensor/notification', "Ricevi una notifica periodica di aggiornamento");
+        $this->name = Translator::translate('Update notification', 'notification');
+        $this->description = Translator::translate("Receive a periodic update notification", 'notification');
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Opencontent\Sensor\Legacy\Statistics;
 
+use Opencontent\Sensor\Legacy\Utils\Translator;
+
 class OpenPerOwnerGroup extends StatusPerOwnerGroup
 {
     protected $addTotals = false;
@@ -13,12 +15,12 @@ class OpenPerOwnerGroup extends StatusPerOwnerGroup
 
     public function getName()
     {
-        return \ezpI18n::tr('sensor/chart', 'Aperte per gruppo di incaricati');
+        return Translator::translate('Open for group of operators in charge', 'chart');
     }
 
     public function getDescription()
     {
-        return \ezpI18n::tr('sensor/chart', 'Segnalazioni aperte per gruppi di incaricati coinvolti');
+        return Translator::translate('Open issues for groups of operators in charge', 'chart');
     }
 
     protected function generateSeries($serie)

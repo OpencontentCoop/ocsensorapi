@@ -17,6 +17,7 @@ use eZCollaborationGroup;
 use eZCollaborationItemGroupLink;
 use eZPersistentObject;
 use eZCollaborationItemStatus;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 
 class ParticipantService extends ParticipantServiceBase
@@ -53,31 +54,31 @@ class ParticipantService extends ParticipantServiceBase
             $role = new ParticipantRole();
             $role->id = eZCollaborationItemParticipantLink::ROLE_STANDARD;
             $role->identifier = ParticipantRole::ROLE_STANDARD;
-            $role->name = ezpI18n::tr('sensor/role_name', 'Standard');
+            $role->name = Translator::translate('Standard', 'role_name');
             $this->participantRoles->addParticipantRole($role);
 
             $role = new ParticipantRole();
             $role->id = eZCollaborationItemParticipantLink::ROLE_OBSERVER;
             $role->identifier = ParticipantRole::ROLE_OBSERVER;
-            $role->name = ezpI18n::tr('sensor/role_name', 'Osservatore');
+            $role->name = Translator::translate('Observer', 'role_name');
             $this->participantRoles->addParticipantRole($role);
 
             $role = new ParticipantRole();
             $role->id = eZCollaborationItemParticipantLink::ROLE_OWNER;
             $role->identifier = ParticipantRole::ROLE_OWNER;
-            $role->name = ezpI18n::tr('sensor/role_name', 'In carico a');
+            $role->name = Translator::translate('In charge of', 'role_name');
             $this->participantRoles->addParticipantRole($role);
 
             $role = new ParticipantRole();
             $role->id = eZCollaborationItemParticipantLink::ROLE_APPROVER;
             $role->identifier = ParticipantRole::ROLE_APPROVER;
-            $role->name = ezpI18n::tr('sensor/role_name', 'Riferimento per il cittadino');
+            $role->name = Translator::translate('Reference for the citizen', 'role_name');
             $this->participantRoles->addParticipantRole($role);
 
             $role = new ParticipantRole();
             $role->id = eZCollaborationItemParticipantLink::ROLE_AUTHOR;
             $role->identifier = ParticipantRole::ROLE_AUTHOR;
-            $role->name = ezpI18n::tr('sensor/role_name', 'Autore');
+            $role->name = Translator::translate('Author', 'role_name');
             $this->participantRoles->addParticipantRole($role);
         }
 

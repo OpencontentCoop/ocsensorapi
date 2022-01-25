@@ -3,9 +3,8 @@
 namespace Opencontent\Sensor\Legacy\Statistics;
 
 use Opencontent\Sensor\Api\StatisticFactory;
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 use Opencontent\Sensor\Legacy\Repository;
-
 
 class Trend extends StatisticFactory
 {
@@ -28,12 +27,12 @@ class Trend extends StatisticFactory
 
     public function getName()
     {
-        return ezpI18n::tr('sensor/chart', 'Trend inserimento/chiusura');
+        return Translator::translate('Trend opening/closing', 'chart');
     }
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni inserite e chiuse per intervallo di tempo');
+        return Translator::translate('Number of issues open and closed by time interval', 'chart');
     }
 
     public function getData()

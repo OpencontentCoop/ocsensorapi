@@ -3,8 +3,7 @@
 namespace Opencontent\Sensor\Legacy\Statistics;
 
 use Opencontent\Sensor\Api\StatisticFactory;
-use ezpI18n;
-use Opencontent\Sensor\Api\Values\Group;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 use Opencontent\Sensor\Legacy\Repository;
 use Opencontent\Sensor\Legacy\Utils;
 
@@ -29,12 +28,12 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
 
     public function getName()
     {
-        return \ezpI18n::tr('sensor/chart', 'Aperte nel tempo');
+        return Translator::translate('Open over time', 'chart');
     }
 
     public function getDescription()
     {
-        return \ezpI18n::tr('sensor/chart', 'Segnalazioni aperte per data di inserimento');
+        return Translator::translate('Open issues by entering date', 'chart');
     }
 
     public function getData()

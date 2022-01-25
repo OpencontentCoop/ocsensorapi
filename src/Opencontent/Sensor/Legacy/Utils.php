@@ -7,6 +7,7 @@ use DateTime;
 use DateInterval;
 use ezpI18n;
 use Opencontent\Sensor\Legacy\Utils\DateDiffResult;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class Utils
 {
@@ -57,40 +58,40 @@ class Utils
             $string = $nb > 1 ? $str . 's' : $str;
             switch ($string) {
                 case 'year';
-                    $string = ezpI18n::tr('sensor/expiring', 'anno');
+                    $string = Translator::translate( 'year', 'expiring');
                     break;
                 case 'years';
-                    $string = ezpI18n::tr('sensor/expiring', 'anni');
+                    $string = Translator::translate( 'years', 'expiring');
                     break;
                 case 'month';
-                    $string = ezpI18n::tr('sensor/expiring', 'mese');
+                    $string = Translator::translate( 'month', 'expiring');
                     break;
                 case 'months';
-                    $string = ezpI18n::tr('sensor/expiring', 'mesi');
+                    $string = Translator::translate( 'months', 'expiring');
                     break;
                 case 'day';
-                    $string = ezpI18n::tr('sensor/expiring', 'giorno');
+                    $string = Translator::translate( 'day', 'expiring');
                     break;
                 case 'days';
-                    $string = ezpI18n::tr('sensor/expiring', 'giorni');
+                    $string = Translator::translate( 'days', 'expiring');
                     break;
                 case 'hour';
-                    $string = ezpI18n::tr('sensor/expiring', 'ora');
+                    $string = Translator::translate( 'hour', 'expiring');
                     break;
                 case 'hours';
-                    $string = ezpI18n::tr('sensor/expiring', 'ore');
+                    $string = Translator::translate( 'hours', 'expiring');
                     break;
                 case 'minute';
-                    $string = ezpI18n::tr('sensor/expiring', 'minuto');
+                    $string = Translator::translate( 'minute', 'expiring');
                     break;
                 case 'minutes';
-                    $string = ezpI18n::tr('sensor/expiring', 'minuti');
+                    $string = Translator::translate( 'minutes', 'expiring');
                     break;
                 case 'second';
-                    $string = ezpI18n::tr('sensor/expiring', 'secondo');
+                    $string = Translator::translate( 'second', 'expiring');
                     break;
                 case 'seconds';
-                    $string = ezpI18n::tr('sensor/expiring', 'secondi');
+                    $string = Translator::translate( 'seconds', 'expiring');
                     break;
             }
             return $string;
@@ -118,7 +119,7 @@ class Utils
 
         // We use the two biggest parts
         if (count($format) > 1) {
-            $format = array_shift($format) . " " . ezpI18n::tr('sensor/expiring', 'e') . " " . array_shift($format);
+            $format = array_shift($format) . " " . Translator::translate( 'and', 'expiring') . " " . array_shift($format);
         } else {
             $format = array_pop($format);
         }

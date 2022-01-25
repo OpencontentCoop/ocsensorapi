@@ -63,6 +63,17 @@ class TreeNodeItem implements \JsonSerializable
 
     public static function walk(eZContentObjectTreeNode $node, $parameters = array(), $level = -1)
     {
+        $canCreate = $canRemove = $canEdit = true;
+        if (in_array($node->attribute('class_identifier'), ['sensor_area', 'sensor_category'])) {
+            $availableLanguages = $node->object()->availableLanguages();
+            if ($node->attribute('class_identifier') == 'sensor_area') {
+                $canCreate = $canRemove = $canEdit = in_array(\eZLocale::currentLocaleCode(), $availableLanguages);
+            }
+            if ($node->attribute('class_identifier') == 'sensor_category') {
+                $canCreate = $canRemove = in_array(\eZLocale::currentLocaleCode(), $availableLanguages);
+            }
+        }
+
         $data = array();
         $data['name'] = $node->attribute('name');
         $data['id'] = (int)$node->attribute('contentobject_id');
@@ -72,9 +83,9 @@ class TreeNodeItem implements \JsonSerializable
         $data['bounding_box'] = self::boundingBox($node);
         $data['group'] = self::group($node);
         $data['level'] = $level;
-        $data['can_remove'] = $node->canRemove();
-        $data['can_edit'] = $node->canEdit();
-        $data['can_create'] = $node->canCreate();
+        $data['can_remove'] = $node->canRemove() && $canRemove;
+        $data['can_edit'] = $node->canEdit() && $canEdit;
+        $data['can_create'] = $node->canCreate() && $canCreate;
         $data['languages'] = $node->object()->availableLanguages();
         $level++;
         $data['children'] = self::children($node, $parameters, $level);

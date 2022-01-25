@@ -41,18 +41,24 @@ class MailNotificationListener extends AbstractListener
                 /** @var ParticipantRole $role */
                 foreach ($roles as $role) {
                     if (!empty($notificationType->targets[$role->identifier])) {
-                        //$this->repository->getLogger()->debug("Build mail for {$role->name} users");
-                        $mailData = $this->buildMailDataToRole($param, $notificationType, $role->identifier);
-                        $addresses = [];
+
+                        $localizedAddresses = [];
                         /** @var Participant $participant */
                         foreach ($this->repository->getParticipantService()->loadPostParticipantsByRole($param->post, $role->identifier) as $participant) {
-                            $addresses = array_merge($addresses, $this->getAddressFromParticipant($participant, $param->identifier, $notificationType->targets[$role->identifier]));
+                            $localizedAddresses = array_merge_recursive($localizedAddresses, $this->getLocalizedAddressFromParticipant($participant, $param->identifier, $notificationType->targets[$role->identifier]));
                         }
-                        $addresses = array_unique($addresses);
-                        if ($mailData && !empty($addresses)) {
-                            if ($this->sendMail($addresses, $mailData['subject'], $mailData['body'], $mailData['parameters'])) {
-                                $this->repository->getLogger()->info("Prepare notification mail to {$role->name} addresses: " . implode(',', $addresses));
-                                $auditMessages[] = "Invio notifica '{$notificationType->name}' a utenti con ruolo '{$role->name}': " . implode(', ', $addresses);
+                        foreach ($localizedAddresses as $locale => $values){
+                            $localizedAddresses[$locale] = array_unique($values);
+                        }
+
+                        foreach ($localizedAddresses as $locale => $addresses) {
+                            $mailData = $this->buildMailDataToRole($param, $notificationType, $role->identifier, $locale);
+                            $this->repository->setCurrentLanguage(\eZLocale::currentLocaleCode());
+                            if ($mailData && !empty($addresses)) {
+                                if ($this->sendMail($addresses, $mailData['subject'], $mailData['body'], $mailData['parameters'])) {
+                                    $this->repository->getLogger()->info("Prepare notification mail to {$role->name} addresses: " . implode(',', $addresses));
+                                    $auditMessages[] = "Invio notifica ($locale) '{$notificationType->name}' a utenti con ruolo '{$role->name}': " . implode(', ', $addresses);
+                                }
                             }
                         }
                     }else{
@@ -75,14 +81,21 @@ class MailNotificationListener extends AbstractListener
      * @param SensorEvent $event
      * @param NotificationType $notificationType
      * @param int $roleIdentifier
+     * @param string $locale
      * @return array|bool
      */
-    public function buildMailDataToRole($event, $notificationType, $roleIdentifier)
+    public function buildMailDataToRole($event, $notificationType, $roleIdentifier, $locale = null)
     {
-        try {
-            $currentLanguage = \eZLocale::currentLocaleCode();
-            $notificationTexts = $notificationType->template[$roleIdentifier][$currentLanguage];
+        if ($locale){
+            $this->repository->setCurrentLanguage($locale);
+        }else{
+            $locale = $this->repository->getCurrentLanguage();
+        }
 
+        try {
+            $notificationTexts = $notificationType->template[$roleIdentifier][$locale];
+
+            \eZTemplate::resetInstance();
             $tpl = \eZTemplate::factory();
             $tpl->resetVariables();
             $templateName = $this->getNotificationMailTemplate($roleIdentifier);
@@ -92,6 +105,7 @@ class MailNotificationListener extends AbstractListener
 
                 return false;
             }
+            $this->repository->getLogger()->info('Build mail template', ['event' => $event->identifier, 'locale' => $locale, 'template' => $templateName]);
 
             $templatePath = 'design:sensor/mail/' . $event->identifier . '/' . $templateName;
             $tpl->setVariable('event_details', $event->parameters);
@@ -127,7 +141,6 @@ class MailNotificationListener extends AbstractListener
                 }
 
                 //$mailParameters['sensor_post_id'] = $event->post->id;
-
                 return [
                     'subject' => $mailSubject,
                     'body' => $mailBody,
@@ -164,7 +177,7 @@ class MailNotificationListener extends AbstractListener
         return false;
     }
 
-    protected function getAddressFromParticipant(Participant $participant, $notificationIdentifier, $targets)
+    protected function getLocalizedAddressFromParticipant(Participant $participant, $notificationIdentifier, $targets)
     {
         $addresses = [];
         if ($participant->type == Participant::TYPE_USER && in_array(Participant::TYPE_USER, $targets)) {
@@ -174,7 +187,7 @@ class MailNotificationListener extends AbstractListener
                 }
                 $userNotifications = $this->repository->getNotificationService()->getUserNotifications($user);
                 if (in_array($notificationIdentifier, $userNotifications) && MailValidator::validate($user->email)) {
-                    $addresses[] = $user->email;
+                    $addresses[$user->language][] = $user->email;
                 }
             }
         } elseif ($participant->type == Participant::TYPE_GROUP && in_array(Participant::TYPE_GROUP, $targets)) {
@@ -182,9 +195,10 @@ class MailNotificationListener extends AbstractListener
                 $group = $this->repository->getGroupService()->loadGroup($participant->id, []);
                 if ($group instanceof Group) {
                     if (MailValidator::validate($group->email)) {
-                        $addresses[] = $group->email;
+                        $addresses[\eZLocale::currentLocaleCode()][] = $group->email;
                     }
                     $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*', []);
+                    /** @var Operator[] $operators */
                     $operators = $operatorResult['items'];
                     $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
                     foreach ($operators as $operator) {
@@ -193,7 +207,7 @@ class MailNotificationListener extends AbstractListener
                         }
                         $userNotifications = $this->repository->getNotificationService()->getUserNotifications($operator);
                         if (in_array($notificationIdentifier, $userNotifications) && MailValidator::validate($operator->email)) {
-                            $addresses[] = $operator->email;
+                            $addresses[$operator->language][] = $operator->email;
                         }
                     }
                 }
@@ -201,7 +215,10 @@ class MailNotificationListener extends AbstractListener
                 $this->repository->getLogger()->error($e->getMessage(), ['participant' => $participant->name, 'notification' => $notificationIdentifier]);
             }
         }
-        return array_unique($addresses);
+        foreach ($addresses as $locale => $values){
+            $addresses[$locale] = array_unique($values);
+        }
+        return $addresses;
     }
 
     /**

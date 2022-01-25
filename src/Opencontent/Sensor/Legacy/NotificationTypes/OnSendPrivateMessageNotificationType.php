@@ -3,7 +3,7 @@
 namespace Opencontent\Sensor\Legacy\NotificationTypes;
 
 use Opencontent\Sensor\Api\Values\NotificationType;
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class OnSendPrivateMessageNotificationType extends NotificationType implements TemplateAwareNotificationTypeInterface
 {
@@ -14,7 +14,7 @@ class OnSendPrivateMessageNotificationType extends NotificationType implements T
     public function __construct()
     {
         $this->identifier = 'on_send_private_message';
-        $this->name = ezpI18n::tr('sensor/notification', 'Messaggio privato');
-        $this->description = ezpI18n::tr('sensor/notification', 'Ricevi una notifica quando sei il destinatario di un messaggio privato');
+        $this->name = Translator::translate('Private message', 'notification');
+        $this->description = Translator::translate('Receive a notification when you are the recipient of a private message', 'notification');
     }
 }

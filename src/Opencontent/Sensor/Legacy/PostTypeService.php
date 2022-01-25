@@ -2,9 +2,9 @@
 
 namespace Opencontent\Sensor\Legacy;
 
-use ezpI18n;
 use Opencontent\Sensor\Api\Values\Post\Type;
 use Opencontent\Sensor\Core\PostTypeService as BasePostTypeService;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class PostTypeService extends BasePostTypeService
 {
@@ -45,22 +45,22 @@ class PostTypeService extends BasePostTypeService
                     $type->identifier = $typeIdentifier;
                     switch ($typeIdentifier) {
                         case 'suggerimento':
-                            $type->name = ezpI18n::tr('openpa_sensor/type', 'Suggerimento');
+                            $type->name = Translator::translate('suggerimento', 'type');
                             $type->label = 'warning';
                             break;
 
                         case 'reclamo':
-                            $type->name = ezpI18n::tr('openpa_sensor/type', 'Reclamo');
+                            $type->name = Translator::translate('reclamo', 'type');
                             $type->label = 'danger';
                             break;
 
                         case 'segnalazione':
-                            $type->name = ezpI18n::tr('openpa_sensor/type', 'Segnalazione');
+                            $type->name = Translator::translate('segnalazione', 'type');
                             $type->label = 'info';
                             break;
 
                         default:
-                            $type->name = ucfirst($typeIdentifier);
+                            $type->name = ucfirst(Translator::translate($typeIdentifier, 'type'));
                             $type->label = 'info';
                     }
 

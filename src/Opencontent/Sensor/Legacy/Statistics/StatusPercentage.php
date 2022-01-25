@@ -3,7 +3,7 @@
 namespace Opencontent\Sensor\Legacy\Statistics;
 
 use Opencontent\Sensor\Api\StatisticFactory;
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 use Opencontent\Sensor\Legacy\Repository;
 use Opencontent\Sensor\Legacy\Utils;
 
@@ -28,12 +28,12 @@ class StatusPercentage extends StatisticFactory
 
     public function getName()
     {
-        return ezpI18n::tr('sensor/chart', 'Stato');
+        return Translator::translate('Status', 'chart');
     }
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni per stato');
+        return Translator::translate('Number of issues by status', 'chart');
     }
 
     public function getData()

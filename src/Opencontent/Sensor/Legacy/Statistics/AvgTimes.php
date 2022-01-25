@@ -3,7 +3,7 @@
 namespace Opencontent\Sensor\Legacy\Statistics;
 
 use Opencontent\Sensor\Api\StatisticFactory;
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 use Opencontent\Sensor\Legacy\Repository;
 
 class AvgTimes extends StatisticFactory
@@ -27,12 +27,12 @@ class AvgTimes extends StatisticFactory
 
     public function getName()
     {
-        return ezpI18n::tr('sensor/chart', 'Media tempi di esecuzione');
+        return Translator::translate('Average execution times', 'chart');
     }
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Media dei tempi di esecuzione in giornate');
+        return Translator::translate('Average of execution times on days', 'chart');
     }
 
     public function getData()
@@ -95,10 +95,10 @@ class AvgTimes extends StatisticFactory
 
     private function getTimeName($name)
     {
-        if ($name == 'sensor_open_read_time_i') $name = ezpI18n::tr('sensor/chart', 'Lettura');
-        if ($name == 'sensor_read_assign_time_i') $name = ezpI18n::tr('sensor/chart', 'Assegnazione');
-        if ($name == 'sensor_assign_fix_time_i') $name = ezpI18n::tr('sensor/chart', 'Lavorazione');
-        if ($name == 'sensor_fix_close_time_i') $name = ezpI18n::tr('sensor/chart', 'Chiusura');
+        if ($name == 'sensor_open_read_time_i') $name = Translator::translate('Reading');
+        if ($name == 'sensor_read_assign_time_i') $name = Translator::translate('Assignment');
+        if ($name == 'sensor_assign_fix_time_i') $name = Translator::translate('Processing');
+        if ($name == 'sensor_fix_close_time_i') $name = Translator::translate('Closure');
 
         return $name;
     }

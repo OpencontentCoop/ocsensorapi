@@ -3,7 +3,7 @@
 namespace Opencontent\Sensor\Legacy\NotificationTypes;
 
 use Opencontent\Sensor\Api\Values\NotificationType;
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class OnReopenNotificationType extends NotificationType implements TemplateAwareNotificationTypeInterface
 {
@@ -12,7 +12,7 @@ class OnReopenNotificationType extends NotificationType implements TemplateAware
     public function __construct()
     {
         $this->identifier = 'on_reopen';
-        $this->name = ezpI18n::tr('sensor/notification', 'Riapertura di una segnalazione');
-        $this->description = ezpI18n::tr('sensor/notification', "Ricevi una notifica alla riapertura di una tua segnalazione");
+        $this->name = Translator::translate('Reopening a report', 'notification');
+        $this->description = Translator::translate("Receive a notification to the reopening of your issue", 'notification');
     }
 }

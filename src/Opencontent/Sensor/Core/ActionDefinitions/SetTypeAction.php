@@ -10,7 +10,7 @@ use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 
-class SetType extends ActionDefinition
+class SetTypeAction extends ActionDefinition
 {
     public function __construct()
     {

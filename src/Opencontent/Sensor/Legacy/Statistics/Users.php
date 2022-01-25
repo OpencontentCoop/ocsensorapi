@@ -2,7 +2,7 @@
 
 namespace Opencontent\Sensor\Legacy\Statistics;
 
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 use Opencontent\Opendata\Api\ContentSearch;
 use Opencontent\Sensor\Api\StatisticFactory;
 use Opencontent\Sensor\Legacy\Repository;
@@ -27,12 +27,12 @@ class Users extends StatisticFactory
 
     public function getName()
     {
-        return ezpI18n::tr('sensor/chart', 'Adesioni');
+        return Translator::translate('Subscriptions', 'chart');
     }
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Andamento nuove adesioni');
+        return Translator::translate('Subscriptions trend', 'chart');
     }
 
     public function getData()
@@ -89,7 +89,7 @@ class Users extends StatisticFactory
     private function search($query)
     {
         $contentSearch = new ContentSearch();
-        $contentSearch->setCurrentEnvironmentSettings(new \DefaultEnvironmentSettings());
+        $contentSearch->setCurrentEnvironmentSettings(new \SensorDefaultEnvironmentSettings());
 
         return $contentSearch->search($query, array());
     }

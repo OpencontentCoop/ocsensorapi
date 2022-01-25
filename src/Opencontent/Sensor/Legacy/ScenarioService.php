@@ -115,12 +115,12 @@ class ScenarioService extends BaseScenarioService
         $this->setEnvironmentSettings(new \FullEnvironmentSettings(['maxSearchLimit' => $this->scenarioSearchLimit]));
         $result = $this->search($query, []);
         foreach ($result->searchHits as $item) {
-            $scenarios[] = new SensorScenario($this->repository, (new Content($item))->getContentObject($this->repository->getCurrentLanguage()));
+            $scenarios[] = new SensorScenario($this->repository, \eZContentObject::fetch((int)$item['metadata']['id']));
         }
         while ($result->nextPageQuery){
             $result = $this->search($result->nextPageQuery, []);
             foreach ($result->searchHits as $item) {
-                $scenarios[] = new SensorScenario($this->repository, (new Content($item))->getContentObject($this->repository->getCurrentLanguage()));
+                $scenarios[] = new SensorScenario($this->repository, \eZContentObject::fetch((int)$item['metadata']['id']));
             }
         };
 

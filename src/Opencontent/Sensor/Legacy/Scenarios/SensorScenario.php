@@ -10,6 +10,7 @@ use Opencontent\Sensor\Api\Values\Scenario;
 use Opencontent\Sensor\Legacy\Repository;
 use Opencontent\Sensor\Legacy\SearchService;
 use eZContentObject;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class SensorScenario extends Scenario
 {
@@ -247,19 +248,20 @@ class SensorScenario extends Scenario
         return $data;
     }
 
-    public static function getAvailableEvents()
+    public static function getAvailableEvents($locale = null)
     {
         return [
-            'on_create' => 'Creazione della segnalazione',
-            'on_set_type' => 'Assegnazione della tipologia alla segnalazione',
-            'on_add_category' => 'Assegnazione di categoria alla segnalazione',
-            'on_add_area' => 'Assegnazione di zona alla segnalazione',
-            'on_fix' => 'Fine lavorazione della segnalazione',
-            'on_close' => 'Chiusura della segnalazione',
+            'on_create' => Translator::translate('Creating a issue', 'scenario', [], $locale),
+            'on_set_type' => Translator::translate('Type assignment to issue', 'scenario', [], $locale),
+            'on_add_category' => Translator::translate('Category assignment to issue', 'scenario', [], $locale),
+            'on_add_area' => Translator::translate('Zone assignment to issue', 'scenario', [], $locale),
+            'on_fix' => Translator::translate('Fixing the issue', 'scenario', [], $locale),
+            'on_close' => Translator::translate('Closing the issue', 'scenario', [], $locale),
         ];
     }
 
     /**
+     * @todo Al momento l'audit message viene scritto in italiano
      * @param string $trigger
      * @return string
      */
@@ -311,7 +313,7 @@ class SensorScenario extends Scenario
                 }
             }
         }
-        $availableEvents = self::getAvailableEvents();
+        $availableEvents = self::getAvailableEvents('ita-IT');
         $eventMessage = strtolower($availableEvents[$trigger]);
 
         $criteriaMessages = [];

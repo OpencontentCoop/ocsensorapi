@@ -24,19 +24,26 @@ class PrivateMailNotificationListener extends MailNotificationListener
                     /** @var ParticipantRole $role */
                     foreach ($roles as $role) {
                         if (!empty($notificationType->targets[$role->identifier])) {
-                            $mailData = $this->buildMailDataToRole($param, $notificationType, $role->identifier);
-                            $addresses = [];
+
+                            $localizedAddresses = [];
                             /** @var Participant $participant */
                             foreach ($this->repository->getParticipantService()->loadPostParticipantsByRole($param->post, $role->identifier) as $participant) {
                                 if (in_array($participant->id, $receiverIdList)) {
-                                    $addresses = array_merge($addresses, $this->getAddressFromParticipant($participant, $param->identifier, $notificationType->targets[$role->identifier]));
+                                    $localizedAddresses = array_merge($localizedAddresses, $this->getLocalizedAddressFromParticipant($participant, $param->identifier, $notificationType->targets[$role->identifier]));
                                 }
                             }
-                            $addresses = array_unique($addresses);
-                            if ($mailData && !empty($addresses)) {
-                                if ($this->sendMail($addresses, $mailData['subject'], $mailData['body'], $mailData['parameters'])) {
-                                    $this->repository->getLogger()->info("Sent private notification mail to addresses: " . implode(',', $addresses));
-                                    $auditMessages[] = "Invio notifica privata a " . implode(',', $addresses);
+                            foreach ($localizedAddresses as $locale => $values){
+                                $localizedAddresses[$locale] = array_unique($values);
+                            }
+
+                            foreach ($localizedAddresses as $locale => $addresses) {
+                                $mailData = $this->buildMailDataToRole($param, $notificationType, $role->identifier, $locale);
+                                $this->repository->setCurrentLanguage(\eZLocale::currentLocaleCode());
+                                if ($mailData && !empty($addresses)) {
+                                    if ($this->sendMail($addresses, $mailData['subject'], $mailData['body'], $mailData['parameters'])) {
+                                        $this->repository->getLogger()->info("Sent private notification mail to addresses: " . implode(',', $addresses));
+                                        $auditMessages[] = "Invio notifica ($locale) privata a " . implode(',', $addresses);
+                                    }
                                 }
                             }
                         } else {

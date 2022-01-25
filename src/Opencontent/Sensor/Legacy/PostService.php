@@ -32,6 +32,7 @@ use Opencontent\Sensor\Legacy\Utils\ExpiryTools;
 use Opencontent\Sensor\Legacy\Validators\PostCreateStructValidator;
 use Opencontent\Sensor\Legacy\Validators\PostUpdateStructValidator;
 use Ramsey\Uuid\Uuid;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class PostService extends PostServiceBase
 {
@@ -143,10 +144,10 @@ class PostService extends PostServiceBase
         if ($post->expirationInfo->expirationDateTime instanceof \DateTime) {
             $diffResult = Utils::getDateDiff($post->expirationInfo->expirationDateTime);
             if ($diffResult->interval->invert) {
-                $expirationText = \ezpI18n::tr('sensor/expiring', 'Scaduto da');
+                $expirationText = Translator::translate('Expired since', 'expiring');
                 $post->expirationInfo->label = 'danger';
             } else {
-                $expirationText = \ezpI18n::tr('sensor/expiring', 'Scade fra');
+                $expirationText = Translator::translate('Expires in', 'expiring');
                 $post->expirationInfo->label = 'default';
             }
             $post->expirationInfo->text = $expirationText . ' ' . $diffResult->getText();
@@ -501,7 +502,7 @@ class PostService extends PostServiceBase
     {
         $contentObject = $this->getContentObject($post);
         if (!$status instanceof eZContentObjectState) {
-            list($group, $identifier) = explode('.', $status);
+            [$group, $identifier] = explode('.', $status);
             $states = $this->repository->getSensorPostStates($group);
             $status = $states["{$group}.{$identifier}"];
         }

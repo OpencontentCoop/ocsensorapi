@@ -3,7 +3,7 @@
 namespace Opencontent\Sensor\Legacy\NotificationTypes;
 
 use Opencontent\Sensor\Api\Values\NotificationType;
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 
@@ -14,8 +14,8 @@ class OnGroupAssignNotificationType extends NotificationType implements Template
     public function __construct()
     {
         $this->identifier = 'on_group_assign';
-        $this->name = ezpI18n::tr('sensor/notification', 'Assegnazione di una segnalazione a un gruppo');
-        $this->description = ezpI18n::tr('sensor/notification', 'Ricevi una notifica quando una segnalazione viene assegnata al tuo gruppo');
+        $this->name = Translator::translate('Assigning a issue to a group', 'notification');
+        $this->description = Translator::translate('Receive notification when a issue is assigned to your group', 'notification');
         $this->targets[ParticipantRole::ROLE_OWNER] = [Participant::TYPE_GROUP];
     }
 

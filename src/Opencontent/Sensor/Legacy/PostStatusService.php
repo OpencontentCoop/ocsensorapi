@@ -4,6 +4,7 @@ namespace Opencontent\Sensor\Legacy;
 
 use Opencontent\Sensor\Api\Values\Post\Status;
 use Opencontent\Sensor\Core\PostStatusService as BasePostStatusService;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class PostStatusService extends BasePostStatusService
 {

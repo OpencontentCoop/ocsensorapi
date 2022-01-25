@@ -17,13 +17,13 @@ trait ContentSearchTrait
     abstract public function getSubtreeAsString();
 
     /**
-     * @return \DefaultEnvironmentSettings
+     * @return \SensorDefaultEnvironmentSettings
      * @throws \Opencontent\Opendata\Api\Exception\OutOfRangeException
      */
     public function getEnvironmentSettings()
     {
         if ($this->environmentSettings === null) {
-            return new \DefaultEnvironmentSettings();
+            return new \SensorDefaultEnvironmentSettings();
         }
 
         return $this->environmentSettings;

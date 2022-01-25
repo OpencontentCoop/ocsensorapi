@@ -3,7 +3,7 @@
 namespace Opencontent\Sensor\Legacy\NotificationTypes;
 
 use Opencontent\Sensor\Api\Values\NotificationType;
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class OnAddObserverNotificationType extends NotificationType implements TemplateAwareNotificationTypeInterface
 {
@@ -12,7 +12,7 @@ class OnAddObserverNotificationType extends NotificationType implements Template
     public function __construct()
     {
         $this->identifier = 'on_add_observer';
-        $this->name = ezpI18n::tr('sensor/notification', 'Coinvolgimento di un osservatore');
-        $this->description = ezpI18n::tr('sensor/notification', 'Ricevi una notifica quando un osservatore viene coinvolto in una segnalazione');
+        $this->name = Translator::translate('Involvement of an observer', 'notification');
+        $this->description = Translator::translate('Receive a notification when an observer is involved in a report', 'notification');
     }
 }

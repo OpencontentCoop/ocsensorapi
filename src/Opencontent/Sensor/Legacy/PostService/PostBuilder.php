@@ -4,7 +4,6 @@ namespace Opencontent\Sensor\Legacy\PostService;
 
 use eZImageAliasHandler;
 use DateInterval;
-use ezpI18n;
 use Opencontent\Sensor\Api\ScenarioService;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\Participant;

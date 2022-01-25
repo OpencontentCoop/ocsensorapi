@@ -2,10 +2,9 @@
 
 namespace Opencontent\Sensor\Legacy\Statistics;
 
-use Opencontent\QueryLanguage\Parser\Exception;
 use Opencontent\Sensor\Api\StatisticFactory;
 use Opencontent\Sensor\Legacy\Repository;
-use Opencontent\Sensor\Legacy\Utils;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class ExecutionTrend extends StatisticFactory
 {
@@ -29,12 +28,12 @@ class ExecutionTrend extends StatisticFactory
 
     public function getName()
     {
-        return \ezpI18n::tr('sensor/chart', 'Tempi di lavorazione');
+        return Translator::translate('Processing times', 'chart');
     }
 
     public function getDescription()
     {
-        return \ezpI18n::tr('sensor/chart', 'Numero di segnalazioni per tempi di lavorazione');
+        return Translator::translate('Number of reports for processing times', 'chart');
     }
 
     public function getData()

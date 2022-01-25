@@ -4,7 +4,7 @@ namespace Opencontent\Sensor\Legacy\Statistics;
 
 use Opencontent\Sensor\Api\StatisticFactory;
 use Opencontent\Sensor\Legacy\Repository;
-use Opencontent\Sensor\Legacy\Utils;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class PostAging extends StatisticFactory
 {
@@ -30,12 +30,12 @@ class PostAging extends StatisticFactory
 
     public function getName()
     {
-        return \ezpI18n::tr('sensor/chart', 'Anzianità segnalazioni');
+        return Translator::translate('Aging of issues', 'chart');
     }
 
     public function getDescription()
     {
-        return \ezpI18n::tr('sensor/chart', 'Numero di segnalazioni aperte per periodi di anzianità');
+        return Translator::translate('Number of issues by aging time buckets', 'chart');
     }
 
     public function getData()

@@ -3,7 +3,7 @@
 namespace Opencontent\Sensor\Legacy\Utils;
 
 use Opencontent\Sensor\Api\Values\ParticipantCollection;
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
 
 class TimelineTools
@@ -94,79 +94,49 @@ class TimelineTools
 
             switch ($parts[0]) {
                 case '_fixed':
-                    $result = ezpI18n::tr(
-                        'sensor/robot message',
-                        'Completata da %name',
-                        false,
-                        array('%name' => $name)
-                    );
+                    $result = Translator::translate('Fixed by %name', 'robot', ['%name' => $name]);
                     break;
 
                 case '_read':
-                    $result = ezpI18n::tr(
-                        'sensor/robot message',
-                        'Letta da %name',
-                        false,
-                        array('%name' => $name)
-                    );
+                    $result = Translator::translate('Read by %name', 'robot', ['%name' => $name]);
                     break;
 
                 case '_closed':
-                    $result = ezpI18n::tr(
-                        'sensor/robot message',
-                        'Chiusa da %name',
-                        false,
-                        array('%name' => $name)
-                    );
+                    $result = Translator::translate('Closed by %name', 'robot', ['%name' => $name]);
                     break;
 
                 case '_assigned':
                     if (in_array($creatorId, $nameIdList)){
-                        $result = ezpI18n::tr(
-                            'sensor/robot message',
-                            'Presa in carico da %name',
-                            false,
-                            array('%name' => $name)
-                        );
+                        $result = Translator::translate('Taken in charge by %name', 'robot', ['%name' => $name]);
                     }else {
-                        $result = ezpI18n::tr(
-                            'sensor/robot message',
-                            'Assegnata a %name',
-                            false,
-                            array('%name' => $name)
-                        );
+                        $result = Translator::translate('Assigned to %name', 'robot', ['%name' => $name]);
                     }
                     break;
 
                 case '_reopened':
-                    $result = ezpI18n::tr(
-                        'sensor/robot message',
-                        'Riaperta da %name',
-                        false,
-                        array('%name' => $name)
-                    );
+                    $result = Translator::translate('Reopen by %name', 'robot', ['%name' => $name]);
                     break;
             }
         } else {
             switch ($parts[0]) {
                 case '_fixed':
-                    $result = ezpI18n::tr('sensor/robot message', 'Completata');
+                    $result = Translator::translate('Fixed', 'robot');
                     break;
 
                 case '_read':
-                    $result = ezpI18n::tr('sensor/robot message', 'Letta');
+                    $result = Translator::translate('Read', 'robot');
                     break;
 
                 case '_closed':
-                    $result = ezpI18n::tr('sensor/robot message', 'Chiusa');
+                    $result = Translator::translate('Closed', 'robot');
                     break;
 
                 case '_assigned':
-                    $result = ezpI18n::tr('sensor/robot message', 'Assegnata');
+                    $result = Translator::translate('Assigned', 'robot');
                     break;
 
                 case '_reopened':
-                    $result = ezpI18n::tr('sensor/robot message', 'Riaperta');
+                    $result = Translator::translate('Reopen', 'robot');
                     break;
             }
         }

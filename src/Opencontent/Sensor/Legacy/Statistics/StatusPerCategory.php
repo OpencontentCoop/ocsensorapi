@@ -4,6 +4,7 @@ namespace Opencontent\Sensor\Legacy\Statistics;
 
 use Opencontent\Sensor\Api\StatisticFactory;
 use Opencontent\Sensor\Legacy\Repository;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class StatusPerCategory extends StatisticFactory
 {
@@ -28,12 +29,12 @@ class StatusPerCategory extends StatisticFactory
 
     public function getName()
     {
-        return \ezpI18n::tr('sensor/chart', 'Stato per categoria');
+        return Translator::translate('Status by category', 'chart');
     }
 
     public function getDescription()
     {
-        return \ezpI18n::tr('sensor/chart', 'Stato delle segnalazioni per categoria');
+        return Translator::translate('Status of issues by category', 'chart');
     }
 
     public function getData()

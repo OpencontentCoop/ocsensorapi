@@ -23,7 +23,9 @@ class Logger extends AbstractLogger implements LoggerInterface
 
     private function getStringValue($value)
     {
-        if (is_scalar($value) or method_exists($value, '__toString')) {
+        if (empty($value)) {
+            $stringValue = '[empty]';
+        }elseif (is_scalar($value) or method_exists($value, '__toString')) {
             $stringValue = $value;
         }elseif (is_array($value)){
             $stringValue = '';
@@ -35,6 +37,6 @@ class Logger extends AbstractLogger implements LoggerInterface
             }
         }
 
-        return $stringValue;
+        return (string)$stringValue;
     }
 }

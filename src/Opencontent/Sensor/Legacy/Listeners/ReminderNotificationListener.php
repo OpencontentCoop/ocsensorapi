@@ -69,8 +69,10 @@ class ReminderNotificationListener extends AbstractListener
                             $this->repository->getLogger()->info("Notify '{$event->getName()}' to user {$user->name}");
 
                             $currentLanguage = $this->repository->getUserService()->loadUser($user->id)->language;
+                            $this->repository->setCurrentLanguage($currentLanguage);
                             $notificationTexts = $notificationType->template[ParticipantRole::ROLE_AUTHOR][$currentLanguage];
 
+                            \eZTemplate::resetInstance();
                             $tpl = \eZTemplate::factory();
                             $tpl->resetVariables();
                             $templatePath = 'design:sensor/mail/reminder.tpl';
@@ -122,6 +124,8 @@ class ReminderNotificationListener extends AbstractListener
                             }
                         }
                     }
+
+                    $this->repository->setCurrentLanguage(\eZLocale::currentLocaleCode());
                 }
             } else {
                 $this->repository->getLogger()->error('Attribute ' . self::INACTIVITY_INTERVAL_ATTRIBUTE . ' in sensor root not found', ['event' => $event->getName()]);

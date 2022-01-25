@@ -60,7 +60,7 @@ class SearchService extends BaseSearchService
         $searchQuery = $query ? 'raw[meta_name_t] = ' . $query : '';
         $query = "classes [{$classString}] and subtree [{$subtreeString}] and $searchQuery limit $limit cursor [$cursor]";
         $search = new ContentSearch();
-        $search->setCurrentEnvironmentSettings(new \DefaultEnvironmentSettings());
+        $search->setCurrentEnvironmentSettings(new \SensorDefaultEnvironmentSettings());
 
         $operatorsClasses = explode(',', $this->repository->getOperatorService()->getClassIdentifierAsString());
         $groupClasses = explode(',', $this->repository->getGroupService()->getClassIdentifierAsString());
@@ -361,7 +361,7 @@ class SearchService extends BaseSearchService
     private function getUserIdListByFiscalCode($fiscalCode)
     {
         $query = "select-fields [metadata.id => data.fiscal_code] and fiscal_code = '\"{$fiscalCode}\"'";
-        $currentEnvironment = new \DefaultEnvironmentSettings();
+        $currentEnvironment = new \SensorDefaultEnvironmentSettings();
         $parser = new \ezpRestHttpRequestParser();
         $request = $parser->createRequest();
         $currentEnvironment->__set('request', $request);

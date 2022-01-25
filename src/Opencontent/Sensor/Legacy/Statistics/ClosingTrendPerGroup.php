@@ -2,7 +2,7 @@
 
 namespace Opencontent\Sensor\Legacy\Statistics;
 
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class ClosingTrendPerGroup extends ClosingTrend
 {
@@ -13,12 +13,12 @@ class ClosingTrendPerGroup extends ClosingTrend
 
     public function getName()
     {
-        return ezpI18n::tr('sensor/chart', 'Trend per gruppo di incaricati');
+        return Translator::translate('Trend by group of operators in charge', 'chart');
     }
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Percentuale di segnalazioni chiuse per gruppo di incaricati');
+        return Translator::translate('Percentage of messages closed by group of operators in charge', 'chart');
     }
 
     public function getDataFields()

@@ -347,4 +347,14 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
 
         return $this->postStatusService;
     }
+
+    public function setCurrentLanguage($language)
+    {
+        $this->language = $language;
+    }
+
+    public function getCurrentLanguage()
+    {
+        return $this->language;
+    }
 }

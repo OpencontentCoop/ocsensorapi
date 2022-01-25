@@ -204,13 +204,20 @@ class UserService extends UserServiceBase
                     $user->moderationMode = $this->loadUserIsModerated($ezUser);
                     $user->type = $userObject->attribute('class_identifier');
                     $user->groups = $this->loadUserGroups($userObject);
-                    $user->language = $userObject->attribute('initial_language_code');
+                    $user->language = $this->getLocale($userObject);
                     $user->restrictMode = $this->loadUserHasRestrictMode($ezUser);
                 }
             }
             $this->users[$id] = $user;
         }
         return $this->users[$id];
+    }
+
+    private function getLocale(eZContentObject $userObject)
+    {
+        $preference = $this->getEzPreferenceValue('sensor_language', (int)$userObject->attribute('id'));
+
+        return $preference ? $preference : $userObject->attribute('initial_language_code');
     }
 
     private function getAdditionalInfo($userId)

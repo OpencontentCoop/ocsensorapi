@@ -3,9 +3,8 @@
 namespace Opencontent\Sensor\Legacy\Statistics;
 
 use Opencontent\Sensor\Api\StatisticFactory;
-use Opencontent\Sensor\Api\Values\Group;
 use Opencontent\Sensor\Legacy\Repository;
-use Opencontent\Sensor\Legacy\SearchService;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 
 class StatusPerOwnerGroup extends StatisticFactory
 {
@@ -32,12 +31,12 @@ class StatusPerOwnerGroup extends StatisticFactory
 
     public function getName()
     {
-        return \ezpI18n::tr('sensor/chart', 'Stato per gruppo di incaricati');
+        return Translator::translate('Status for group of operators in charge', 'chart');
     }
 
     public function getDescription()
     {
-        return \ezpI18n::tr('sensor/chart', 'Stato delle segnalazioni per gruppi di incaricati coinvolti');
+        return Translator::translate('Status of issues for groups of operators in charge', 'chart');
     }
 
     public function getData()

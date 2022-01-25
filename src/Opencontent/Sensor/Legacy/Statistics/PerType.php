@@ -3,7 +3,7 @@
 namespace Opencontent\Sensor\Legacy\Statistics;
 
 use Opencontent\Sensor\Api\StatisticFactory;
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 use Opencontent\Sensor\Legacy\Repository;
 
 class PerType extends StatisticFactory
@@ -27,12 +27,12 @@ class PerType extends StatisticFactory
 
     public function getName()
     {
-        return ezpI18n::tr('sensor/chart', 'Tipologia');
+        return Translator::translate('Type', 'chart');
     }
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni aperte per tipologia');
+        return Translator::translate('Number of issues by type', 'chart');
     }
 
     public function getData()
@@ -57,7 +57,7 @@ class PerType extends StatisticFactory
             $pivotItems = $search->pivot["attr_type_s,{$byInterval}"];
             foreach ($pivotItems as $pivotItem) {
                 $item = [
-                    'name' => ezpI18n::tr('sensor/chart', $pivotItem['value']),
+                    'name' => Translator::translate($pivotItem['value']),
                     'data' => []
                 ];
                 $item['data'][] = [

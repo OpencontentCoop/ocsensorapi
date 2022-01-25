@@ -3,7 +3,7 @@
 namespace Opencontent\Sensor\Legacy\Statistics;
 
 use Opencontent\Sensor\Api\StatisticFactory;
-use ezpI18n;
+use Opencontent\Sensor\Legacy\Utils\Translator;
 use Opencontent\Sensor\Legacy\Repository;
 
 class PerArea extends StatisticFactory
@@ -27,12 +27,12 @@ class PerArea extends StatisticFactory
 
     public function getName()
     {
-        return ezpI18n::tr('sensor/chart', 'Zone');
+        return Translator::translate( 'Area', 'chart');
     }
 
     public function getDescription()
     {
-        return ezpI18n::tr('sensor/chart', 'Numero di segnalazioni aperte per zona');
+        return Translator::translate('Number of issues by area', 'chart');
     }
 
     public function getData()

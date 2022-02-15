@@ -76,6 +76,7 @@ class PostBuilder
         $post->description = $this->loadPostDescription();
         $post->type = $this->loadPostType();
         $post->images = $this->loadPostImages();
+        $post->files = $this->loadPostAttachments('files');
         $post->attachments = $this->loadPostAttachments();
         $post->categories = $this->loadPostCategories();
         $post->areas = $this->loadPostAreas();
@@ -365,6 +366,7 @@ class PostBuilder
                 $image = new Post\Field\Image();
                 $image->fileName = $file->attribute('original_filename');
 
+                /** @var \eZDFSFileHandler $fileHandler */
                 $fileHandler = \eZClusterFileHandler::instance($file->attribute('filepath'));
                 $fileHandler->fetch();
 
@@ -397,6 +399,10 @@ class PostBuilder
                     'url' => $url,
                     'filesize' => $fileHandler->size()
                 );
+
+                $image->mimeType = $fileHandler->dataType();
+                $image->size = $fileHandler->size();
+
                 $data[] = $image;
 
                 $fileHandler->deleteLocal();
@@ -406,13 +412,13 @@ class PostBuilder
         return $data;
     }
 
-    protected function loadPostAttachments()
+    protected function loadPostAttachments($identifier = 'attachment')
     {
         $data = array();
-        if (isset($this->contentObjectDataMap['attachment'])
-            && $this->contentObjectDataMap['attachment']->hasContent()
+        if (isset($this->contentObjectDataMap[$identifier])
+            && $this->contentObjectDataMap[$identifier]->hasContent()
         ) {
-            $attribute = $this->contentObjectDataMap['attachment'];
+            $attribute = $this->contentObjectDataMap[$identifier];
             $files = array();
             $prefix = 'content';
             if ($attribute->attribute('data_type_string') == \eZBinaryFileType::DATA_TYPE_STRING) {
@@ -424,13 +430,13 @@ class PostBuilder
 
             foreach ($files as $file) {
                 if ($file instanceof \eZBinaryFile) {
-                    $attachment = new Post\Field\Attachment();
+                    $attachment = $identifier == 'attachment' ? new Post\Field\Attachment() : new Post\Field\File();
                     $attachment->filename = $file->attribute('original_filename');
 
                     $attachment->downloadUrl = $prefix . '/download/'
-                        . $this->contentObjectDataMap['attachment']->attribute('contentobject_id')
-                        . '/' . $this->contentObjectDataMap['attachment']->attribute('id')
-                        . '/' . $this->contentObjectDataMap['attachment']->attribute('version');
+                        . $this->contentObjectDataMap[$identifier]->attribute('contentobject_id')
+                        . '/' . $this->contentObjectDataMap[$identifier]->attribute('id')
+                        . '/' . $this->contentObjectDataMap[$identifier]->attribute('version');
                     if ($prefix == 'ocmultibinary'){
                         $attachment->downloadUrl .= '/' . $file->attribute('filename') . '/file';
                     }
@@ -440,6 +446,10 @@ class PostBuilder
                         . $attribute->attribute('id') . '-' . $attribute->attribute('version') . '-' . $attribute->attribute('language_code')
                         . '/' . base64_encode($file->attribute('filename'))
                         . '/' . $file->attribute('original_filename');
+
+                    $attachment->mimeType = $file->attribute('mime_type');
+                    $attachment->size = $file->attribute('filesize');
+                    $attachment->icon = Utils\MimeIcon::getIconByMimeType($attachment->mimeType, false, '16x16');
 
                     $data[] = $attachment;
                 }

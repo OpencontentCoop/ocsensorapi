@@ -1958,6 +1958,7 @@ class SchemaBuilder
 
             'Address' => $this->buildSchema('Address'),
             'Image' => $this->buildSchema('Image'),
+            'File' => $this->buildSchema('File'),
             'Attachment' => $this->buildSchema('Attachment'),
             'AttachmentCollection' => $this->buildSchema('AttachmentCollection'),
 
@@ -2092,6 +2093,14 @@ class SchemaBuilder
                     'file' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'byte', 'description' => 'base64-encoded file contents']),
                 ];
                 break;
+            case 'File':
+                $schema->title = 'File';
+                $schema->type = 'object';
+                $schema->properties = [
+                    'filename' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'File name']),
+                    'file' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'byte', 'description' => 'base64-encoded file contents']),
+                ];
+                break;
             case 'Attachment':
                 $schema->title = 'Attachment';
                 $schema->type = 'object';
@@ -2156,6 +2165,12 @@ class SchemaBuilder
                             'type' => 'array',
                             'description' => $attribute->attribute('name'),
                             'items' => ['ref' => '#/components/schemas/Image']
+                        ];
+                    } elseif ($identifier == 'files') {
+                        $properties = [
+                            'type' => 'array',
+                            'description' => $attribute->attribute('name'),
+                            'items' => ['ref' => '#/components/schemas/File']
                         ];
                     } elseif ($identifier == 'type') {
                         $properties = [
@@ -2228,6 +2243,7 @@ class SchemaBuilder
                     'reporter' => $this->buildSchemaProperty(['type' => 'integer', 'description' => 'Reporter']),
                     'image' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'url', 'description' => 'Image (first post image)', 'nullable' => true]),
                     'images' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'string', 'format' => 'url'], 'description' => 'Images']),
+                    'files' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'string', 'format' => 'url'], 'description' => 'Files']),
                     'is_comments_allowed' => $this->buildSchemaProperty(['type' => 'boolean', 'description' => 'Comments allowed']),
                     'address_meta_info' => $this->buildSchemaProperty(['type' => 'object', 'description' => 'Key/value meta informations about geo location']),
                     'channel' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Channel', 'enum' => $channelEnum]),

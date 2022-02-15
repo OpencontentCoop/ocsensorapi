@@ -147,7 +147,12 @@ class Post extends Exportable
     /**
      * @var Post\Field\Image[]
      */
-    public $images;
+    public $images = [];
+
+    /**
+     * @var Post\Field\File[]
+     */
+    public $files = [];
 
     /**
      * @var Post\Field\Attachment[]

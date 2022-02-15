@@ -13,11 +13,11 @@ class CanAddImage extends UserIs
     public function userHasPermission(User $user, Post $post)
     {
         return !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
-            && count($post->images) < $this->getImageLimitCount()
+            && count($post->images) < $this->getMaxNumberOfImages()
             && $this->userIs(ParticipantRole::ROLE_AUTHOR, $user, $post);
     }
 
-    protected function getImageLimitCount()
+    protected function getMaxNumberOfImages()
     {
         return -1;
     }

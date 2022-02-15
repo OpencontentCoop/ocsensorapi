@@ -44,13 +44,14 @@ class ExecutionTrend extends StatisticFactory
             $areaFilter = $this->getAreaFilter();
             $groupFilter = $this->getOwnerGroupFilter();
             $typeFilter = $this->getTypeFilter();
+            $timeRangeFilter = $this->getRangeFilter();
 
             $groupIdlist = [];
             $data = [];
 //            $queries = [];
             foreach ($this->getBuckets() as $bucket) {
                 $rangeFilter = $bucket['filter'];
-                $query = "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter} raw[sensor_workflow_status_lk] in [fixed,closed] limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000]";
+                $query = "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter}{$timeRangeFilter} raw[sensor_workflow_status_lk] in [fixed,closed] limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000]";
 //                $queries[$bucket['name']] = $query;
                 try {
                     $search = $this->repository->getStatisticsService()->searchPosts(

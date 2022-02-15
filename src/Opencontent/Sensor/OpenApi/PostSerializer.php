@@ -13,9 +13,12 @@ class PostSerializer extends AbstractSerializer
      */
     public function serialize($post, array $parameters = [])
     {
-        $images = [];
+        $images = $files = [];
         foreach ($post->images as $image){
             $images[] = $image->jsonSerialize()['apiUrl'];
+        }
+        foreach ($post->files as $file){
+            $files[] = $file->jsonSerialize()['apiUrl'];
         }
 
         return $this->apiSettings->replacePlaceholders([
@@ -36,6 +39,7 @@ class PostSerializer extends AbstractSerializer
             'reporter' => (int)$post->reporter->id,
             'image' => isset($images[0]) ? $images[0] : null,
             'images' => $images,
+            'files' => $files,
             'is_comments_allowed' => $post->commentsIsOpen,
             'address_meta_info' => $post->meta,
             'channel' => $post->channel instanceof Post\Channel ? $post->channel->name : null,

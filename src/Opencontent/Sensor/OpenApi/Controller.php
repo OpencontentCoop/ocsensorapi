@@ -153,10 +153,10 @@ class Controller
         $postCreateStruct = $this->loadPostCreateStruct();
 
         $post = $this->repository->getPostService()->createPost($postCreateStruct);
-        if ($postCreateStruct->imagePath) @unlink($postCreateStruct->imagePath);
+        if ($postCreateStruct->imagePath) $this->cleanupTempImage($postCreateStruct->imagePath);
         if (count($postCreateStruct->imagePaths) > 0) {
             foreach ($postCreateStruct->imagePaths as $imagePath) {
-                @unlink($imagePath);
+                $this->cleanupTempImage($imagePath);
             }
         }
 
@@ -182,9 +182,9 @@ class Controller
         $postUpdateStruct = $this->loadPostUpdateStruct();
         $postUpdateStruct->setPost($this->loadPost());
         $post = $this->repository->getPostService()->updatePost($postUpdateStruct);
-        if ($postUpdateStruct->imagePath) @unlink($postUpdateStruct->imagePath);
+        if ($postUpdateStruct->imagePath) $this->cleanupTempImage($postUpdateStruct->imagePath);
         foreach ($postUpdateStruct->imagePaths as $imagePath){
-            @unlink($imagePath);
+            $this->cleanupTempImage($imagePath);
         }
 
         $result = new ezpRestMvcResult();
@@ -1376,12 +1376,12 @@ class Controller
             $imagePaths = [];
             foreach ($payload['images'] as $image) {
                 if (!empty($image)) {
-                    $this->isValidImage($image);
+                    $this->isValidUpload($image);
                 }
             }
             foreach ($payload['images'] as $image) {
                 if (!empty($image)) {
-                    $imagePaths[] = $this->downloadImage($image);
+                    $imagePaths[] = $this->downloadBinary($image);
                 }
             }
             if (!empty($imagePaths)) {
@@ -1390,8 +1390,25 @@ class Controller
 
         }elseif (isset($payload['image'])) {
             if (!empty($payload['image'])) {
-                $this->isValidImage($payload['image']);
-                $postCreateStruct->imagePath = $this->downloadImage($payload['image']);
+                $this->isValidUpload($payload['image']);
+                $postCreateStruct->imagePath = $this->downloadBinary($payload['image']);
+            }
+        }
+
+        if (isset($payload['files'])) {
+            $filesPaths = [];
+            foreach ($payload['files'] as $file) {
+                if (!empty($file)) {
+                    $this->isValidUpload($file);
+                }
+            }
+            foreach ($payload['files'] as $file) {
+                if (!empty($file)) {
+                    $filesPaths[] = $this->downloadBinary($file);
+                }
+            }
+            if (!empty($filesPaths)) {
+                $postCreateStruct->filePaths = $filesPaths;
             }
         }
 
@@ -1417,7 +1434,7 @@ class Controller
         return $postCreateStruct;
     }
 
-    private function isValidImage($image)
+    private function isValidUpload($image)
     {
         if (!filter_var($image, FILTER_VALIDATE_URL) && (empty($image['filename']) || empty($image['file']))) {
             throw new InvalidInputException("Field images has wrong format");
@@ -1426,7 +1443,7 @@ class Controller
         return true;
     }
 
-    private function downloadImage($image)
+    private function downloadBinary($image)
     {
         if (filter_var($image, FILTER_VALIDATE_URL)){
             $context = null;
@@ -1441,10 +1458,28 @@ class Controller
             $imagePath = \eZSys::cacheDirectory() . '/' . basename($image);
             \eZFile::create(basename($imagePath), dirname($imagePath), file_get_contents($image, false, $context));
         }else {
-            $imagePath = \eZSys::cacheDirectory() . '/' . $image['filename'];
-            \eZFile::create(basename($imagePath), dirname($imagePath), base64_decode($image['file']));
+            /** @var \eZDFSFileHandler $fileHandler */
+            $fileHandler = \eZClusterFileHandler::instance($image['file']);
+            if ($fileHandler->exists()){
+                $fileHandler->fetch();
+                $imagePath = $image['file'];
+            }else {
+                $imagePath = \eZSys::cacheDirectory() . '/' . $image['filename'];
+                \eZFile::create(basename($imagePath), dirname($imagePath), base64_decode($image['file']));
+            }
         }
         return $imagePath;
+    }
+
+    private function cleanupTempImage($filepath)
+    {
+        /** @var \eZDFSFileHandler $fileHandler */
+        $fileHandler = \eZClusterFileHandler::instance($filepath);
+        if ($fileHandler->exists()){
+            $fileHandler->delete();
+            $fileHandler->purge();
+        }
+        @unlink($filepath);
     }
 
     private function getRequestParameter($name)

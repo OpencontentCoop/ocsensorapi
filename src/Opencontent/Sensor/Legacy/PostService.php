@@ -343,6 +343,9 @@ class PostService extends PostServiceBase
             if (count($post->imagePaths) > 0) {
                 $params['attributes']['images'] = implode('|', $post->imagePaths);
             }
+            if (count($post->filePaths) > 0) {
+                $params['attributes']['files'] = implode('|', $post->filePaths);
+            }
             if (count($post->areas) > 0) {
                 $params['attributes']['area'] = implode('|', $post->areas);
             }
@@ -386,10 +389,10 @@ class PostService extends PostServiceBase
                 $attributes[$identifier] = (string)$post->{$identifier};
             }
         }
-        if (!empty((string)$post->areas)) {
+        if (!empty($post->areas)) {
             $attributes['area'] = implode('-', $post->areas);
         }
-        if (!empty((string)$post->categories)) {
+        if (!empty($post->categories)) {
             $attributes['category'] = implode('-', $post->categories);
         }
         if ((string)$post->privacy != '') {
@@ -397,6 +400,9 @@ class PostService extends PostServiceBase
         }
         if (!empty($post->imagePaths)) {
             $attributes['images'] = implode('|', $post->imagePaths);
+        }
+        if (!empty($post->filePaths)) {
+            $attributes['files'] = implode('|', $post->filePaths);
         }
 
         if (\eZContentFunctions::updateAndPublishObject($contentObject, ['attributes' => $attributes])) {
@@ -645,6 +651,28 @@ class PostService extends PostServiceBase
         }
     }
 
+    public function addFile(Post $post, $files)
+    {
+        $contentObjectDataMap = $this->getContentObject($post)->dataMap();
+        if (isset($contentObjectDataMap['files'])
+            && $contentObjectDataMap['files']->attribute('data_type_string') == 'ocmultibinary'){
+            $attribute = $contentObjectDataMap['files'];
+            foreach ($files as $file) {
+                $tempFilePath = \eZSys::cacheDirectory() . '/fileupload/' . $file['filename'];
+                \eZFile::create(basename($tempFilePath), dirname($tempFilePath), base64_decode($file['file']));
+                $attribute->dataType()->insertRegularFile(
+                    $attribute->attribute('object'),
+                    $attribute->attribute('version'),
+                    $attribute->attribute('language_code'),
+                    $attribute,
+                    $tempFilePath,
+                    $response
+                );
+                @unlink($tempFilePath);
+            }
+        }
+    }
+
     public function removeImage(Post $post, $files)
     {
         $contentObjectDataMap = $this->getContentObject($post)->dataMap();
@@ -654,7 +682,6 @@ class PostService extends PostServiceBase
                 $currentFiles = $contentObjectDataMap['images']->content();
                 foreach ($files as $file) {
                     $filename = false;
-                    //echo '<pre>';print_r($currentFiles);die();
                     foreach ($currentFiles as $currentFile) {
                         if ($currentFile->attribute('original_filename') == basename($file)) {
                             $filename = $currentFile->attribute('filename');
@@ -667,6 +694,33 @@ class PostService extends PostServiceBase
                         $postValue[$contentObjectDataMap['images']->attribute('id') . '_delete_multibinary'][$filename] = 1;
                         $http->setPostVariable('CustomActionButton', $postValue);
                         $contentObjectDataMap['images']->customHTTPAction($http, 'delete_multibinary', []);
+                    }
+                }
+            }
+        }
+    }
+
+    public function removeFile(Post $post, $files)
+    {
+        $contentObjectDataMap = $this->getContentObject($post)->dataMap();
+        if (isset($contentObjectDataMap['files'])) {
+            if ($contentObjectDataMap['files']->attribute('data_type_string') == 'ocmultibinary') {
+                /** @var \eZMultiBinaryFile[] $currentFiles */
+                $currentFiles = $contentObjectDataMap['files']->content();
+                foreach ($files as $file) {
+                    $filename = false;
+                    foreach ($currentFiles as $currentFile) {
+                        if ($currentFile->attribute('original_filename') == basename($file)) {
+                            $filename = $currentFile->attribute('filename');
+                            break;
+                        }
+                    }
+                    if ($filename) {
+                        $http = new \eZHTTPTool();
+                        $postValue = [];
+                        $postValue[$contentObjectDataMap['files']->attribute('id') . '_delete_multibinary'][$filename] = 1;
+                        $http->setPostVariable('CustomActionButton', $postValue);
+                        $contentObjectDataMap['files']->customHTTPAction($http, 'delete_multibinary', []);
                     }
                 }
             }

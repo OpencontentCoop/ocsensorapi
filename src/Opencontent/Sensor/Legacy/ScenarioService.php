@@ -111,7 +111,7 @@ class ScenarioService extends BaseScenarioService
                         $nodes = \eZContentObjectTreeNode::subTreeByNodeID([
                             'ClassFilterType' => 'include',
                             'ClassFilterArray' => ['sensor_scenario'],
-                            'Limitations' => []
+                            'Limitation' => []
                         ], $args[1]);
                         foreach ($nodes as $node) {
                             $data[] = SensorScenario::fromContentObject($this->repository, $node->object());

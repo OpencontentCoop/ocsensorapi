@@ -27,7 +27,7 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
     public function loadOperator($id, $limitations = null)
     {
         try {
-            $content = $this->searchOne("id = '$id'", $limitations);
+            $content = $this->searchOne($id, $limitations);
 
             return $this->internalLoadOperator($content);
         } catch (\Exception $e) {

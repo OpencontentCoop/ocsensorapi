@@ -4,6 +4,7 @@ namespace Opencontent\Sensor\Legacy;
 
 use Opencontent\Opendata\Api\ContentSearch;
 use Opencontent\Opendata\Api\EnvironmentSettings;
+use Opencontent\Opendata\Api\Values\Content;
 use Opencontent\Opendata\Api\Values\SearchResults;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 
@@ -53,18 +54,22 @@ trait ContentSearchTrait
     }
 
     /**
-     * @param $query
+     * @param $identifier
      * @param null $limitations
      * @return array
      * @throws NotFoundException
      * @throws \Opencontent\Opendata\Api\Exception\OutOfRangeException
      */
-    public function searchOne($query, $limitations = null)
+    public function searchOne($identifier, $limitations = null)
     {
-        $query .= ' limit 1';
-        $results = $this->search($query, $limitations);
-        if ($results->totalCount > 0) {
-            return $results->searchHits[0];
+        $object = \eZContentObject::fetch((int)$identifier);
+        $classes = array_map('trim', explode(',', $this->getClassIdentifierAsString()));
+        if ($object instanceof \eZContentObject && in_array($object->attribute('class_identifier'), $classes)){
+            if ($limitations === null && !$object->canRead()){
+                throw new NotFoundException();
+            }
+
+            return $this->getEnvironmentSettings()->filterContent(Content::createFromEzContentObject($object));
         }
 
         throw new NotFoundException();

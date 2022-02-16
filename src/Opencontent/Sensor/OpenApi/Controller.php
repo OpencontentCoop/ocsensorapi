@@ -667,7 +667,7 @@ class Controller
     {
         $result = new ezpRestMvcResult();
         // utilizzo la ricerca per il controllo dei permessi di accesso
-        $userData = $this->repository->getUserService()->searchOne('id = ' . $this->restController->userId);
+        $userData = $this->repository->getUserService()->searchOne($this->restController->userId);
         $user = $this->repository->getUserService()->loadUser($userData['metadata']['id']);
         $result->variables = $this->serializer->serializeItem($user);
 
@@ -677,7 +677,7 @@ class Controller
     public function getUserByIdPosts()
     {
         // utilizzo la ricerca per il controllo dei permessi di accesso
-        $userData = $this->repository->getUserService()->searchOne('id = ' . $this->restController->userId);
+        $userData = $this->repository->getUserService()->searchOne($this->restController->userId);
         $user = $this->repository->getUserService()->loadUser($userData['metadata']['id']);
 
         return $this->loadPosts($user->id);
@@ -698,7 +698,7 @@ class Controller
 
     public function updateUserById()
     {
-        $userData = $this->repository->getUserService()->searchOne('id = ' . $this->restController->userId);
+        $userData = $this->repository->getUserService()->searchOne($this->restController->userId);
         $user = $this->repository->getUserService()->loadUser($userData['metadata']['id']);
         $payload = $this->restController->getPayload();
 
@@ -707,7 +707,7 @@ class Controller
 
     public function patchUserById()
     {
-        $userData = $this->repository->getUserService()->searchOne('id = ' . $this->restController->userId);
+        $userData = $this->repository->getUserService()->searchOne($this->restController->userId);
         $user = $this->repository->getUserService()->loadUser($userData['metadata']['id']);
         $payload = $this->restController->getPayload();
 

@@ -88,7 +88,7 @@ class FaqService extends BaseFaqService
             return $this->faqs[$faqId];
         }
         try {
-            $content = $this->searchOne("id = '$faqId'");
+            $content = $this->searchOne($faqId);
 
             $faq = $this->internalLoadFaq($content);
             $this->faqs[$faqId] = $faq;

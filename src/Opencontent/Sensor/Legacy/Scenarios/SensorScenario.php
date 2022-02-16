@@ -24,73 +24,139 @@ class SensorScenario extends Scenario
 
     private $makeReporterAsObserver = false;
 
-    public function __construct(Repository $repository, eZContentObject $object)
+    public function __construct(Repository $repository)
     {
         $this->repository = $repository;
+    }
 
-        $this->id = $object->attribute('id');
+    public static function fromContentObject(Repository $repository, eZContentObject $object)
+    {
+        $scenario = new SensorScenario($repository);
+        $scenario->id = $object->attribute('id');
         $dataMap = $object->dataMap();
 
-        $this->triggers = explode('|', $dataMap['triggers']->toString());
+        if (isset($dataMap['triggers'])) {
+            $scenario->triggers = explode('|', $dataMap['triggers']->toString());
+        }
 
         if (isset($dataMap['approver']) && $dataMap['approver']->hasContent()) {
-            $this->approversIdList = array_map( 'intval', explode('-', $dataMap['approver']->toString()));
+            $scenario->approversIdList = array_map( 'intval', explode('-', $dataMap['approver']->toString()));
         }
         if (isset($dataMap['owner_group']) && $dataMap['owner_group']->hasContent()) {
-            $this->ownerGroupsIdList = array_map( 'intval', explode('-', $dataMap['owner_group']->toString()));
+            $scenario->ownerGroupsIdList = array_map( 'intval', explode('-', $dataMap['owner_group']->toString()));
         }
         if (isset($dataMap['owner']) && $dataMap['owner']->hasContent()) {
-            $this->ownersIdList = array_map( 'intval', explode('-', $dataMap['owner']->toString()));
+            $scenario->ownersIdList = array_map( 'intval', explode('-', $dataMap['owner']->toString()));
         }
         if (isset($dataMap['observer']) && $dataMap['observer']->hasContent()) {
-            $this->observersIdList = array_map('intval', explode('-', $dataMap['observer']->toString()));
+            $scenario->observersIdList = array_map('intval', explode('-', $dataMap['observer']->toString()));
         }
         if (isset($dataMap['category']) && $dataMap['category']->hasContent()) {
-            $this->category = (int)$dataMap['category']->toString();
+            $scenario->category = (int)$dataMap['category']->toString();
         }
 
         if (isset($dataMap['criterion_type']) && $dataMap['criterion_type']->hasContent()) {
-            $this->criteria[] = new Criteria\TypeCriterion(
-                $this->repository,
+            $scenario->criteria[] = new Criteria\TypeCriterion(
+                $scenario->repository,
                 explode('|', $dataMap['criterion_type']->toString())
             );
         }
         if (isset($dataMap['criterion_category']) && $dataMap['criterion_category']->hasContent()) {
-            $this->criteria[] = new Criteria\CategoryCriterion(
-                $this->repository,
+            $scenario->criteria[] = new Criteria\CategoryCriterion(
+                $scenario->repository,
                 array_map( 'intval', explode('-', $dataMap['criterion_category']->toString()))
             );
         }
         if (isset($dataMap['criterion_area']) && $dataMap['criterion_area']->hasContent()) {
-            $this->criteria[] = new Criteria\AreaCriterion(
-                $this->repository,
+            $scenario->criteria[] = new Criteria\AreaCriterion(
+                $scenario->repository,
                 array_map( 'intval', explode('-', $dataMap['criterion_area']->toString()))
             );
         }
         if (isset($dataMap['criterion_reporter_group']) && $dataMap['criterion_reporter_group']->hasContent()) {
-            $this->criteria[] = new Criteria\ReporterGroupCriterion(
-                $this->repository,
+            $scenario->criteria[] = new Criteria\ReporterGroupCriterion(
+                $scenario->repository,
                 array_map( 'intval', explode('-', $dataMap['criterion_reporter_group']->toString()))
             );
         }
 
         if (isset($dataMap['random_owner'])) {
-            $this->useRandomOwner = $dataMap['random_owner']->attribute('data_int') == 1;
+            $scenario->useRandomOwner = $dataMap['random_owner']->attribute('data_int') == 1;
         }
         if (isset($dataMap['reporter_as_approver'])) {
-            $this->makeReporterAsApprover = $dataMap['reporter_as_approver']->attribute('data_int') == 1;
+            $scenario->makeReporterAsApprover = $dataMap['reporter_as_approver']->attribute('data_int') == 1;
         }
         if (isset($dataMap['reporter_as_owner'])) {
-            $this->makeReporterAsOwner = $dataMap['reporter_as_owner']->attribute('data_int') == 1;
+            $scenario->makeReporterAsOwner = $dataMap['reporter_as_owner']->attribute('data_int') == 1;
         }
         if (isset($dataMap['reporter_as_observer'])) {
-            $this->makeReporterAsObserver = $dataMap['reporter_as_observer']->attribute('data_int') == 1;
+            $scenario->makeReporterAsObserver = $dataMap['reporter_as_observer']->attribute('data_int') == 1;
         }
 
         if (isset($dataMap['expiry']) && $dataMap['expiry']->hasContent()) {
-            $this->expiry = (int)$dataMap['expiry']->toString();
+            $scenario->expiry = (int)$dataMap['expiry']->toString();
         }
+
+        return $scenario;
     }
+
+    public static function fromArray(Repository $repository, $data)
+    {
+        $scenario = new SensorScenario($repository);
+        $scenario->id = $data['id'];
+        $scenario->triggers = $data['triggers'];
+        if (is_array($data['assignments']['approver'])) {
+            $scenario->approversIdList = array_column($data['assignments']['approver'], 'id');
+        }
+        if (is_array($data['assignments']['owner_group'])) {
+            $scenario->ownerGroupsIdList = array_column($data['assignments']['owner_group'], 'id');
+        }
+        if (is_array($data['assignments']['owner'])) {
+            $scenario->ownersIdList =  array_column($data['assignments']['owner'], 'id');
+        }
+        if (is_array($data['assignments']['observer'])) {
+            $scenario->observersIdList =  array_column($data['assignments']['observer'], 'id');
+        }
+        if (is_array($data['assignments']['category'])) {
+            $scenario->category = array_column($data['assignments']['category'], 'id');
+        }
+        $scenario->useRandomOwner = (bool)$data['assignments']['random_owner'];
+        $scenario->makeReporterAsApprover = (bool)$data['assignments']['reporter_as_approver'];
+        $scenario->makeReporterAsOwner = (bool)$data['assignments']['reporter_as_owner'];
+        $scenario->makeReporterAsObserver = (bool)$data['assignments']['reporter_as_observer'];
+        if (intval($data['expiry']) > 0) {
+            $scenario->expiry = intval($data['expiry']);
+        }
+        foreach ($data['criteria'] as $type => $values){
+            if ($type === 'type'){
+                $scenario->criteria[] = new Criteria\TypeCriterion(
+                    $scenario->repository,
+                    $values
+                );
+            }
+            if ($type === 'category'){
+                $scenario->criteria[] = new Criteria\CategoryCriterion(
+                    $scenario->repository,
+                    $values
+                );
+            }
+            if ($type === 'area'){
+                $scenario->criteria[] = new Criteria\AreaCriterion(
+                    $scenario->repository,
+                    $values
+                );
+            }
+            if ($type === 'reporter_group'){
+                $scenario->criteria[] = new Criteria\ReporterGroupCriterion(
+                    $scenario->repository,
+                    $values
+                );
+            }
+        }
+
+        return $scenario;
+    }
+
 
     public function getApprovers()
     {
@@ -150,7 +216,7 @@ class SensorScenario extends Scenario
     private function getRandomOperatorFromGroups($ownerGroupsIdList)
     {
         foreach ($ownerGroupsIdList as $ownerGroupsId){
-            $group = $this->repository->getGroupService()->loadGroup($ownerGroupsId);
+            $group = $this->repository->getGroupService()->loadGroup($ownerGroupsId, []);
             if ($group instanceof Group){
                 $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, '*');
                 $operators = $operatorResult['items'];
@@ -171,7 +237,7 @@ class SensorScenario extends Scenario
     private function recursiveLoadOperatorsByGroup(Group $group, $operatorResult, &$operators)
     {
         if ($operatorResult['next']) {
-            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next']);
+            $operatorResult = $this->repository->getOperatorService()->loadOperatorsByGroup($group, SearchService::MAX_LIMIT, $operatorResult['next'], []);
             $operators = array_merge($operatorResult['items'], $operators);
             $this->recursiveLoadOperatorsByGroup($group, $operatorResult, $operators);
         }

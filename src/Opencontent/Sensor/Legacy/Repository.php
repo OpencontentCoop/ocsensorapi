@@ -27,11 +27,6 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
 
     protected $useCache = false;
 
-    protected function __construct()
-    {
-        //$this->addListener('*', new Listeners\LogListener($this));
-    }
-
     /**
      * @return string
      */

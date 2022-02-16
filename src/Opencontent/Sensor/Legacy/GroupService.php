@@ -28,7 +28,7 @@ class GroupService extends \Opencontent\Sensor\Core\GroupService
             return self::$cache[$groupId];
         }
         try {
-            $content = $this->searchOne("id = '$groupId'", $limitations);
+            $content = $this->searchOne($groupId, $limitations);
             $group = $this->internalLoadGroup($content);
             if (is_array($limitations) && empty($limitations)){
                 self::$cache[$groupId] = $group;

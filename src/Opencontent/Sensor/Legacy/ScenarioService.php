@@ -26,6 +26,8 @@ class ScenarioService extends BaseScenarioService
 
     private $scenarioSearchLimit = 300;
 
+    private $scenariosByTrigger;
+
     public function getClassIdentifierAsString()
     {
         return 'sensor_scenario';
@@ -52,7 +54,11 @@ class ScenarioService extends BaseScenarioService
         if ($trigger == self::INIT_POST) {
             $loadedScenarios = $this->loadInitScenarios();
         } else {
-            $loadedScenarios = $this->searchScenarios(['trigger' => $trigger]);
+            if ($this->repository->getSensorSettings()->get('ScenarioCache')) {
+                $loadedScenarios = $this->getScenariosByTriggerFromCache($trigger);
+            }else{
+                $loadedScenarios = $this->searchScenarios(['trigger' => $trigger]);
+            }
         }
         foreach ($loadedScenarios as $scenario) {
             $scenario->setCurrentPost($post);
@@ -80,6 +86,68 @@ class ScenarioService extends BaseScenarioService
         }
 
         return $scenarios;
+    }
+
+    private function getScenariosByTriggerFromCache($trigger)
+    {
+        if ($this->scenariosByTrigger === null) {
+            $this->scenariosByTrigger = [];
+            $scenarioRoot = $this->repository->getScenariosRootNode();
+            if ($scenarioRoot instanceof \eZContentObjectTreeNode) {
+                $rootId = $scenarioRoot->attribute('node_id');
+                $modified = $scenarioRoot->attribute('modified_subnode');
+                $data = self::getCacheManager()->processCache(
+                    function ($file, $mtime, $extraData) {
+                        if ($mtime >= $extraData[0]) {
+                            $content = include($file);
+                            return $content;
+                        } else {
+                            return new \eZClusterFileFailure(1, "Modified timestamp greater then file mtime");
+                        }
+                    },
+                    function ($file, $args) {
+                        $data = [];
+                        /** @var \eZContentObjectTreeNode[] $nodes */
+                        $nodes = \eZContentObjectTreeNode::subTreeByNodeID([
+                            'ClassFilterType' => 'include',
+                            'ClassFilterArray' => ['sensor_scenario'],
+                            'Limitations' => []
+                        ], $args[1]);
+                        foreach ($nodes as $node) {
+                            $data[] = SensorScenario::fromContentObject($this->repository, $node->object());
+                        }
+                        return [
+                            'content' => json_encode($data),
+                            'scope' => 'sensor-scenarios',
+                            'datatype' => 'php',
+                            'store' => true
+                        ];
+                    },
+                    null, null, [$modified, $rootId]
+                );
+
+                $scenariosList = json_decode($data, 1);
+                foreach ($scenariosList as $scenario) {
+                    foreach ($scenario['triggers'] as $trigger) {
+                        $this->scenariosByTrigger[$trigger][$scenario['id']] = SensorScenario::fromArray($this->repository, $scenario);
+                    }
+                }
+            }
+        }
+
+        if (isset($this->scenariosByTrigger[$trigger])){
+            ksort($this->scenariosByTrigger[$trigger]);
+            return array_values($this->scenariosByTrigger[$trigger]);
+        }
+
+        return [];
+    }
+
+    private static function getCacheManager()
+    {
+        $cacheFile = 'scenarios.cache';
+        $cacheFilePath = \eZDir::path(array(\eZSys::cacheDirectory(), 'ocopendata', 'sensor', 'scenarios', $cacheFile));
+        return \eZClusterFileHandler::instance($cacheFilePath);
     }
 
     public function loadInitScenarios()
@@ -115,12 +183,12 @@ class ScenarioService extends BaseScenarioService
         $this->setEnvironmentSettings(new \FullEnvironmentSettings(['maxSearchLimit' => $this->scenarioSearchLimit]));
         $result = $this->search($query, []);
         foreach ($result->searchHits as $item) {
-            $scenarios[] = new SensorScenario($this->repository, \eZContentObject::fetch((int)$item['metadata']['id']));
+            $scenarios[] = SensorScenario::fromContentObject($this->repository, \eZContentObject::fetch((int)$item['metadata']['id']));
         }
         while ($result->nextPageQuery){
             $result = $this->search($result->nextPageQuery, []);
             foreach ($result->searchHits as $item) {
-                $scenarios[] = new SensorScenario($this->repository, \eZContentObject::fetch((int)$item['metadata']['id']));
+                $scenarios[] = SensorScenario::fromContentObject($this->repository, \eZContentObject::fetch((int)$item['metadata']['id']));
             }
         };
 
@@ -146,7 +214,7 @@ class ScenarioService extends BaseScenarioService
             TreeNode::clearCache($this->repository->getCategoriesRootNode()->attribute('node_id'));
         }
 
-        return new SensorScenario($this->repository, $object);
+        return SensorScenario::fromContentObject($this->repository, $object);
     }
 
     private function loadStruct($struct)

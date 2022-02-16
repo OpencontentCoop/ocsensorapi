@@ -253,7 +253,8 @@ class SolrMapper
         if (isset($data['sensor_assigning_time_i']) && isset($data['sensor_fixing_time_i']))
             $data['sensor_assign_fix_time_i'] = $data['sensor_fixing_time_i'] - $data['sensor_assigning_time_i'];
 
-        //se non c'è un sensor_fixing_time_i e la segnalazione è chiusa calcolare il sensor_assign_fix_time_i sulla chiusura
+        if (!isset($data['sensor_fixing_time_i']) && isset($data['sensor_closing_time_i'], $data['sensor_assigning_time_i']))
+            $data['sensor_assign_fix_time_i'] = $data['sensor_closing_time_i'] - $data['sensor_assigning_time_i'];
 
         if (isset($data['sensor_fixing_time_i']) && isset($data['sensor_closing_time_i']))
             $data['sensor_fix_close_time_i'] = $data['sensor_closing_time_i'] - $data['sensor_fixing_time_i'];;

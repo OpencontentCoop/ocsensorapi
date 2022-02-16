@@ -27,7 +27,14 @@ class FirstAreaApproverScenario extends Scenario
                     $dataMap = $firstAreaObject->dataMap();
                     if (isset($dataMap['approver']) && $dataMap['approver']->hasContent()) {
                         $approvers = explode('-', $dataMap['approver']->toString());
-                        $this->approversIdList = array_map('intval', $approvers);
+                        $approversIdList = array_map('intval', $approvers);
+                        /** @var eZContentObject[] $responderObjectList */
+                        $approversList = eZContentObject::fetchIDArray($approversIdList);
+                        foreach ($approversList as $approver){
+                            if (in_array($approver->attribute('class_identifier'), ['user', 'sensor_operator'])){
+                                $this->approversIdList[] = (int)$approver->attribute('id');
+                            }
+                        }
                     }
                 }
             }

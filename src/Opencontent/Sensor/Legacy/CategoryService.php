@@ -33,7 +33,7 @@ class CategoryService extends \Opencontent\Sensor\Core\CategoryService
             return $this->categories[$categoryId];
         }
         try {
-            $content = $this->searchOne("id = '$categoryId'");
+            $content = $this->searchOne($categoryId);
 
             $category = $this->internalLoadCategory($content);
             $this->categories[$categoryId] = $category;

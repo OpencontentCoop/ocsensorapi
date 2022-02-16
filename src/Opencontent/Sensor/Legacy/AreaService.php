@@ -28,7 +28,7 @@ class AreaService extends \Opencontent\Sensor\Core\AreaService
     public function loadArea($areaId, $limitations = null)
     {
         try {
-            $content = $this->searchOne("id = '$areaId'", $limitations);
+            $content = $this->searchOne($areaId, $limitations);
 
             return $this->internalLoadArea($content);
         } catch (\Exception $e) {

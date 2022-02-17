@@ -411,20 +411,18 @@ class UserService extends UserServiceBase
     {
         \eZUserOperationCollection::setSettings(  $user->id, !$enable, 0 );
         $user->isEnabled = $enable;
-        $this->refreshUser($user);
     }
 
     public function setCommentMode(User $user, $enable = true)
     {
         if ($enable) {
-            \eZPreferences::setValue('sensor_deny_comment', 1, $user->id);
-        } else {
             /** @var \eZDBInterface $db */
             $db = \eZDB::instance();
             $db->query("DELETE FROM ezpreferences WHERE user_id = {$user->id} AND name = 'sensor_deny_comment'");
+        } else {
+            \eZPreferences::setValue('sensor_deny_comment', 1, $user->id);
         }
         $user->commentMode = $enable;
-        $this->refreshUser($user);
     }
 
     public function setBehalfOfMode(User $user, $enable = true)
@@ -438,14 +436,12 @@ class UserService extends UserServiceBase
             }
         }
         $user->behalfOfMode = $enable;
-        $this->refreshUser($user);
     }
 
     public function setModerationMode(User $user, $enable = true)
     {
         $this->setAdditionalInfo($user->id, 'moderate', intval($enable));
         $user->moderationMode = $enable;
-        $this->refreshUser($user);
     }
 
     public function setRestrictMode(User $user, $enable = true)
@@ -459,7 +455,6 @@ class UserService extends UserServiceBase
         }
 
         $user->restrictMode = $enable;
-        $this->refreshUser($user);
     }
 
     public function getAlerts(User $user)

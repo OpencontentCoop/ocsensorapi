@@ -106,6 +106,11 @@ class User extends Exportable
      */
     public $restrictMode;
 
+    /**
+     * @var bool
+     */
+    public $isFirstApprover = false;
+
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);

@@ -36,6 +36,8 @@ class UserService extends UserServiceBase
 
     private $userContentClass;
 
+    private $firstApprovers;
+
     /**
      * @param $id
      * @return Post|User
@@ -206,6 +208,16 @@ class UserService extends UserServiceBase
                     $user->groups = $this->loadUserGroups($userObject);
                     $user->language = $this->getLocale($userObject);
                     $user->restrictMode = $this->loadUserHasRestrictMode($ezUser);
+
+                    if ($this->firstApprovers === null) {
+                        $this->firstApprovers = [];
+                        foreach ($this->repository->getScenarioService()->loadInitScenarios() as $scenario) {
+                            $this->firstApprovers = array_merge($this->firstApprovers, $scenario->getApprovers());
+                        }
+                    }
+                    if (in_array($user->id, $this->firstApprovers) || !empty(array_intersect($user->groups, $this->firstApprovers))){
+                        $user->isFirstApprover = true;
+                    }
                 }
             }
             $this->users[$id] = $user;

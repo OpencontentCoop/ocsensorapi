@@ -24,6 +24,8 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
      */
     protected $repository;
 
+    protected static $firstApprovers;
+
     public function loadOperator($id, $limitations = null)
     {
         try {

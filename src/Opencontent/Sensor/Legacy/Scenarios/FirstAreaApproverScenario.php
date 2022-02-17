@@ -11,6 +11,8 @@ use eZContentObject;
 
 class FirstAreaApproverScenario extends Scenario
 {
+    private $userApprovers = [];
+
     public function __construct(Repository $repository)
     {
         $this->id = 1;
@@ -31,13 +33,22 @@ class FirstAreaApproverScenario extends Scenario
                         /** @var eZContentObject[] $responderObjectList */
                         $approversList = eZContentObject::fetchIDArray($approversIdList);
                         foreach ($approversList as $approver){
+                            $this->approversIdList[] = (int)$approver->attribute('id');
                             if (in_array($approver->attribute('class_identifier'), ['user', 'sensor_operator'])){
-                                $this->approversIdList[] = (int)$approver->attribute('id');
+                                $this->userApprovers[] = (int)$approver->attribute('id');
                             }
                         }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getUserApprovers()
+    {
+        return $this->userApprovers;
     }
 }

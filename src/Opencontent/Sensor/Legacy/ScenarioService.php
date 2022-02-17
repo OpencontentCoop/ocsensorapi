@@ -152,10 +152,14 @@ class ScenarioService extends BaseScenarioService
 
     public function loadInitScenarios()
     {
-        return [
-            new FirstAreaApproverScenario($this->repository),
-            new FallbackScenario(),
-        ];
+        if ($this->initScenarios === null) {
+            $this->initScenarios = [
+                new FirstAreaApproverScenario($this->repository),
+                new FallbackScenario(),
+            ];
+        }
+
+        return $this->initScenarios;
     }
 
     public function searchScenarios(array $parameters)

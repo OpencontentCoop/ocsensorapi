@@ -22,13 +22,19 @@ abstract class ScenarioService implements ScenarioServiceInterface
 
     private static $avoidRecursion = [];
 
+    protected $initScenarios;
+
     /**
      * @param Repository $repository
+     * @params Scenario[] $initScenarios
      */
-    public function __construct(Repository $repository)
+    public function __construct(Repository $repository, $initScenarios = null)
     {
         $this->repository = $repository;
         $this->roles = $this->repository->getParticipantService()->loadParticipantRoleCollection();
+        if (!empty($initScenarios)) {
+            $this->initScenarios = $initScenarios;
+        }
     }
 
     public function applyScenario(Scenario $scenario, Post $post, $trigger, $context = [])

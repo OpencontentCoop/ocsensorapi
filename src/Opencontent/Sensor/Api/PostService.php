@@ -175,4 +175,11 @@ interface PostService
      */
     public function setPostType(Post $post, Post\Type $type);
 
+    /**
+     * @param Post $post
+     * @param array $tags
+     * @return mixed
+     */
+    public function setPostTags(Post $post, array $tags);
+
 }

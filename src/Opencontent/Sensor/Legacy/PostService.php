@@ -735,4 +735,14 @@ class PostService extends PostServiceBase
             $contentObjectDataMap['type']->store();
         }
     }
+
+    public function setPostTags(Post $post, array $tags)
+    {
+        $contentObjectDataMap = $this->getContentObject($post)->dataMap();
+        if (isset($contentObjectDataMap['tags'])
+            && $contentObjectDataMap['tags']->attribute('data_type_string') == \eZKeywordType::DATA_TYPE_STRING) {
+            $contentObjectDataMap['tags']->fromString(implode(',', $tags));
+            $contentObjectDataMap['tags']->store();
+        }
+    }
 }

@@ -199,6 +199,11 @@ class Post extends Exportable
      */
     public $latestOwnerGroup;
 
+    /**
+     * @var string[]
+     */
+    public $tags;
+
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);

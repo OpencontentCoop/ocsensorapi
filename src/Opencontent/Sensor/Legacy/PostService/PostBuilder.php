@@ -123,6 +123,8 @@ class PostBuilder
 
         $post->channel = $this->loadPostChannel();
 
+        $post->tags = $this->loadPostTags();
+
         $this->loadLatestOwnerAndOwnerGroup($post);
 
         $this->checkApproversConsistency($post);
@@ -174,6 +176,20 @@ class PostBuilder
         }
 
         return null;
+    }
+
+    protected function loadPostTags()
+    {
+        if (isset($this->contentObjectDataMap['tags'])
+            && $this->contentObjectDataMap['tags']->attribute('data_type_string') == \eZKeywordType::DATA_TYPE_STRING
+            && $this->contentObjectDataMap['tags']->hasContent()
+        ) {
+            $keyword = new \eZKeyword();
+            $keyword->fetch($this->contentObjectDataMap['tags']);
+            return $keyword->attribute('keywords');
+        }
+
+        return [];
     }
 
     protected function loadPostReporter()

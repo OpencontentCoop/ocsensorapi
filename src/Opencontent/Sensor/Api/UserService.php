@@ -38,4 +38,5 @@ interface UserService
 
     public function refreshUser($user);
 
+    public function setAsSuperObserver(User $user, $enable = true);
 }

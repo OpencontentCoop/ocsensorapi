@@ -218,6 +218,8 @@ class UserService extends UserServiceBase
                     if (in_array($user->id, $this->firstApprovers) || !empty(array_intersect($user->groups, $this->firstApprovers))){
                         $user->isFirstApprover = true;
                     }
+
+                    $user->isSuperObserver = $this->loadUserIsSuperObserver($ezUser);;
                 }
             }
             $this->users[$id] = $user;
@@ -393,6 +395,14 @@ class UserService extends UserServiceBase
         return $this->getEzPreferenceValue('sensor_deny_comment', $user->id()) != 1;
     }
 
+    private function loadUserIsSuperObserver(eZUser $user)
+    {
+        if ($user->isAnonymous()) {
+            return false;
+        }
+        return $this->getEzPreferenceValue('sensor_is_super_observer', $user->id()) == 1;
+    }
+
     private function loadUserIsModerated(eZUser $user)
     {
         $info = $this->getAdditionalInfo($user->id());
@@ -461,6 +471,19 @@ class UserService extends UserServiceBase
     {
         $this->setAdditionalInfo($user->id, 'moderate', intval($enable));
         $user->moderationMode = $enable;
+    }
+
+    public function setAsSuperObserver(User $user, $enable = true)
+    {
+        if ($enable) {
+            \eZPreferences::setValue('sensor_is_super_observer', 1, $user->id);
+        } else {
+            /** @var \eZDBInterface $db */
+            $db = \eZDB::instance();
+            $db->query("DELETE FROM ezpreferences WHERE user_id = {$user->id} AND name = 'sensor_is_super_observer'");
+        }
+
+        $user->restrictMode = $enable;
     }
 
     public function setRestrictMode(User $user, $enable = true)

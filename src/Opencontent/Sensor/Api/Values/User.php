@@ -111,6 +111,11 @@ class User extends Exportable
      */
     public $isFirstApprover = false;
 
+    /**
+     * @var bool
+     */
+    public $isSuperObserver = false;
+
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);

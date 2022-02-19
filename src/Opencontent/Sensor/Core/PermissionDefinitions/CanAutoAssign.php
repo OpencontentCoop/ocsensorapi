@@ -33,7 +33,11 @@ class CanAutoAssign extends UserIs
                 ||
                 (!$isDefaultApprover
                     && $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post)
-                    && !($this->userIs(ParticipantRole::ROLE_OWNER, $user, $post) && $post->workflowStatus->is(Post\WorkflowStatus::ASSIGNED)))
+                    && !($this->userIs(ParticipantRole::ROLE_OWNER, $user, $post)
+                        && $post->workflowStatus->is(Post\WorkflowStatus::ASSIGNED)))
+                ||
+                ($this->userIs(ParticipantRole::ROLE_OBSERVER, $user, $post)
+                    && $user->isSuperObserver)
             );
     }
 }

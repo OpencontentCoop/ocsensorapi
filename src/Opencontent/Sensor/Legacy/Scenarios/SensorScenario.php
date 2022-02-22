@@ -118,7 +118,7 @@ class SensorScenario extends Scenario
             $scenario->observersIdList =  array_column($data['assignments']['observer'], 'id');
         }
         if (is_array($data['assignments']['category'])) {
-            $scenario->category = array_column($data['assignments']['category'], 'id');
+            $scenario->category = $data['assignments']['category']['id'];
         }
         $scenario->useRandomOwner = (bool)$data['assignments']['random_owner'];
         $scenario->makeReporterAsApprover = (bool)$data['assignments']['reporter_as_approver'];

@@ -88,7 +88,7 @@ class ScenarioService extends BaseScenarioService
         return $scenarios;
     }
 
-    private function getScenariosByTriggerFromCache($trigger)
+    private function getScenariosByTriggerFromCache($requestTrigger)
     {
         if ($this->scenariosByTrigger === null) {
             $this->scenariosByTrigger = [];
@@ -135,9 +135,9 @@ class ScenarioService extends BaseScenarioService
             }
         }
 
-        if (isset($this->scenariosByTrigger[$trigger])){
-            ksort($this->scenariosByTrigger[$trigger]);
-            return array_values($this->scenariosByTrigger[$trigger]);
+        if (isset($this->scenariosByTrigger[$requestTrigger])){
+            ksort($this->scenariosByTrigger[$requestTrigger]);
+            return array_values($this->scenariosByTrigger[$requestTrigger]);
         }
 
         return [];

@@ -16,10 +16,48 @@ abstract class NotificationType extends Exportable
 
     public $template;
 
-    public $targets = [
-        ParticipantRole::ROLE_OBSERVER => [Participant::TYPE_USER],
-        ParticipantRole::ROLE_OWNER => [Participant::TYPE_USER, Participant::TYPE_GROUP],
-        ParticipantRole::ROLE_APPROVER => [Participant::TYPE_USER],
-        ParticipantRole::ROLE_AUTHOR => [Participant::TYPE_USER],
-    ];
+    /**
+     * @var array
+     */
+    protected $targets = [];
+
+    /**
+     * @param $role
+     * @return array
+     */
+    public function getTarget($role)
+    {
+        return isset($this->targets[$role]) ? $this->targets[$role] : [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getTargets()
+    {
+        return $this->targets;
+    }
+
+    /**
+     * @param $role
+     * @param array $types
+     * @return void
+     */
+    public function setTarget($role, array $types)
+    {
+        $this->targets[$role] = $types;
+    }
+
+    /**
+     * @param $targets
+     * @return void
+     */
+    public function setTargets($targets)
+    {
+        if (is_array($targets)){
+            foreach ($targets as $role => $types){
+                $this->setTarget($role, $types);
+            }
+        }
+    }
 }

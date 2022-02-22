@@ -14,7 +14,7 @@ class NotificationService extends \Opencontent\Sensor\Core\NotificationService
      */
     protected $repository;
 
-    private $notificationTypes;
+    private $notificationTypes = [];
 
     /**
      * @return NotificationType[]

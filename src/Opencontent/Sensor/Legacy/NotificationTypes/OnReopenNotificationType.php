@@ -9,10 +9,11 @@ class OnReopenNotificationType extends NotificationType implements TemplateAware
 {
     use TemplateTextHelperTrait;
 
-    public function __construct()
+    public function __construct(array $targets = null)
     {
         $this->identifier = 'on_reopen';
         $this->name = Translator::translate('Reopening a report', 'notification');
         $this->description = Translator::translate("Receive a notification to the reopening of your issue", 'notification');
+        $this->setTargets($targets);
     }
 }

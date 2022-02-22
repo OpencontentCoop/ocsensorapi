@@ -9,10 +9,11 @@ class OnCreateNotificationType extends NotificationType implements TemplateAware
 {
     use TemplateTextHelperTrait;
 
-    public function __construct()
+    public function __construct(array $targets = null)
     {
         $this->identifier = 'on_create';
         $this->name = Translator::translate('Creating a issue', 'notification');
         $this->description = Translator::translate('Receive a notification for creating a issue', 'notification');
+        $this->setTargets($targets);
     }
 }

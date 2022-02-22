@@ -9,10 +9,11 @@ class OnCloseNotificationType extends NotificationType implements TemplateAwareN
 {
     use TemplateTextHelperTrait;
 
-    public function __construct()
+    public function __construct(array $targets = null)
     {
         $this->identifier = 'on_close';
         $this->name = Translator::translate('Closing a issue', 'notification');
         $this->description = Translator::translate("Receive a notification when your issue has been closed", 'notification');
+        $this->setTargets($targets);
     }
 }

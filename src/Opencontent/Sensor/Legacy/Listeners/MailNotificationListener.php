@@ -40,12 +40,12 @@ class MailNotificationListener extends AbstractListener
                 $roles = $this->repository->getParticipantService()->loadParticipantRoleCollection();
                 /** @var ParticipantRole $role */
                 foreach ($roles as $role) {
-                    if (!empty($notificationType->targets[$role->identifier])) {
+                    if (!empty($notificationType->getTarget($role->identifier))) {
 
                         $localizedAddresses = [];
                         /** @var Participant $participant */
                         foreach ($this->repository->getParticipantService()->loadPostParticipantsByRole($param->post, $role->identifier) as $participant) {
-                            $localizedAddresses = array_merge_recursive($localizedAddresses, $this->getLocalizedAddressFromParticipant($participant, $param->identifier, $notificationType->targets[$role->identifier]));
+                            $localizedAddresses = array_merge_recursive($localizedAddresses, $this->getLocalizedAddressFromParticipant($participant, $param->identifier, $notificationType->getTarget($role->identifier)));
                         }
                         foreach ($localizedAddresses as $locale => $values){
                             $localizedAddresses[$locale] = array_unique($values);

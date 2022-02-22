@@ -23,13 +23,13 @@ class PrivateMailNotificationListener extends MailNotificationListener
                     $roles = $this->repository->getParticipantService()->loadParticipantRoleCollection();
                     /** @var ParticipantRole $role */
                     foreach ($roles as $role) {
-                        if (!empty($notificationType->targets[$role->identifier])) {
+                        if (!empty($notificationType->getTarget($role->identifier))) {
 
                             $localizedAddresses = [];
                             /** @var Participant $participant */
                             foreach ($this->repository->getParticipantService()->loadPostParticipantsByRole($param->post, $role->identifier) as $participant) {
                                 if (in_array($participant->id, $receiverIdList)) {
-                                    $localizedAddresses = array_merge($localizedAddresses, $this->getLocalizedAddressFromParticipant($participant, $param->identifier, $notificationType->targets[$role->identifier]));
+                                    $localizedAddresses = array_merge($localizedAddresses, $this->getLocalizedAddressFromParticipant($participant, $param->identifier, $notificationType->getTarget($role->identifier)));
                                 }
                             }
                             foreach ($localizedAddresses as $locale => $values){

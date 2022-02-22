@@ -9,10 +9,11 @@ class OnAddObserverNotificationType extends NotificationType implements Template
 {
     use TemplateTextHelperTrait;
 
-    public function __construct()
+    public function __construct(array $targets = null)
     {
         $this->identifier = 'on_add_observer';
         $this->name = Translator::translate('Involvement of an observer', 'notification');
         $this->description = Translator::translate('Receive a notification when an observer is involved in a report', 'notification');
+        $this->setTargets($targets);
     }
 }

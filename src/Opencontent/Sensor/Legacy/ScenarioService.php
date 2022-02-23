@@ -166,7 +166,8 @@ class ScenarioService extends BaseScenarioService
     {
         $query = '';
         if (isset($parameters['trigger'])) {
-            $query .= "triggers = '" . addcslashes($parameters['trigger'], "')([]") . "' and ";
+            $triggerParam = addcslashes($parameters['trigger'], "')([]");
+            $query .= "(triggers in ['$triggerParam'] or raw[triggers_lk] in ['$triggerParam']) and ";
         }
         if (isset($parameters['type'])) {
             $query .= "criterion_type = '" . addcslashes($parameters['type'], "')([]") . "' and ";

@@ -18,6 +18,14 @@ trait BucketsTrait
         ];
         $data[] = $item;
 
+        $end = (clone $now)->sub(new \DateInterval('PT8H'));
+        $start = (clone $now)->sub(new \DateInterval('P1D'))->setTime(23, 59);
+        $item = [
+            'name' => '8h-1g',
+            'filter' => " $field range [{$start->format('c')},{$end->format('c')}] and ",
+        ];
+        $data[] = $item;
+
         $end = (clone $now)->sub(new \DateInterval('P1D'))->setTime(23, 59);
         $start = (clone $now)->sub(new \DateInterval('P3D'))->setTime(23, 59);
         $item = [

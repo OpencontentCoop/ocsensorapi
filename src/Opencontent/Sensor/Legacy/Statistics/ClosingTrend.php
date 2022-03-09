@@ -52,14 +52,18 @@ class ClosingTrend extends StatisticFactory
         if ($this->hasParameter('category')) {
             $selectedCategories = (array)$this->getParameter('category');
         }
+        if ($this->hasParameter('maincategories')) {
+            $selectedCategories = array_merge($selectedCategories, (array)$this->getParameter('maincategories'));
+        }
+        $selectedCategories = array_unique($selectedCategories);
+
         foreach ($this->dailyReportRepository->getCategories() as $id => $category) {
-            if (!empty($selectedCategories) && !in_array($id, $selectedCategories)){
-                continue;
+            if (!empty($selectedCategories) && in_array($id, $selectedCategories)) {
+                $fields['percentage_cat_' . $id . '_sf'] = [
+                    'label' => $category['name'],
+                    'color' => $this->getColor($id)
+                ];
             }
-            $fields['percentage_cat_'. $id .'_sf'] = [
-                'label' => $category['name'],
-                'color' => $this->getColor($id)
-            ];
         }
 
         return $fields;
@@ -87,7 +91,7 @@ class ClosingTrend extends StatisticFactory
                     'name' => $values['label'],
                     'data' => $percentages,
                     'color' => $values['color'],
-                    'visible' => $percentageField === 'percentage_sf' || $this->hasParameter('category') || $this->hasParameter('group'),
+                    'visible' => $percentageField === 'percentage_sf' || $this->hasParameter('maincategories') || $this->hasParameter('category') || $this->hasParameter('group'),
                 ];
             }
         }

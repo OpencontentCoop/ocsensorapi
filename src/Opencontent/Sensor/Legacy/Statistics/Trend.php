@@ -49,9 +49,10 @@ class Trend extends StatisticFactory
             $rangeFilter = $this->getRangeFilter();
             $groupFilter = $this->getOwnerGroupFilter();
             $typeFilter = $this->getTypeFilter();
+            $userGroupFilter = $this->getUserGroupFilter();
 
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter} limit 1 facets [raw[{$byStartInterval}]|alpha|10000,raw[{$byEndInterval}]|alpha|10000]",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter}{$userGroupFilter} limit 1 facets [raw[{$byStartInterval}]|alpha|10000,raw[{$byEndInterval}]|alpha|10000]",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
 

@@ -45,9 +45,10 @@ class PerArea extends StatisticFactory
             $rangeFilter = $this->getRangeFilter();
             $groupFilter = $this->getOwnerGroupFilter();
             $typeFilter = $this->getTypeFilter();
+            $userGroupFilter = $this->getUserGroupFilter();
 
             $search = $this->repository->getStatisticsService()->searchPosts(
-                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter} limit 1 facets [raw[submeta_area___id____si]|alpha|1000] pivot [facet=>[submeta_area___id____si,{$byInterval}],mincount=>1]",
+                "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$typeFilter}{$userGroupFilter} limit 1 facets [raw[submeta_area___id____si]|alpha|1000] pivot [facet=>[submeta_area___id____si,{$byInterval}],mincount=>1]",
                 ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
 

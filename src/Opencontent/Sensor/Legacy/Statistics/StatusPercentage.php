@@ -47,8 +47,9 @@ class StatusPercentage extends StatisticFactory
             $areaFilter = $this->getAreaFilter();
             $groupFilter = $this->getOwnerGroupFilter();
             $typeFilter = $this->getTypeFilter();
+            $userGroupFilter = $this->getUserGroupFilter();
             $this->data = $this->getStatusHistory(
-                "{$categoryFilter}{$areaFilter}{$groupFilter}{$typeFilter}",
+                "{$categoryFilter}{$areaFilter}{$groupFilter}{$typeFilter}{$userGroupFilter}",
                 $this->getGapFilter(),
                 $this->getParameter('start'),
                 $this->getParameter('end')

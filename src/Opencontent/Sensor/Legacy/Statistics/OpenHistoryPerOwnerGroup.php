@@ -47,6 +47,7 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
             $areaFilter = $this->getAreaFilter();
             $typeFilter = $this->getTypeFilter();
             $ownerGroupFilter = '';//$this->getOwnerGroupFilter();
+            $userGroupFilter = $this->getUserGroupFilter();
             $rangeFilter = $this->getRangeFilter();
             $hasGroupingFlag = $this->hasParameter('taggroup');
             $statusFilter = " raw[sensor_status_lk] = 'open' and ";
@@ -57,7 +58,7 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
                 $operators = $this->getOperatorsTree($groupIdList);
                 foreach ($operators as $id => $operator) {
                     $nameAndQueryList[$operator['name']] =
-                        "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$ownerGroupFilter}raw[sensor_last_owner_user_id_i] = '$id' and";
+                        "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$ownerGroupFilter}{$userGroupFilter} raw[sensor_last_owner_user_id_i] = '$id' and";
                 }
 
 //            } elseif ($this->hasParameter('group') && $hasGroupingFlag) {
@@ -77,7 +78,7 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
                     $idList = array_merge(["$id"], $group['children']);
                     $groupFilter = 'raw[sensor_last_owner_group_id_i] in [' . implode(',', $idList) . '] and ';
                     $nameAndQueryList[$group['name']] =
-                        "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}";
+                        "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}{$userGroupFilter}";
                 }
             }
 

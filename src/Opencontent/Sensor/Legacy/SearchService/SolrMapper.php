@@ -71,6 +71,7 @@ class SolrMapper
 
             'author_id' => 'sensor_author_id_i',
             'author_name' => 'sensor_author_name_t',
+            'author_group_id_list' => 'sensor_author_group_list_lk',
             'reporter_id' => 'sensor_reporter_id_i',
             'reporter_name' => 'sensor_reporter_name_t',
             'behalf' => 'sensor_behalf_b',
@@ -162,6 +163,7 @@ class SolrMapper
         if ($this->post->author) {
             $data['sensor_author_id_i'] = (int)$this->post->author->id;
             $data['sensor_author_name_t'] = $this->post->author->name;
+            $data['sensor_author_group_list_lk'] = is_array($this->post->author->groups) ? implode(',', array_unique($this->post->author->groups)) : '0';
         }
 
         if ($this->post->reporter) {

@@ -33,13 +33,12 @@ class ClosingTrendPerGroup extends ClosingTrend
             $selectedGroups = (array)$this->getParameter('group');
         }
         foreach ($this->dailyReportRepository->getGroups() as $id => $group) {
-            if (!empty($selectedGroups) && !in_array($id, $selectedGroups)){
-                continue;
+            if (!empty($selectedGroups) && in_array($id, $selectedGroups)){
+                $fields['percentage_group_'. $id .'_sf'] = [
+                    'label' => $group['name'],
+                    'color' => $this->getColor($id)
+                ];
             }
-            $fields['percentage_group_'. $id .'_sf'] = [
-                'label' => $group['name'],
-                'color' => $this->getColor($id)
-            ];
         }
 
         return $fields;

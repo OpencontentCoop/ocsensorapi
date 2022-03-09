@@ -46,13 +46,14 @@ class PostAging extends StatisticFactory
             $categoryFilter = $this->getCategoryFilter();
             $areaFilter = $this->getAreaFilter();
             $groupFilter = $this->getOwnerGroupFilter();
+            $userGroupFilter = $this->getUserGroupFilter();
             
             $groupIdlist = [];
             $data = [];
             foreach ($this->getBuckets() as $bucket) {
                 $rangeFilter = $bucket['filter'];
                 $search = $this->repository->getStatisticsService()->searchPosts(
-                    "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter} raw[sensor_status_lk] = 'open' limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000]",
+                    "{$categoryFilter}{$areaFilter}{$rangeFilter}{$groupFilter}{$userGroupFilter} raw[sensor_status_lk] in ['pending', 'open'] limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000]",
                     ['authorFiscalCode' => $this->getAuthorFiscalCode()]
                 );
                 $data[$bucket['name']] = $search->facets[0]['data'];

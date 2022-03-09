@@ -282,6 +282,22 @@ trait FiltersTrait
         return $typeFilter;
     }
 
+    protected function getUserGroupFilter()
+    {
+        $userGroupFilter = '';
+        if ($this->hasParameter('usergroup')) {
+            $userGroup = $this->getParameter('usergroup');
+            if (!empty($userGroup)){
+                if (!is_array($userGroup)){
+                    $userGroup = [$userGroup];
+                }
+                $userGroupFilter .= 'raw[sensor_author_group_list_lk] in [\'' . implode("','", $userGroup) . '\'] and ';
+            }
+        }
+
+        return $userGroupFilter;
+    }
+
     protected function getGroupTree($groupedByTag = false, $onlyGroups = [])
     {
         $tree = [];

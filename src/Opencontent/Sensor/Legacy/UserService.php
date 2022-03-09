@@ -205,7 +205,7 @@ class UserService extends UserServiceBase
                     $user->commentMode = $this->loadUserCanComment($ezUser);
                     $user->moderationMode = $this->loadUserIsModerated($ezUser);
                     $user->type = $userObject->attribute('class_identifier');
-                    $user->groups = $this->loadUserGroups($userObject);
+                    $user->groups = $this->loadUserGroups($userObject, $ezUser);
                     $user->language = $this->getLocale($userObject);
                     $user->restrictMode = $this->loadUserHasRestrictMode($ezUser);
 
@@ -304,16 +304,18 @@ class UserService extends UserServiceBase
         }
     }
 
-    private function loadUserGroups(eZContentObject $contentObject)
+    private function loadUserGroups(eZContentObject $contentObject, eZUser $ezUser)
     {
+        $idList = [];
         $dataMap = $contentObject->dataMap();
         if (isset($dataMap[OperatorService::GROUP_ATTRIBUTE_IDENTIFIER]) && $dataMap[OperatorService::GROUP_ATTRIBUTE_IDENTIFIER]->hasContent()){
             $idList = explode('-', $dataMap[OperatorService::GROUP_ATTRIBUTE_IDENTIFIER]->toString());
-            $idList = array_map('intval', $idList);
-            return $idList;
+        }else{
+            $idList = $ezUser->groups();
         }
 
-        return [];
+        $idList = array_map('intval', $idList);
+        return array_unique($idList);
     }
     
     private function loadUserFiscalCode(eZContentObject $contentObject)

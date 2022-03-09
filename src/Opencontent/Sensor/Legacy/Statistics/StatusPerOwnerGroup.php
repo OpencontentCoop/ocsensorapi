@@ -50,6 +50,7 @@ class StatusPerOwnerGroup extends StatisticFactory
             $hasGroupingFlag = $this->hasParameter('taggroup');
             $onlyGroups = (array)$this->getParameter('group');
             $groupTagMapper = $this->getOwnerGroupTagMapper();
+            $userGroupFilter = $this->getUserGroupFilter();
 
             $columns = false;
             if (!empty($onlyGroups)) {
@@ -81,7 +82,7 @@ class StatusPerOwnerGroup extends StatisticFactory
                     $ownerGroupFacetName = 'sensor_last_owner_user_id_i';
                 }
                 $search = $this->repository->getStatisticsService()->searchPosts(
-                    "{$categoryFilter}{$areaFilter}{$rangeFilter}{$ownerGroupFilter}{$typeFilter} limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000] pivot [facet=>[sensor_status_lk,{$ownerGroupFacetName}],mincount=>{$this->minCount}]",
+                    "{$categoryFilter}{$areaFilter}{$rangeFilter}{$ownerGroupFilter}{$typeFilter}{$userGroupFilter} limit 1 facets [raw[{$ownerGroupFacetName}]|alpha|10000] pivot [facet=>[sensor_status_lk,{$ownerGroupFacetName}],mincount=>{$this->minCount}]",
                     ['authorFiscalCode' => $this->getAuthorFiscalCode()]
                 );
                 $pivotItems = isset($search->pivot) ? $search->pivot["sensor_status_lk,{$ownerGroupFacetName}"] : [];
@@ -139,8 +140,9 @@ class StatusPerOwnerGroup extends StatisticFactory
             $series = $this->generateSeries($serie);
 
             $sorter = [];
+
             foreach ($pivotItems as $pivotItem) {
-                $serieIndex = $pivotItem['value'] == 'open' ? 1 : 0;
+                $serieIndex = $pivotItem['value'] == 'close' ? 0 : 1;
                 if (!isset($series[$serieIndex])){
                     continue;
                 }

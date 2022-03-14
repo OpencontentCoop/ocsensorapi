@@ -219,7 +219,7 @@ class UserService extends UserServiceBase
                         $user->isFirstApprover = true;
                     }
 
-                    $user->isSuperObserver = $this->loadUserIsSuperObserver($ezUser);;
+                    $user->isSuperObserver = $this->loadUserIsSuperObserver($ezUser);
                 }
             }
             $this->users[$id] = $user;
@@ -433,8 +433,21 @@ class UserService extends UserServiceBase
         if ($itemStatus instanceof eZCollaborationItemStatus) {
             $user->lastAccessDateTime = Utils::getDateTimeFromTimestamp($itemStatus->attribute('last_read'));
             $user->hasRead = $itemStatus->attribute('is_read');
+            if ($user->isFirstApprover){
+                $user->firstApproverHasRead = $user->hasRead;
+                $user->firstApproverLastAccessDateTime = $user->lastAccessDateTime;
+            }
         }
         $user->permissions = $this->repository->getPermissionService()->loadUserPostPermissionCollection($user, $post);
+
+        if ($approver = $this->getFirstApproverGroupId($user)){
+            $itemStatus = eZCollaborationItemStatus::fetch($post->internalId, $approver);
+            if ($itemStatus instanceof eZCollaborationItemStatus) {
+                $user->firstApproverHasRead = (int)$itemStatus->attribute('is_read');
+                $user->firstApproverLastAccessDateTime = Utils::getDateTimeFromTimestamp($itemStatus->attribute('last_read'));;
+            }
+        }
+
         return $user;
     }
 
@@ -537,12 +550,45 @@ class UserService extends UserServiceBase
 
     public function setLastAccessDateTime(User $user, Post $post)
     {
+        $this->internalSetLastAccessDateTime($post->internalId, $user->id);
+        $this->setFirstApproverGroupLastAccessDateTime($user, $post);
+    }
+
+    private function internalSetLastAccessDateTime($postInternalId, $id)
+    {
         $timestamp = time() + 1;
-        if (!eZCollaborationItemStatus::fetch($post->internalId, $user->id)){
-            eZCollaborationItemStatus::create($post->internalId, $user->id)->store();
+        if (!eZCollaborationItemStatus::fetch($postInternalId, $id)){
+            eZCollaborationItemStatus::create($postInternalId, $id)->store();
         }
-        eZCollaborationItemStatus::setLastRead($post->internalId, $user->id, $timestamp);
-        eZCollaborationItemParticipantLink::setLastRead($post->internalId, $user->id, $timestamp);
+        eZCollaborationItemStatus::setLastRead($postInternalId, $id, $timestamp);
+        eZCollaborationItemParticipantLink::setLastRead($postInternalId, $id, $timestamp);
+    }
+
+    private function setFirstApproverGroupLastAccessDateTime(User $user, Post $post)
+    {
+        if ($approver = $this->getFirstApproverGroupId($user)){
+            $this->internalSetLastAccessDateTime($post->internalId, $approver);
+        }
+    }
+
+    /**
+     * @param $user
+     * @return false|int
+     */
+    private function getFirstApproverGroupId($user)
+    {
+        if ($user->isFirstApprover){
+            foreach ($this->repository->getScenarioService()->loadInitScenarios() as $scenario){
+                $approvers = $scenario->getApprovers();
+                foreach ($approvers as $approver){
+                    if (in_array($approver, $user->groups)){
+                        return $approver;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     public function getClassIdentifierAsString()

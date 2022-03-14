@@ -146,6 +146,15 @@ class SearchService extends BaseSearchService
         }
         $ezFindQuery = $ezFindQueryObject->getArrayCopy();
 
+        $firstApproverFields = [
+            'first_approver_has_read' => 'sensor_first_approver_has_read_i',
+            'first_approver_last_access_timestamp' => 'sensor_first_approver_last_access_timestamp_i',
+            'first_approver_unread_timelines' => 'sensor_first_approver_unread_timelines_i',
+            'first_approver_unread_comments' => 'sensor_first_approver_unread_comments_i',
+            'first_approver_unread_private_messages' => 'sensor_first_approver_unread_private_messages_i',
+            'first_approver_unread_responses' => 'sensor_first_approver_unread_responses_i',
+        ];
+
         // boost geojson query fetching single fields
         if ($parameters['format'] == 'geojson'){
             $fieldsToReturn = [
@@ -169,6 +178,7 @@ class SearchService extends BaseSearchService
             }
             if ($parameters['readingStatuses']) {
                 $fieldsToReturn[] = $solrStorageTools->getSolrStorageFieldName(SolrMapper::SOLR_STORAGE_READ_STATUSES);
+                $fieldsToReturn = array_merge($fieldsToReturn, array_values($firstApproverFields));
             }
         }
 
@@ -298,6 +308,10 @@ class SearchService extends BaseSearchService
                             $resultItem['data_map'][SolrMapper::SOLR_STORAGE_READ_STATUSES],
                             $currentUserId
                         );
+                        foreach ($firstApproverFields as $key => $field){
+                            $post->readingStatuses[$key] = isset($resultItem['fields'][$field]) ?
+                                (int)$resultItem['fields'][$field] : false;
+                        }
                     }
                     $this->repository->getPostService()->refreshExpirationInfo($post);
                     $this->repository->getPostService()->setCommentsIsOpen($post);

@@ -25,6 +25,7 @@ use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\PostCreateStruct;
 use Opencontent\Sensor\Api\Values\PostUpdateStruct;
+use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Core\PermissionDefinitions\CanSendPrivateMessage;
 use Opencontent\Sensor\Core\PostService as PostServiceBase;
 use Opencontent\Sensor\Legacy\PostService\PostBuilder;
@@ -211,24 +212,42 @@ class PostService extends PostServiceBase
             && !PermissionService::isSuperAdmin($this->repository->getCurrentUser())
         ){
             $hiddenOperatorName = $this->repository->getSensorSettings()->get('HiddenOperatorName');
+            $hiddenApproverName = $this->repository->getSensorSettings()->get('HiddenApproverName');
             $hiddenOperatorEmail = $this->repository->getSensorSettings()->get('HiddenOperatorEmail');
+            $hiddenApprovers = [];
             $hiddenOperators = [];
             $hiddenParticipantsByRole = [];
             $hiddenParticipants = [];
-            foreach ($post->participants as $participant){
-                if (in_array($participant->roleIdentifier, [ParticipantRole::ROLE_OWNER, ParticipantRole::ROLE_OBSERVER])
-                    && $participant->type == Participant::TYPE_USER){
-                    $hiddenOperators[$participant->id] = $participant->name;
-                    $hiddenParticipant = clone $participant;
-                    $hiddenParticipant->name = $hiddenOperatorName;
-                    $hiddenParticipant->id = 1;
-                    $hiddenParticipantsByRole[$participant->roleIdentifier][$hiddenParticipant->id] = $hiddenParticipant;
-                    $hiddenParticipants[] = $hiddenParticipant;
-                }else{
+            foreach ($post->participants as $participant) {
+                if (in_array($participant->roleIdentifier, [ParticipantRole::ROLE_OWNER, ParticipantRole::ROLE_OBSERVER, ParticipantRole::ROLE_APPROVER])) {
+                    if ($participant->type == Participant::TYPE_USER) {
+                        $hiddenOperators[$participant->id] = $participant->name;
+                        if ($participant->roleIdentifier == ParticipantRole::ROLE_APPROVER){
+                            $hiddenApprovers[$participant->id] = $participant->name;
+                        }
+                        $hiddenParticipant = $this->getHiddenParticipant($participant);
+                        $hiddenParticipantsByRole[$participant->roleIdentifier][$hiddenParticipant->id] = $hiddenParticipant;
+                        $hiddenParticipants[] = $hiddenParticipant;
+                    } elseif ($participant->type == Participant::TYPE_GROUP) {
+                        $hiddenUsers = [];
+                        foreach ($participant->users as $user) {
+                            $hiddenUsers[$user->id] = $this->getHiddenUser($user);
+                            $hiddenOperators[$user->id] = $user->name;
+                            if ($participant->roleIdentifier == ParticipantRole::ROLE_APPROVER){
+                                $hiddenApprovers[$user->id] = $user->name;
+                            }
+                        }
+                        $hiddenParticipant = clone $participant;
+                        $hiddenParticipant->users = $hiddenUsers;
+                        $hiddenParticipantsByRole[$participant->roleIdentifier][$participant->id] = $hiddenParticipant;
+                        $hiddenParticipants[] = $hiddenParticipant;
+                    }
+                } else {
                     $hiddenParticipantsByRole[$participant->roleIdentifier][$participant->id] = $participant;
                     $hiddenParticipants[] = $participant;
                 }
             }
+
             $post->participants = new ParticipantCollection($hiddenParticipants);
             if (isset($hiddenParticipantsByRole[ParticipantRole::ROLE_APPROVER])) {
                 $post->approvers = new Participant\ApproverCollection($hiddenParticipantsByRole[ParticipantRole::ROLE_APPROVER]);
@@ -248,14 +267,16 @@ class PostService extends PostServiceBase
             foreach ($post->timelineItems->messages as $message){
                 $hiddenMessage = clone $message;
                 if (isset($hiddenOperators[$message->creator->id])) {
-                    $hiddenMessage->creator = clone $message->creator;
-                    $hiddenMessage->creator->id = 1;
-                    $hiddenMessage->creator->name = $hiddenOperatorName;
-                    $hiddenMessage->creator->email = $hiddenOperatorEmail;
+                    $hiddenMessage->creator = $this->getHiddenUser($message->creator);
                 }
+                $replaceStringList = array_fill(0, count($hiddenApprovers), $hiddenApproverName);
+                $hiddenMessage->text = str_replace(array_values($hiddenApprovers), $replaceStringList, $message->text);
+                $hiddenMessage->richText = str_replace(array_values($hiddenApprovers), $replaceStringList, $message->text);
+
                 $replaceStringList = array_fill(0, count($hiddenOperators), $hiddenOperatorName);
-                $hiddenMessage->text = str_replace(array_values($hiddenOperators), $replaceStringList, $message->text);
-                $hiddenMessage->richText = str_replace(array_values($hiddenOperators), $replaceStringList, $message->text);
+                $hiddenMessage->text = str_replace(array_values($hiddenOperators), $replaceStringList, $hiddenMessage->text);
+                $hiddenMessage->richText = str_replace(array_values($hiddenOperators), $replaceStringList, $hiddenMessage->text);
+
                 $timelineMessages->addMessage($hiddenMessage);
             }
             $post->timelineItems = $timelineMessages;
@@ -264,10 +285,7 @@ class PostService extends PostServiceBase
             foreach ($post->comments->messages as $message){
                 $hiddenMessage = clone $message;
                 if (isset($hiddenOperators[$message->creator->id])) {
-                    $hiddenMessage->creator = clone $message->creator;
-                    $hiddenMessage->creator->id = 1;
-                    $hiddenMessage->creator->name = $hiddenOperatorName;
-                    $hiddenMessage->creator->email = $hiddenOperatorEmail;
+                    $hiddenMessage->creator = $this->getHiddenUser($message->creator);
                 }
                 $comments->addMessage($hiddenMessage);
             }
@@ -287,6 +305,34 @@ class PostService extends PostServiceBase
         if (!PermissionService::isSuperAdmin($this->repository->getCurrentUser())){
             $post->audits = new AuditCollection();
         }
+    }
+
+    private function getHiddenParticipant(Participant $participant)
+    {
+        $hiddenOperatorName = $this->repository->getSensorSettings()->get('HiddenOperatorName');
+        if ($participant->roleIdentifier == ParticipantRole::ROLE_APPROVER){
+            $hiddenOperatorName = $this->repository->getSensorSettings()->get('HiddenApproverName');
+        }
+        $hiddenParticipant = clone $participant;
+        $hiddenParticipant->name = $hiddenOperatorName;
+        $hiddenParticipant->id = 1;
+
+        return $hiddenParticipant;
+    }
+
+    private function getHiddenUser(User $user)
+    {
+        $hiddenOperatorName = $this->repository->getSensorSettings()->get('HiddenOperatorName');
+        if ($user->isFirstApprover){
+            $hiddenOperatorName = $this->repository->getSensorSettings()->get('HiddenApproverName');
+        }
+        $hiddenOperatorEmail = $this->repository->getSensorSettings()->get('HiddenOperatorEmail');
+        $hiddenUser = clone $user;
+        $hiddenUser->id = 1;
+        $hiddenUser->name = $hiddenOperatorName;
+        $hiddenUser->email = $hiddenOperatorEmail;
+
+        return $hiddenUser;
     }
 
     public function setCommentsIsOpen(Post $post)

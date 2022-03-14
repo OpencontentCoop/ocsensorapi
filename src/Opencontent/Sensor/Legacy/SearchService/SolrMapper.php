@@ -4,6 +4,7 @@ namespace Opencontent\Sensor\Legacy\SearchService;
 
 use Opencontent\Sensor\Api\Repository;
 use Opencontent\Sensor\Api\Values\Participant;
+use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Legacy\Utils;
 
@@ -131,6 +132,14 @@ class SolrMapper
             'closing_year' => 'sensor_closing_year_i',
 
             'related_id_list' => 'sensor_related_id_list_lk',
+
+            'first_approver_has_read' => 'sensor_first_approver_has_read_i',
+            'first_approver_last_access_timestamp' => 'sensor_first_approver_last_access_timestamp_i',
+            'first_approver_unread_timelines' => 'sensor_first_approver_unread_timelines_i',
+            'first_approver_unread_comments' => 'sensor_first_approver_unread_comments_i',
+            'first_approver_unread_private_messages' => 'sensor_first_approver_unread_private_messages_i',
+            'first_approver_unread_private_messages_as_receiver' => 'sensor_first_approver_unread_private_messages_as_receiver_i',
+            'first_approver_unread_responses' => 'sensor_first_approver_unread_responses_i',
 
             //'published' => 'published',
             //'modified' => 'modified',
@@ -403,39 +412,63 @@ class SolrMapper
                         $data['sensor_user_' . $user->id . '_last_access_timestamp_i'] = 0;
                     }
 
+                    $firstApproverLastAccessDateTime = false;
+                    if ($user->isFirstApprover) {
+                        $data['sensor_first_approver_has_read_i'] = $user->firstApproverHasRead;
+                        if ($user->firstApproverLastAccessDateTime instanceof \DateTime ) {
+                            $data['sensor_first_approver_last_access_timestamp_i'] = (int)$user->firstApproverLastAccessDateTime->format('U');
+                            $firstApproverLastAccessDateTime = $user->firstApproverLastAccessDateTime;
+                        }
+                    }
+
                     $unreadTimeLines = 0;
+                    $unreadFirstApproverTimeLines = 0;
                     foreach ($post->timelineItems->messages as $message) {
                         if ($message->creator->id != $user->id && $message->modified > $user->lastAccessDateTime) {
                             $unreadTimeLines++;
+                        }
+                        if ($firstApproverLastAccessDateTime && $message->modified > $firstApproverLastAccessDateTime){
+                            $unreadFirstApproverTimeLines++;
                         }
                     }
                     $data['sensor_user_' . $user->id . '_unread_timelines_i'] = $unreadTimeLines;
                     $data['sensor_user_' . $user->id . '_timelines_i'] = $post->timelineItems->count();
 
                     $unreadComments = 0;
+                    $unreadFirstApproverComments = 0;
                     $unmoderatedComments = 0;
                     foreach ($post->comments->messages as $message) {
                         if ($message->creator->id != $user->id && $message->modified > $user->lastAccessDateTime) {
                             $unreadComments++;
+                        }
+                        if ($firstApproverLastAccessDateTime && $message->modified > $firstApproverLastAccessDateTime){
+                            $unreadFirstApproverComments++;
                         }
                         if ($message->needModeration){
                             $unmoderatedComments++;
                         }
                     }
                     $data['sensor_user_' . $user->id . '_unread_comments_i'] = $unreadComments;
-                    $data['sensor_unmoderated_comments_comments_i'] = $unmoderatedComments;
+                    if ($post->participants->getParticipantsByRole(ParticipantRole::ROLE_APPROVER)->getUserById($user->id)) {
+                        $data['sensor_unmoderated_comments_comments_i'] = $unmoderatedComments;
+                    }
                     $data['sensor_user_' . $user->id . '_comments_i'] = $post->comments->count();
 
                     $unreadResponses = 0;
+                    $unreadFirstApproverResponses = 0;
                     foreach ($post->responses->messages as $message) {
                         if ($message->creator->id != $user->id && $message->modified > $user->lastAccessDateTime) {
                             $unreadResponses++;
+                        }
+                        if ($firstApproverLastAccessDateTime && $message->modified > $firstApproverLastAccessDateTime){
+                            $unreadFirstApproverResponses++;
                         }
                     }
                     $data['sensor_user_' . $user->id . '_unread_responses_i'] = $unreadResponses;
                     $data['sensor_user_' . $user->id . '_responses_i'] = $post->responses->count();
 
                     $unreadPrivates = 0;
+                    $unreadFirstApproverPrivates = 0;
                     $unreadPrivatesAsReceiver = 0;
                     foreach ($post->privateMessages->messages as $message) {
                         if ($message->creator->id != $user->id) {
@@ -445,11 +478,21 @@ class SolrMapper
                                     $unreadPrivatesAsReceiver++;
                                 }
                             }
+                            if ($firstApproverLastAccessDateTime && $message->modified > $firstApproverLastAccessDateTime){
+                                $unreadFirstApproverPrivates++;
+                            }
                         }
                     }
                     $data['sensor_user_' . $user->id . '_unread_private_messages_i'] = $unreadPrivates;
                     $data['sensor_user_' . $user->id . '_unread_private_messages_as_receiver_i'] = $unreadPrivatesAsReceiver;
                     $data['sensor_user_' . $user->id . '_private_messages_i'] = $post->privateMessages->count();
+
+                    if ($firstApproverLastAccessDateTime){
+                        $data['sensor_first_approver_unread_timelines_i'] = $unreadFirstApproverTimeLines;
+                        $data['sensor_first_approver_unread_comments_i'] = $unreadFirstApproverComments;
+                        $data['sensor_first_approver_unread_private_messages_i'] = $unreadFirstApproverPrivates;
+                        $data['sensor_first_approver_unread_responses_i'] = $unreadFirstApproverResponses;
+                    }
                 }
             }
             $this->repository->setCurrentUser($currentUser);

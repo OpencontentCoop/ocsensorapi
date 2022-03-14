@@ -111,6 +111,10 @@ class User extends Exportable
      */
     public $isFirstApprover = false;
 
+    public $firstApproverHasRead = 0;
+
+    public $firstApproverLastAccessDateTime;
+
     /**
      * @var bool
      */
@@ -123,6 +127,9 @@ class User extends Exportable
         unset($objectVars['permissions']);
         unset($objectVars['image']);
         unset($objectVars['hasRead']);
+        unset($objectVars['isFirstApprover']);
+        unset($objectVars['firstApproverHasRead']);
+        unset($objectVars['firstApproverLastAccessDateTime']);
 
         return self::toJson($objectVars);
     }

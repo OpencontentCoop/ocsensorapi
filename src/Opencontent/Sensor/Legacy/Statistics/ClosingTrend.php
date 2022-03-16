@@ -176,7 +176,7 @@ class ClosingTrend extends StatisticFactory
                         ],
                         'series' => [
                             'showInNavigator' => true
-                        ]
+                        ],
                     ],
                     'legend' => [
                         'enabled' => true,

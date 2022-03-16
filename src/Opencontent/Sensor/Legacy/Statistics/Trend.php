@@ -164,8 +164,11 @@ class Trend extends StatisticFactory
                             'style' => [
                                 'textShadow' => '0 0 3px black'
                             ]
+                        ],
+                        'point' => [
+                            'events' => [],
                         ]
-                    ]
+                    ],
                 ],
                 'title' => [
                     'text' => $this->getDescription()

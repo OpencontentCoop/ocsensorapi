@@ -142,6 +142,9 @@ class PerArea extends StatisticFactory
                             'dataLabels' => [
                                 'enabled' => true,
                                 'format' => '<b>{point.name}:</b> {point.y} - {point.percentage:.1f}%'
+                            ],
+                            'point' => [
+                                'events' => [],
                             ]
                         ]
                     ],
@@ -189,6 +192,9 @@ class PerArea extends StatisticFactory
                                 'style' => [
                                     'textShadow' => '0 0 3px black'
                                 ]
+                            ],
+                            'point' => [
+                                'events' => [],
                             ]
                         ]
                     ],

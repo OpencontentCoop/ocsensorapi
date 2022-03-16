@@ -7,7 +7,7 @@ use Opencontent\Sensor\Legacy\Utils\Translator;
 use Opencontent\Sensor\Legacy\Repository;
 use Opencontent\Sensor\Legacy\Utils;
 
-class StatusPercentage extends StatisticFactory
+class StatusPercentage extends StatisticFactory implements SinglePointQueryCapableInterface
 {
     use FiltersTrait;
     use AccessControlTrait;
@@ -274,6 +274,9 @@ class StatusPercentage extends StatisticFactory
                             'dataLabels' => [
                                 'enabled' => true,
                                 'format' => '<b>{point.name}:</b> {point.y} - {point.percentage:.1f}%'
+                            ],
+                            'point' => [
+                                'events' => [],
                             ]
                         ]
                     ],
@@ -316,6 +319,13 @@ class StatusPercentage extends StatisticFactory
                         ],
                         'pointFormat' => '<span style="color:{point.color}">{series.name}</span>: <b>{point.y}</b><br/>'
                     ],
+                    'plotOptions' => [
+                        'column' => [
+                            'point' => [
+                                'events' => [],
+                            ]
+                        ]
+                    ],
                     'title' => [
                         'text' => ''
                     ],
@@ -324,4 +334,82 @@ class StatusPercentage extends StatisticFactory
             ]
         ];
     }
+
+    public function getSinglePointQuery($category, $serie)
+    {
+        $categoryFilter = $this->getCategoryFilter();
+        $areaFilter = $this->getAreaFilter();
+        $groupFilter = $this->getOwnerGroupFilter();
+        $typeFilter = $this->getTypeFilter();
+        $userGroupFilter = $this->getUserGroupFilter();
+        $query = "{$categoryFilter}{$areaFilter}{$groupFilter}{$typeFilter}{$userGroupFilter}";
+
+        if (!empty($query)) {
+            $query .= ' and ';
+        }
+
+        if (is_numeric($category)) {
+            $interval = $this->hasParameter('interval') ? $this->getParameter('interval') : StatisticFactory::DEFAULT_INTERVAL;
+            $start = \DateTime::createFromFormat('U', $category / 1000, Utils::getDateTimeZone());
+
+            switch ($interval) {
+                case 'daily':
+                    $dateInterval = new \DateInterval('P1D');
+                    break;
+
+                case 'weekly':
+                    $dateInterval = new \DateInterval('P7D');
+                    break;
+
+                case 'monthly':
+                    $dateInterval = new \DateInterval('P1M');
+                    break;
+
+                case 'quarterly':
+                    $dateInterval = new \DateInterval('P3M');
+                    break;
+
+                case 'half-yearly':
+                    $dateInterval = new \DateInterval('P6M');
+                    break;
+
+                default:
+                    $dateInterval = new \DateInterval('P1Y');
+                    break;
+            }
+
+            $end = clone $start;
+            $end->add($dateInterval)->sub(new \DateInterval('P1D'))->setTime(23,59);
+
+            $status = $this->getSinglePointStatus($serie);
+
+            if ($status == 'close') {
+                $query .= "raw[sensor_status_lk] = 'close' and raw[sensor_is_closed_i] range ['1','*'] and published range ['*', '" . $end->format('c') . "'] and ";
+                $query .= "raw[sensor_close_dt] = '[* TO " . \ezfSolrDocumentFieldBase::convertTimestampToDate($end->format('U')) . "]'";
+            }elseif ($status == 'open') {
+                $query .= "(raw[sensor_is_read_i] range ['1','*'] or raw[sensor_is_assigned_i] range ['1','*']) and published range ['*', '" . $end->format('c') . "'] and ";
+                $query .= "raw[sensor_read_dt] = '[" . \ezfSolrDocumentFieldBase::convertTimestampToDate($start->format('U')) . " TO " . \ezfSolrDocumentFieldBase::convertTimestampToDate($end->format('U')) . "]' and ";
+                $query .= "raw[sensor_close_dt] != '[" . \ezfSolrDocumentFieldBase::convertTimestampToDate($start->format('U')) . " TO " . \ezfSolrDocumentFieldBase::convertTimestampToDate($end->format('U')) . "]'";
+            }else{
+
+            }
+
+        } else {
+            $query .= "status = '" . $this->getSinglePointStatus($category) . "'";
+        }
+
+        return ['query' => $query];
+    }
+
+    private function getSinglePointStatus($data)
+    {
+        if ($data == $this->repository->getSensorPostStates('sensor')['sensor.close']->attribute('current_translation')->attribute('name')) {
+            return 'close';
+        } elseif ($data == $this->repository->getSensorPostStates('sensor')['sensor.open']->attribute('current_translation')->attribute('name')) {
+            return 'open';
+        } else{
+            return 'pending';
+        }
+    }
+
 }

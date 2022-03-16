@@ -12,6 +12,10 @@ class StatisticsService extends \Opencontent\Sensor\Core\StatisticsService
      */
     private $factories = [];
 
+    private $collectQueries = false;
+
+    private $queries = [];
+
     public function getStatisticFactories($ignorePolicies = false)
     {
         if ($ignorePolicies){
@@ -89,6 +93,26 @@ class StatisticsService extends \Opencontent\Sensor\Core\StatisticsService
 
     public function searchPosts($query, $parameters = array())
     {
+        if ($this->collectQueries) {
+            $cleanQuery = preg_replace("/\r|\n|\s+/", " ", $query);
+            $this->queries[] = ['query' => trim($cleanQuery), 'parameters' => $parameters];
+        }
         return $this->repository->getSearchService()->searchPosts($query, $parameters, []);
+    }
+
+    public function startCollectQueries()
+    {
+        $this->queries = [];
+        $this->collectQueries = true;
+    }
+
+    public function stopCollectQueries()
+    {
+        $this->collectQueries = false;
+    }
+
+    public function getCollectedQueries()
+    {
+        return $this->queries;
     }
 }

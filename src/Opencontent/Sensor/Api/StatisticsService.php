@@ -17,4 +17,9 @@ interface StatisticsService
      */
     public function getStatisticFactoryByIdentifier($identifier);
 
+    public function startCollectQueries();
+
+    public function stopCollectQueries();
+
+    public function getCollectedQueries();
 }

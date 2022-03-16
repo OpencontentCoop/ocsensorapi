@@ -6,7 +6,7 @@ use Opencontent\Sensor\Api\StatisticFactory;
 use Opencontent\Sensor\Legacy\Repository;
 use Opencontent\Sensor\Legacy\Utils\Translator;
 
-class StatusPerOwnerGroup extends StatisticFactory
+class StatusPerOwnerGroup extends StatisticFactory implements SinglePointQueryCapableInterface
 {
     use FiltersTrait;
     use AccessControlTrait;
@@ -310,6 +310,9 @@ class StatusPerOwnerGroup extends StatisticFactory
                                 'style' => [
                                     'textShadow' => '0 0 3px black'
                                 ]
+                            ],
+                            'point' => [
+                                'events' => [],
                             ]
                         ],
                         'pareto' => [
@@ -332,4 +335,11 @@ class StatusPerOwnerGroup extends StatisticFactory
     {
         return 'Gruppo';
     }
+
+    public function getSinglePointQuery($category, $serie)
+    {
+        // TODO: Implement getSinglePointQuery() method.
+    }
+
+
 }

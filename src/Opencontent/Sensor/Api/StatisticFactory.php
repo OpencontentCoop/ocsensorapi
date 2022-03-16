@@ -12,6 +12,9 @@ abstract class StatisticFactory
 
     protected $authorFiscalCode;
 
+    /**
+     * @var Repository
+     */
     protected $repository;
 
     protected $data;
@@ -181,11 +184,21 @@ abstract class StatisticFactory
             return $this->getHighchartsformatData();
         }elseif ($formatIdentifier == 'table'){
             return $this->getTableformatData();
+        }elseif ($formatIdentifier == 'queries'){
+            return $this->getQueries();
         }elseif ($formatIdentifier == 'data'){
             return $this->getData();
         }
 
         throw new InvalidArgumentException("Stat $formatIdentifier not handled");
+    }
+
+    protected function getQueries()
+    {
+        $this->repository->getStatisticsService()->startCollectQueries();
+        $this->getData();
+        $this->repository->getStatisticsService()->stopCollectQueries();
+        return $this->repository->getStatisticsService()->getCollectedQueries();
     }
 
     protected function getDefaultFormatData()

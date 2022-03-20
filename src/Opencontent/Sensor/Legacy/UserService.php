@@ -315,6 +315,7 @@ class UserService extends UserServiceBase
         }
 
         $idList = array_map('intval', $idList);
+        $idList = array_diff($idList, [4,11]);
         return array_unique($idList);
     }
     

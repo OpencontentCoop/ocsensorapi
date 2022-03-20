@@ -266,14 +266,28 @@ class MessageService extends MessageServiceBase
         if ($parameters === null)
             $parameters = $struct->creator->id;
         $struct->text = TimelineTools::setText($status, $parameters);
-        $this->createTimelineItem($struct);
+        $message = $this->createTimelineItem($struct);
+
+        $item = new Message\TimelineItem();
+        $item->id = $message->attribute('id');
+        $item->creator = $struct->creator->id;
+        $item->published = Utils::getDateTimeFromTimestamp($message->attribute('created'));
+        $item->type = TimelineTools::getType($message->attribute('data_text1'));
+        $item->extra = TimelineTools::getExtra($message->attribute('data_text1'));
+        \SensorTimelineIndexer::indexTimelineItem($post, $item);
+
         $this->clearMemoryCache($post);
     }
 
+    /**
+     * @param Message\TimelineItemStruct $struct
+     * @return eZCollaborationSimpleMessage
+     */
     public function createTimelineItem(Message\TimelineItemStruct $struct)
     {
         $message = $this->createMessage($struct);
         $this->linkMessage($message, $struct, self::TIMELINE_ITEM);
+        return $message;
     }
 
     public function createPrivateMessage(Message\PrivateMessageStruct $struct)

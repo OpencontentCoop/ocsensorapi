@@ -91,6 +91,8 @@ class PostInitializer
             $roles->getParticipantRoleById(ParticipantRole::ROLE_AUTHOR)
         );
 
+        \SensorTimelineIndexer::indexPublish($post);
+
         $scenario = $this->repository
             ->getScenarioService()
             ->getFirstScenariosByTrigger($post, ScenarioService::INIT_POST, new SearchScenarioParameters(true));

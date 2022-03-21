@@ -30,6 +30,7 @@ class SchemaBuilder
         'post-operators' => "Operators of post",
         'post-statuses' => "Statuses of post",
         'users' => "Users",
+        'user-groups' => "Groups of users",
         'operators' => "Operators",
         'groups' => "Groups of operators",
         'categories' => "Categories",
@@ -69,6 +70,7 @@ class SchemaBuilder
                 $this->buildAuthPaths(),
                 $this->buildPostPaths(),
                 $this->buildUserPaths(),
+                $this->buildUserGroupPaths(),
                 $this->buildOperatorPaths(),
                 $this->buildGroupPaths(),
                 $this->buildCategoryPaths(),
@@ -131,6 +133,7 @@ class SchemaBuilder
             new OA\Tag(self::$tags['post-operators']),
             new OA\Tag(self::$tags['post-statuses']),
             new OA\Tag(self::$tags['users']),
+            new OA\Tag(self::$tags['user-groups']),
             new OA\Tag(self::$tags['operators']),
             new OA\Tag(self::$tags['groups']),
             new OA\Tag(self::$tags['categories']),
@@ -1203,6 +1206,125 @@ class SchemaBuilder
         ];
     }
 
+    private function buildUserGroupPaths()
+    {
+        return [
+            '/user-groups' => new OA\PathItem([
+                'get' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response.', [
+                            'application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/UserGroupCollection')
+                            ])
+                        ]),
+                        '400' => new OA\Response('Invalid search limit provided.'),
+                    ],
+                    'loadUserGroups',
+                    'Get all user groups',
+                    [
+                        'description' => 'Returns a list of user group',
+                        'tags' => [self::$tags['user-groups']],
+                        'parameters' => $this->buildSearchParameters(['limit', 'offset'])
+                    ]
+                ),
+//                'post' => new OA\Operation(
+//                    [
+//                        '201' => new OA\Response('Successful response', [
+//                            'application/json' => new OA\MediaType([
+//                                'schema' => new OA\Reference('#/components/schemas/UserGroup')
+//                            ])
+//                        ]),
+//                        '400' => new OA\Response('Invalid input provided'),
+//                        '403' => new OA\Response('Forbidden'),
+//                        '405' => new OA\Response('Invalid input'),
+//                    ],
+//                    'createUserGroup',
+//                    'Add a new user group',
+//                    [
+//                        'summary' => 'Returns a list of user group',
+//                        'tags' => [self::$tags['user-groups']],
+//                        'requestBody' => new OA\Reference('#/components/requestBodies/UserGroup')
+//                    ]
+//                ),
+            ]),
+            '/user-groups/{userGroupId}' => new OA\PathItem([
+                'get' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response',
+                            ['application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/UserGroup')
+                            ])], null),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '404' => new OA\Response('Not found'),
+                    ],
+                    'getUserGroupById',
+                    'Get single user group',
+                    [
+                        'tags' => [self::$tags['user-groups']],
+                        'parameters' => [
+                            new OA\Parameter('userGroupId', OA\Parameter::IN_PATH, 'ID of user group', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+                                'required' => true,
+                            ]),
+                        ]
+                    ]
+                ),
+//                'put' => new OA\Operation(
+//                    [
+//                        '200' => new OA\Response('Successful response',
+//                            ['application/json' => new OA\MediaType([
+//                                'schema' => new OA\Reference('#/components/schemas/UserGroup')
+//                            ])], null),
+//                        '400' => new OA\Response('Invalid input provided'),
+//                        '403' => new OA\Response('Forbidden'),
+//                        '404' => new OA\Response('Not found'),
+//                    ],
+//                    'updateUserGroupById',
+//                    'Update single user group',
+//                    [
+//                        'tags' => [self::$tags['user-groups']],
+//                        'parameters' => [
+//                            new OA\Parameter('userGroupId', OA\Parameter::IN_PATH, 'ID of user group', [
+//                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+//                                'required' => true,
+//                            ]),
+//                        ],
+//                        'requestBody' => new OA\Reference('#/components/requestBodies/UserGroup')
+//                    ]
+//                ),
+            ]),
+//            '/user-groups/{userGroupId}/users' => new OA\PathItem([
+//                'get' => new OA\Operation(
+//                    [
+//                        '200' => new OA\Response('Successful response',
+//                            ['application/json' => new OA\MediaType([
+//                                'schema' => new OA\Reference('#/components/schemas/UserCollection')
+//                            ])], null),
+//                        '400' => new OA\Response('Invalid input provided'),
+//                        '404' => new OA\Response('Not found'),
+//                    ],
+//                    'getUserGroupUsersById',
+//                    'Get user-group users',
+//                    [
+//                        'tags' => [self::$tags['user-groups']],
+//                        'parameters' => [
+//                            new OA\Parameter('userGroupId', OA\Parameter::IN_PATH, 'ID of user group', [
+//                                'schema' => $this->buildSchemaProperty(['type' => 'integer']),
+//                                'required' => true,
+//                            ]),
+//                            new OA\Parameter('limit', OA\Parameter::IN_QUERY, 'Limit to restrict the number of entries on a page', [
+//                                'schema' => $this->buildSchemaProperty(['type' => 'integer', 'minimum' => 1, 'maximum' => SearchService::MAX_LIMIT, 'default' => SearchService::DEFAULT_LIMIT, 'nullable' => true]),
+//                            ]),
+//                            new OA\Parameter('cursor', OA\Parameter::IN_QUERY, 'Cursor pagination', [
+//                                'schema' => $this->buildSchemaProperty(['type' => 'string', 'default' => '*', 'nullable' => true]),
+//                            ])
+//                        ]
+//                    ]
+//                )
+//            ]),
+        ];
+    }
+
     private function buildOperatorPaths()
     {
         return [
@@ -1385,7 +1507,7 @@ class SchemaBuilder
                     [
                         '200' => new OA\Response('Successful response',
                             ['application/json' => new OA\MediaType([
-                                'schema' => new OA\Reference('#/components/schemas/Group')
+                                'schema' => new OA\Reference('#/components/schemas/OperatorCollection')
                             ])], null),
                         '400' => new OA\Response('Invalid input provided'),
                         '404' => new OA\Response('Not found'),
@@ -1990,6 +2112,10 @@ class SchemaBuilder
             'NewUser' => $this->buildSchema('NewUser'),
             'PatchUser' => $this->buildSchema('PatchUser'),
 
+            'UserGroupCollection' => $this->buildSchema('UserGroupCollection'),
+            'UserGroup' => $this->buildSchema('UserGroup'),
+            'NewUserGroup' => $this->buildSchema('NewUserGroup'),
+
             'OperatorCollection' => $this->buildSchema('OperatorCollection'),
             'Operator' => $this->buildSchema('Operator'),
             'NewOperator' => $this->buildSchema('NewOperator'),
@@ -2458,6 +2584,33 @@ class SchemaBuilder
                 ];
                 break;
 
+            case 'UserGroupCollection':
+                $schema->title = 'UserGroupCollection';
+                $schema->type = 'object';
+                $schema->properties = [
+                    'items' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['ref' => '#/components/schemas/UserGroup']]),
+                    'self' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Current pagination cursor']),
+                    'next' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Next pagination cursor', 'nullable' => true]),
+                    'count' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int32', 'description' => 'Total number of items available']),
+                ];
+                break;
+            case 'UserGroup':
+                $schema->title = 'UserGroup';
+                $schema->type = 'object';
+                $schema->properties = [
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                ];
+                break;
+            case 'NewUserGroup':
+                $schema->title = 'NewUserGroup';
+                $schema->type = 'object';
+                $schema->required = ['name'];
+                $schema->properties = [
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                ];
+                break;
+
             case 'OperatorCollection':
                 $schema->title = 'OperatorCollection';
                 $schema->type = 'object';
@@ -2607,11 +2760,11 @@ class SchemaBuilder
                 $schema->title = 'Faq';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
+                    'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'Unique identifier']),
                     'question' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Question']),
                     'answer' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Answer']),
-                    'category' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'description' => 'ID', 'description' => 'Category id']),
-                    'priority' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'nullable' => true, 'description' => 'ID', 'description' => 'Priority']),
+                    'category' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'description' => 'Category id']),
+                    'priority' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'nullable' => true, 'description' => 'Priority']),
                 ];
                 break;
             case 'NewFaq':
@@ -2621,8 +2774,8 @@ class SchemaBuilder
                 $schema->properties = [
                     'question' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Question']),
                     'answer' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Answer']),
-                    'category' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'description' => 'ID', 'description' => 'Category id']),
-                    'priority' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'nullable' => true, 'description' => 'ID', 'description' => 'Priority']),
+                    'category' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'description' => 'Category id']),
+                    'priority' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'nullable' => true, 'description' => 'Priority']),
                 ];
                 break;
 
@@ -2640,7 +2793,6 @@ class SchemaBuilder
                         'type' => $this->buildSchemaProperty(['type' => 'string', 'default' => 'Feature']),
                         'properties' => $this->buildSchemaProperty(['type' => 'object', 'properties' => [
                             'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64']),
-                            'subject' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Subject']),
                             'type' => $this->buildSchemaProperty(['type' => 'object', 'properties' => [
                                 'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Type label']),
                                 'identifier' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Type identifier', 'enum' => $typeEnum]),

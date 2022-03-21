@@ -1281,6 +1281,83 @@ class Controller
         throw new NotFoundException();
     }
 
+    public function loadUserGroups()
+    {
+        $limit = (int)$this->getRequestParameter('limit');
+        if ($limit === 0){
+            $limit = 10;
+        }
+        $offset = (int)$this->getRequestParameter('offset');
+
+        $countUserGroups = \eZContentObjectTreeNode::subTreeCountByNodeID([
+            'ClassFilterType' => 'array',
+            'ClassFilterArray' => ['user_group'],
+            'AttributeFilter' => [['contentobject_id', '!=', $this->repository->getOperatorsRootNode()->attribute('contentobject_id')]],
+        ], \eZINI::instance()->variable("UserSettings", "DefaultUserPlacement"));
+
+        /** @var \eZContentObjectTreeNode[] $userGroups */
+        $userGroups = \eZContentObjectTreeNode::subTreeByNodeID([
+            'ClassFilterType' => 'include',
+            'ClassFilterArray' => ['user_group'],
+            'LoadDataMap' => false,
+            'Limit' => $limit,
+            'Offset' => $offset,
+            'AttributeFilter' => [['contentobject_id', '!=', $this->repository->getOperatorsRootNode()->attribute('contentobject_id')]],
+        ], \eZINI::instance()->variable("UserSettings", "DefaultUserPlacement"));
+
+        $items = [];
+        foreach ($userGroups as $userGroup){
+            $items[] = [
+                'id' => (int)$userGroup->attribute('contentobject_id'),
+                'name' => $userGroup->attribute('name'),
+            ];
+        }
+
+        $next = null;
+        if (($limit+$offset) < $countUserGroups){
+            $nextOffset = $offset + $limit;
+            $next = $this->restController->getBaseUri() . "/user-groups?limit=$limit&offset=$nextOffset";
+        }
+
+        $result = new ezpRestMvcResult();
+        $result->variables = [
+            'self' => $this->restController->getBaseUri() . "/user-groups?limit=$limit&offset=$offset",
+            'next' => $next,
+            'items' => $items,
+            'count' => (int)$countUserGroups,
+        ];
+
+        return $result;
+    }
+
+    public function getUserGroupById()
+    {
+        /** @var \eZContentObjectTreeNode[] $userGroups */
+        $userGroups = \eZContentObjectTreeNode::subTreeByNodeID([
+            'ClassFilterType' => 'include',
+            'ClassFilterArray' => ['user_group'],
+            'LoadDataMap' => false,
+            'Limit' => 1,
+            'Offset' => 0,
+            'AttributeFilter' => [
+                ['node_id', '!=', $this->repository->getOperatorsRootNode()->attribute('node_id')],
+                ['contentobject_id', '=', $this->restController->userGroupId],
+            ],
+        ], \eZINI::instance()->variable("UserSettings", "DefaultUserPlacement"));
+        
+        if (count($userGroups) === 0){
+            throw new NotFoundException();
+        }
+
+        $result = new ezpRestMvcResult();
+        $result->variables = [
+            'id' => (int)$userGroups[0]->attribute('contentobject_id'),
+            'name' => $userGroups[0]->attribute('name'),
+        ];
+
+        return $result;
+    }
+
     private function loadPost()
     {
         return $this->repository->getSearchService()->searchPost($this->restController->postId);

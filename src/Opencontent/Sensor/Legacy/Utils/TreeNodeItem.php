@@ -110,6 +110,7 @@ class TreeNodeItem implements \JsonSerializable
             $scenarios = $node->object()->reverseRelatedObjectList(
                 false, $attributeId, false, $params
             );
+            $scenarioGroups = [];
             foreach ($scenarios as $scenario){
                 $scenarioDataMap = $scenario->dataMap();
                 if (isset($scenarioDataMap['criterion_area'])
@@ -117,15 +118,19 @@ class TreeNodeItem implements \JsonSerializable
                     && isset($scenarioDataMap['owner_group'])
                     && $scenarioDataMap['owner_group']->hasContent()
                 ){
-                    $scenarioOwnerGroupIdList = explode('-', $scenarioDataMap['owner_group']->toString());
-                    $scenarioOwnerGroupList = \OpenPABase::fetchObjects($scenarioOwnerGroupIdList);
-                    $scenarioOwnerGroup = [];
-                    foreach ($scenarioOwnerGroupList as $object){
-                        $scenarioOwnerGroup[] = $object->attribute('name');
+                    $triggers = explode('|', $scenarioDataMap['triggers']->toString());
+                    if (in_array('on_add_category', $triggers)){
+                        $scenarioOwnerGroupIdList = explode('-', $scenarioDataMap['owner_group']->toString());
+                        $scenarioOwnerGroupList = \OpenPABase::fetchObjects($scenarioOwnerGroupIdList);
+                        $scenarioOwnerGroup = [];
+                        foreach ($scenarioOwnerGroupList as $object){
+                            $scenarioOwnerGroup[] = $object->attribute('name');
+                        }
+                        $scenarioGroups = array_merge($scenarioGroups, $scenarioOwnerGroup);
                     }
-                    return implode(', ', $scenarioOwnerGroup);
                 }
             }
+            return implode(', ', $scenarioGroups);
         }
 //        if (isset($dataMap['approver']) && $dataMap['approver']->hasContent()) {
 //            $idList = explode('-', $dataMap['approver']->toString());

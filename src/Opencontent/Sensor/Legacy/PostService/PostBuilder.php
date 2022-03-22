@@ -82,40 +82,19 @@ class PostBuilder
         $post->areas = $this->loadPostAreas();
         $post->geoLocation = $this->loadPostGeoLocation();
 
-        $post->participants = $this->repository->getParticipantService()->loadPostParticipants(
-            $post
-        );
+        $this->repository->getParticipantService()->loadPostParticipants($post);
         $post->reporter = $this->loadPostReporter();
-        $post->approvers = Participant\ApproverCollection::fromCollection(
-            $this->repository->getParticipantService()->loadPostParticipantsByRole(
-                $post,
-                ParticipantRole::ROLE_APPROVER
-            )
-        );
-        $post->owners = Participant\OwnerCollection::fromCollection(
-            $this->repository->getParticipantService()->loadPostParticipantsByRole(
-                $post,
-                ParticipantRole::ROLE_OWNER
-            )
-        );
-        $post->observers = Participant\ObserverCollection::fromCollection(
-            $this->repository->getParticipantService()->loadPostParticipantsByRole(
-                $post,
-                ParticipantRole::ROLE_OBSERVER
-            )
-        );
-
         $post->author = $this->repository->getUserService()->loadUser($this->contentObject->attribute('owner_id'));
         $authorName = $this->loadPostAuthorName();
         if ($authorName) {
             $post->author->name = $authorName;
         }
 
-        $post->comments = $this->repository->getMessageService()->loadCommentCollectionByPost($post);
-        $post->privateMessages = $this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post);
-        $post->timelineItems = $this->repository->getMessageService()->loadTimelineItemCollectionByPost($post);
-        $post->responses = $this->repository->getMessageService()->loadResponseCollectionByPost($post);
-        $post->audits = $this->repository->getMessageService()->loadAuditCollectionByPost($post);
+        $this->repository->getMessageService()->loadPostComments($post);
+        $this->repository->getMessageService()->loadPostPrivateMessages($post);
+        $this->repository->getMessageService()->loadPostTimelineItems($post);
+        $this->repository->getMessageService()->loadPostResponses($post);
+        $this->repository->getMessageService()->loadPostAudits($post);
 
         $post->meta = $this->loadPostMeta();
 

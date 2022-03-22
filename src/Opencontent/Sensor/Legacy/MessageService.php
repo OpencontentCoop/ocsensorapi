@@ -200,8 +200,6 @@ class MessageService extends MessageServiceBase
                         }
                     }
                     $message->id = $simpleMessage->attribute('id');
-                    $creator = new User();
-                    $creator->id = $simpleMessage->attribute('id');
                     $creator = $this->repository->getParticipantService()
                         ->loadPostParticipants($post)
                         ->getUserById($simpleMessage->attribute('creator_id'));
@@ -349,6 +347,8 @@ class MessageService extends MessageServiceBase
                 $now = time();
                 $simpleMessage->setAttribute('modified', $now);
                 $simpleMessage->store();
+
+                $this->reloadPostMessages($struct->post);
                 return $simpleMessage;
             }
         }
@@ -409,6 +409,7 @@ class MessageService extends MessageServiceBase
         }
 
         $this->repository->getUserService()->setLastAccessDateTime($struct->creator, $struct->post);
+        $this->reloadPostMessages($struct->post);
     }
 
     /**
@@ -426,5 +427,41 @@ class MessageService extends MessageServiceBase
     {
         $message = $this->createMessage($struct);
         $this->linkMessage($message, $struct, self::AUDIT);
+    }
+
+    public function loadPostComments(Post $post)
+    {
+        $post->comments = $this->loadCommentCollectionByPost($post);
+    }
+
+    public function loadPostPrivateMessages(Post $post)
+    {
+        $post->privateMessages = $this->loadPrivateMessageCollectionByPost($post);
+    }
+
+    public function loadPostTimelineItems(Post $post)
+    {
+        $post->timelineItems = $this->loadTimelineItemCollectionByPost($post);
+    }
+
+    public function loadPostResponses(Post $post)
+    {
+        $post->responses = $this->loadResponseCollectionByPost($post);
+    }
+
+    public function loadPostAudits(Post $post)
+    {
+        $post->audits = $this->loadAuditCollectionByPost($post);
+    }
+
+    protected function reloadPostMessages(Post $post)
+    {
+        unset($this->countMessagesByPost[$post->internalId]);
+        $post->comments = $this->loadCommentCollectionByPost($post);
+        $post->privateMessages = $this->loadPrivateMessageCollectionByPost($post);
+        $post->privateMessages = $this->loadPrivateMessageCollectionByPost($post);
+        $post->timelineItems = $this->loadTimelineItemCollectionByPost($post);
+        $post->responses = $this->loadResponseCollectionByPost($post);
+        $post->audits = $this->loadAuditCollectionByPost($post);
     }
 }

@@ -25,4 +25,11 @@ interface SearchService
      */
     public function searchPosts($query, $parameters = array(), $policies = null);
 
+    /**
+     * @param $query
+     * @param $limit
+     * @param $cursor
+     * @return mixed
+     */
+    public function searchOperatorAnGroups($query, $limit, $cursor);
 }

@@ -35,4 +35,6 @@ interface NotificationService
     public function removeUserToNotification(User $user, NotificationType $notification);
 
     public function getUserNotifications(User $user);
+
+    public function getUsersByNotification(NotificationType $notification);
 }

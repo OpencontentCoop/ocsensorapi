@@ -89,7 +89,7 @@ interface PostService
 
     /**
      * @param Post $post
-     * @param string $status
+     * @param mixed $status
      * @throw \Exception
      */
     public function setPostStatus(Post $post, $status);
@@ -181,5 +181,4 @@ interface PostService
      * @return mixed
      */
     public function setPostTags(Post $post, array $tags);
-
 }

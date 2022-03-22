@@ -17,4 +17,16 @@ interface StatisticsService
      */
     public function getStatisticFactoryByIdentifier($identifier);
 
+    /**
+     * @param StatisticFactory[] $factories
+     * @return void
+     */
+    public function setStatisticFactories($factories);
+
+    /**
+     * @param mixed $query
+     * @param array $parameters
+     * @return mixed
+     */
+    public function searchPosts($query, $parameters = []);
 }

@@ -170,6 +170,8 @@ class ParticipantService extends ParticipantServiceBase
             );
             $trashGroupLink->store();
             $db->commit();
+            unset($this->participantsByPost[$post->internalId]);
+            $this->internalLoadPostParticipants($post);
         }
     }
 
@@ -193,6 +195,8 @@ class ParticipantService extends ParticipantServiceBase
             $groupLink->remove();
         }
         $db->commit();
+        unset($this->participantsByPost[$post->internalId]);
+        $this->internalLoadPostParticipants($post);
     }
 
     public function restorePostParticipant(Post $post, $id)
@@ -214,6 +218,8 @@ class ParticipantService extends ParticipantServiceBase
             );
             $sensorGroupLink->store();
             $db->commit();
+            unset($this->participantsByPost[$post->internalId]);
+            $this->internalLoadPostParticipants($post);
         }
     }
 
@@ -269,7 +275,23 @@ class ParticipantService extends ParticipantServiceBase
             }
         }
 
+        $this->setPostParticipants($post, $this->participantsByPost[$postInternalId]);
+
         return $this->participantsByPost[$postInternalId];
+    }
+
+    protected function setPostParticipants(Post $post, ParticipantCollection $participants)
+    {
+        $post->participants = $participants;
+        $post->approvers = Participant\ApproverCollection::fromCollection(
+            $participants->getParticipantsByRole(ParticipantRole::ROLE_APPROVER)
+        );
+        $post->owners = Participant\OwnerCollection::fromCollection(
+            $participants->getParticipantsByRole(ParticipantRole::ROLE_OWNER)
+        );
+        $post->observers = Participant\ObserverCollection::fromCollection(
+            $participants->getParticipantsByRole(ParticipantRole::ROLE_OBSERVER)
+        );
     }
 
     protected function internalLoadParticipant(

@@ -10,6 +10,36 @@ interface MessageService
 
     /**
      * @param Post $post
+     * @return void
+     */
+    public function loadPostComments(Post $post);
+
+    /**
+     * @param Post $post
+     * @return void
+     */
+    public function loadPostPrivateMessages(Post $post);
+
+    /**
+     * @param Post $post
+     * @return void
+     */
+    public function loadPostTimelineItems(Post $post);
+
+    /**
+     * @param Post $post
+     * @return void
+     */
+    public function loadPostResponses(Post $post);
+
+    /**
+     * @param Post $post
+     * @return void
+     */
+    public function loadPostAudits(Post $post);
+
+    /**
+     * @param Post $post
      *
      * @return Message/CommentCollection
      */

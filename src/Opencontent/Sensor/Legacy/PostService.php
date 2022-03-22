@@ -29,6 +29,7 @@ use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Core\PermissionDefinitions\CanSendPrivateMessage;
 use Opencontent\Sensor\Core\PostService as PostServiceBase;
 use Opencontent\Sensor\Legacy\PostService\PostBuilder;
+use Opencontent\Sensor\Legacy\SearchService\SolrMapper;
 use Opencontent\Sensor\Legacy\Utils\ExpiryTools;
 use Opencontent\Sensor\Legacy\Validators\PostCreateStructValidator;
 use Opencontent\Sensor\Legacy\Validators\PostUpdateStructValidator;
@@ -534,18 +535,36 @@ class PostService extends PostServiceBase
     public function refreshPost(Post $post, $modifyTimestamp = true)
     {
         $this->repository->getLogger()->debug($modifyTimestamp ? 'Hard refresh post #' . $post->id  : 'Refresh post #' . $post->id);
-        eZContentObject::clearCache($post->id);
-        $timestamp = time();
+
         $contentObject = $this->getContentObject($post);
+        $timestamp = time();
         if ($modifyTimestamp) {
             $contentObject->setAttribute('modified', $timestamp);
             $contentObject->store();
         }
-        if ($contentObject->mainNodeID()) {
-            eZContentCacheManager::clearContentCacheIfNeeded($contentObject->attribute('id'));
-            eZSearch::addObject($contentObject, true);
-            return $this->loadPost($post->id);
+
+        /** @var \eZContentObjectVersion $version */
+        $version = $contentObject->currentVersion();
+        $availableLanguages = $version->translationList(false, false);
+        $solr = new \eZSolr();
+        $updateData = [];
+        foreach ($availableLanguages as $languageCode) {
+            $mapper = new SolrMapper($this->repository, $post);
+            $updateItem = ['meta_guid_ms' => $solr->guid((int)$post->id, $languageCode)];
+            if ($modifyTimestamp) {
+                $updateItem['meta_modified_dt'] = [
+                    'set' => \ezfSolrDocumentFieldBase::convertTimestampToDate($timestamp),
+                ];
+            }
+            // categories areas status
+            foreach ($mapper->mapToIndex() as $key => $value) {
+                $updateItem[$key] = [
+                    'set' => $value,
+                ];
+            }
+            $updateData[] = $updateItem;
         }
+        SolrMapper::patchSearchIndex(json_encode($updateData));
 
         return $post;
     }
@@ -561,6 +580,38 @@ class PostService extends PostServiceBase
 
         if ($status instanceof eZContentObjectState) {
             $contentObject->assignState($status);
+
+            $group = $status->group()->attribute('identifier');
+            $identifier = $status->attribute('identifier');
+            if ($group == 'sensor'){
+                $state = new Post\Status();
+                $state->identifier = $identifier;
+                $state->name = $status->translationByLocale($this->repository->getCurrentLanguage())->attribute('name');
+                $state->label = 'info';
+                if ($identifier == 'pending') {
+                    $state->label = 'danger';
+                } elseif ($identifier == 'open') {
+                    $state->label = 'warning';
+                } elseif ($identifier == 'close') {
+                    $state->label = 'success';
+                }
+                $post->status = $state;
+            }elseif ($group == 'privacy'){
+                $state = new Post\Status\Privacy();
+                $state->identifier = $identifier;
+                $state->name = $status->translationByLocale($this->repository->getCurrentLanguage())->attribute('name');
+                $state->label = 'info';
+                if ($identifier == 'private') {
+                    $state->label = 'default';
+                }
+                $post->privacy = $state;
+            }elseif ($group == 'moderation'){
+                $state = new Post\Status\Moderation();
+                $state->identifier = $identifier;
+                $state->name = $status->translationByLocale($this->repository->getCurrentLanguage())->attribute('name');
+                $state->label = 'danger';
+                $post->moderation = $state;
+            }
         }
     }
 
@@ -590,6 +641,8 @@ class PostService extends PostServiceBase
             $this->setPostStatus($post, $states['sensor.pending']);
         }
         $collaborationItem->sync();
+
+        $post->status = Post\WorkflowStatus::instanceByCode($status);
     }
 
     public function setPostExpirationInfo(Post $post, $expiryDays)
@@ -600,6 +653,20 @@ class PostService extends PostServiceBase
             ExpiryTools::addDaysToTimestamp($collaborationItem->attribute('created'), $expiryDays)
         );
         $collaborationItem->store();
+
+        $publishedDateTime = $post->published;
+        $expirationDateTime = Utils::getDateTimeFromTimestamp(
+            intval($collaborationItem->attribute(PostService::COLLABORATION_FIELD_EXPIRY))
+        );
+
+        $expirationInfo = new Post\ExpirationInfo();
+        $expirationInfo->creationDateTime = clone $publishedDateTime;
+        $expirationInfo->expirationDateTime = clone $expirationDateTime;
+        $diff = $expirationDateTime->setTime(0, 0)->diff($publishedDateTime->setTime(0, 0));
+        if ($diff instanceof \DateInterval) {
+            $expirationInfo->days = $diff->days;
+        }
+        $post->expirationInfo = $expirationInfo;
     }
 
     public function setPostCategory(Post $post, $category)
@@ -609,6 +676,16 @@ class PostService extends PostServiceBase
             $contentObjectDataMap['category']->fromString($category);
             $contentObjectDataMap['category']->store();
         }
+
+        $data = [];
+        $idList = explode('-', $category);
+        foreach ($idList as $id) {
+            try {
+                $data[] = $this->repository->getCategoryService()->loadCategory($id);
+            } catch (\Exception $e) {
+            }
+        }
+        $post->categories = $data;
     }
 
     public function setPostArea(Post $post, $area)
@@ -618,6 +695,16 @@ class PostService extends PostServiceBase
             $contentObjectDataMap['area']->fromString($area);
             $contentObjectDataMap['area']->store();
         }
+
+        $data = [];
+        $idList = explode('-', $area);
+        foreach ($idList as $id) {
+            try {
+                $data[] = $this->repository->getAreaService()->loadArea($id);
+            } catch (\Exception $e) {
+            }
+        }
+        $post->areas = $data;
     }
 
     public function addAttachment(Post $post, $files)
@@ -780,6 +867,7 @@ class PostService extends PostServiceBase
             $contentObjectDataMap['type']->fromString($type->identifier);
             $contentObjectDataMap['type']->store();
         }
+        $post->type = $type;
     }
 
     public function setPostTags(Post $post, array $tags)
@@ -790,5 +878,6 @@ class PostService extends PostServiceBase
             $contentObjectDataMap['tags']->fromString(implode(',', $tags));
             $contentObjectDataMap['tags']->store();
         }
+        $post->tags = $tags;
     }
 }

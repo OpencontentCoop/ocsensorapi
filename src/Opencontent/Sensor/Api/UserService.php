@@ -39,4 +39,12 @@ interface UserService
     public function refreshUser($user);
 
     public function setAsSuperObserver(User $user, $enable = true);
+
+    public function loadUsers($query, $limit, $cursor);
+
+    public function createUser(array $payload, $ignorePolicies = false);
+
+    public function updateUser(User $user, $payload);
+
+    public function setRestrictMode(User $user, $enable = true);
 }

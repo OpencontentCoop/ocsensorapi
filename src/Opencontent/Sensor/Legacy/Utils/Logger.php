@@ -35,6 +35,8 @@ class Logger extends AbstractLogger implements LoggerInterface
                 }
                 $stringValue .= $this->getStringValue($item) . ' ';
             }
+        }else{
+            $stringValue = json_encode($value);
         }
 
         return (string)$stringValue;

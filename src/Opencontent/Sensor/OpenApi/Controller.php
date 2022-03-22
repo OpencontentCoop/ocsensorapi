@@ -1338,6 +1338,7 @@ class Controller
             'ClassFilterArray' => ['user_group'],
             'LoadDataMap' => false,
             'Limit' => 1,
+            'Limitation' => [],
             'Offset' => 0,
             'AttributeFilter' => [
                 ['node_id', '!=', $this->repository->getOperatorsRootNode()->attribute('node_id')],

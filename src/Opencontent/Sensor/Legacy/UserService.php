@@ -315,7 +315,7 @@ class UserService extends UserServiceBase
         }
 
         $idList = array_map('intval', $idList);
-        $idList = array_diff($idList, [4,11]); // remove default user groups
+        $idList = array_diff($idList, [4,11,12,42]); // remove default user groups
         return array_unique(array_values($idList));
     }
     

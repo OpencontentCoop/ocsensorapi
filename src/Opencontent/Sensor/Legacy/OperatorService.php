@@ -102,7 +102,7 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
             'attributes' => [
                 'name' => (string)$payload['name'],
                 'e_mail' => (string)$payload['email'],
-                'user_account' => $payload['email'].'|'.$payload['email'] .'||md5_password|1', // foo|foo@ez.no|1234|md5_password|0
+                'account' => $payload['email'].'|'.$payload['email'] .'||md5_password|1', // foo|foo@ez.no|1234|md5_password|0
                 self::ROLE_ATTRIBUTE_IDENTIFIER => (string)$payload['role'],
                 self::GROUP_ATTRIBUTE_IDENTIFIER => implode('-', $payload['groups']),
             ]

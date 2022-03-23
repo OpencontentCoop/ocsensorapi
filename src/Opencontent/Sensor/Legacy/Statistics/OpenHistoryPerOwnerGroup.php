@@ -12,6 +12,8 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
     use FiltersTrait;
     use AccessControlTrait;
 
+    protected $description;
+
     /**
      * StatusPercentage constructor.
      * @param Repository $repository
@@ -33,7 +35,8 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
 
     public function getDescription()
     {
-        return Translator::translate('Open issues by entering date', 'chart');
+        return ($this->description === null) ?
+            Translator::translate('Open issues by entering date', 'chart') : $this->description;
     }
 
     public function getData()
@@ -52,52 +55,99 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
             $hasGroupingFlag = $this->hasParameter('taggroup');
             $statusFilter = " raw[sensor_status_lk] = 'open' and ";
             $groupIdList = (array)$this->getParameter('group');
-            $nameAndQueryList = [];
+
+            $groupedGroups = $this->getGroupTree($hasGroupingFlag, $groupIdList);
 
             if ($this->hasParameter('group') && !$hasGroupingFlag) {
-                $operators = $this->getOperatorsTree($groupIdList);
-                foreach ($operators as $id => $operator) {
-                    $nameAndQueryList[$operator['name']] =
-                        "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$ownerGroupFilter}{$userGroupFilter} raw[sensor_last_owner_user_id_i] = '$id' and";
+                $groupedGroups = $this->getGroupTree(true, $groupIdList);
+                $idList = [];
+                foreach ($groupedGroups as $groupedGroupId => $groupedGroup) {
+                    if (count($groupedGroup['children'])) {
+                        $idList = array_merge($idList, $groupedGroup['children']);
+                    } else {
+                        $idList[] = $groupedGroupId;
+                    }
                 }
-
-//            } elseif ($this->hasParameter('group') && $hasGroupingFlag) {
-//                foreach ($groupIdList as $groupId) {
-//                    $group = $this->repository->getGroupService()->loadGroup($groupId, []);
-//                    if ($group instanceof Group) {
-//                        $groupFilter = "raw[sensor_last_owner_group_id_i] in ['{$group->id}'] and ";
-//                        $nameAndQueryList[$group->name] =
-//                            "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}";
-//                    }
-//                }
+                $idList = array_unique($idList);
+                $pivotField = 'sensor_last_owner_user_id_i';
+                $aggregations = $this->getOperatorsTree($idList);
+                $queryPart = ' and raw[sensor_last_owner_group_id_i] in [' . implode(',', $idList) . ']';
 
             } else {
-                $groups = $this->getGroupTree($hasGroupingFlag, $groupIdList);
-                foreach ($groups as $id => $group) {
-                    $id = $id == 0 ? "'$id'" : $id;
-                    $idList = array_merge(["$id"], $group['children']);
-                    $groupFilter = 'raw[sensor_last_owner_group_id_i] in [' . implode(',', $idList) . '] and ';
-                    $nameAndQueryList[$group['name']] =
-                        "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$groupFilter}{$userGroupFilter}";
+                $pivotField = 'sensor_last_owner_group_id_i';
+                $aggregations = $groupedGroups;
+                $idList = [];
+                foreach ($groupedGroups as $groupedGroupId => $groupedGroup) {
+                    if (count($groupedGroup['children'])) {
+                        $idList = array_merge($idList, $groupedGroup['children']);
+                    } else {
+                        $idList[] = $groupedGroupId;
+                    }
+                }
+                $idList = array_unique($idList);
+                $queryPart = ' and raw[sensor_last_owner_group_id_i] in [' . implode(',', $idList) . ']';
+            }
+
+            $byInterval = $this->getIntervalFilter();
+            $intervalNameParser = $this->getIntervalNameParser();
+            $query = "{$statusFilter}{$rangeFilter}{$categoryFilter}{$areaFilter}{$typeFilter}{$ownerGroupFilter}{$userGroupFilter}{$queryPart} facets [raw[{$pivotField}]|count|300] pivot [facet=>[{$byInterval},{$pivotField}],mincount=>1] limit 1";
+
+            $search = $this->repository->getStatisticsService()->searchPosts($query);
+
+            $intervals = [];
+            $pivotData = [];
+            foreach ($search->pivot["{$byInterval},{$pivotField}"] as $intervalPivot){
+                $pivotItem = [];
+                if (isset($intervalPivot['pivot'])){
+                    foreach ($intervalPivot['pivot'] as $fieldPivot){
+                        $pivotItem[$fieldPivot['value']] = $fieldPivot['count'];
+                    }
+                }
+                $sum = array_sum($pivotItem);
+                if ($sum > 0) {
+                    $intervals[$intervalPivot['value']] = $intervalNameParser($intervalPivot['value']);
+                    $pivotData[$intervalPivot['value']] = $pivotItem;
                 }
             }
 
-            $intervals = [];
+            ksort($intervals);
+            ksort($pivotData);
+
             $data = [];
-            foreach ($nameAndQueryList as $name => $query) {
-                $datum = $this->getOpenHistory(
-                    $query,
-                    $this->getGapFilter(),
-                    $this->getParameter('start'),
-                    $this->getParameter('end')
-                );
-                if ($datum) {
-                    $intervals = array_merge($intervals, $datum['intervals']);
-                    $data[$name] = $datum;
+            foreach ($aggregations as $aggregationId => $aggregation) {
+                if (count($aggregation['children'])) {
+                    $idList = $aggregation['children'];
+                } else {
+                    $idList = [$aggregationId];
                 }
+                $series = [];
+                foreach ($pivotData as $intervalId => $pivotDatum){
+                    $keys = array_flip($idList);
+                    $filteredData = array_intersect_key($pivotDatum, $keys);
+                    $serie = [
+                        'interval' => $intervals[$intervalId],
+                        'count' => array_sum($filteredData),
+                    ];
+                    $series[] = $serie;
+                }
+                $data[$aggregation['name']] = [
+                    'intervals' => array_values($intervals),
+                    'serie' => $series,
+                ];
             }
-            $intervals = array_unique($intervals);
-            sort($intervals);
+
+            if (isset($_GET['debug'])) {
+                echo '<pre>';
+                print_r([
+                    $query,
+                    $search->facets,
+                    $search->pivot,
+                    $aggregations,
+                    $data,
+                ]);
+                die();
+            }
+
             $this->data['intervals'] = $intervals;
             foreach ($data as $name => $datum) {
                 $serie = $this->formatHistory($datum['serie'], $name, $this->getColor($name), $intervals);
@@ -106,69 +156,6 @@ class OpenHistoryPerOwnerGroup extends StatisticFactory
         }
 
         return $this->data;
-    }
-
-    protected function getOpenHistory($query, $gap, $start = null, $end = null)
-    {
-        $result = [
-            'intervals' => [],
-            'serie' => [],
-        ];
-
-        try {
-            $dateBounds = \SensorOperator::getPostsDateBounds();
-            $startRange = $dateBounds['first']->format('Y') . '-01-01';
-            $endRange = $dateBounds['last']->format('Y') . '-12-31';
-
-            if ($start && $start != '*') {
-                $time = new \DateTime($start, new \DateTimeZone('UTC'));
-                if (!$time instanceof \DateTime) {
-                    throw new \Exception("Problem with date $start");
-                }
-                $startRange = $time->format('Y-m-d');
-            }
-            if ($end && $end != '*') {
-                $time = new \DateTime($end, new \DateTimeZone('UTC'));
-
-                if (!$time instanceof \DateTime) {
-                    throw new \Exception("Problem with date $end");
-                }
-                $endRange = $time->format('Y-m-d');
-            }
-
-            $availableDates = [];
-            $newSearch = $this->repository->getStatisticsService()->searchPosts(
-                "{$query}
-                    facets [raw[sensor_status_lk]|alpha] facet_range [field=>meta_published_dt,start=>{$startRange},end=>{$endRange},gap=>{$gap}] limit 1"
-            );
-            if (array_sum($newSearch->facets[0]['data']) === 0) {
-                return false;
-            }
-            $newCounts = $newSearch->facet_range['meta_published_dt']['counts'];
-            $availableDates = array_unique(array_merge($availableDates, array_keys($newCounts)));
-            sort($availableDates);
-
-            $serie = [];
-            $intervals = [];
-            foreach ($availableDates as $date) {
-                $count = isset($newCounts[$date]) ? $newCounts[$date] : 0;
-                $timestamp = (new \DateTime($date, Utils::getDateTimeZone()))->format('U');
-                $serie[] = [
-                    'interval' => $timestamp,
-                    'count' => $count
-                ];
-                $intervals[] = $timestamp;
-            }
-            $result = [
-                'intervals' => $intervals,
-                'serie' => $serie,
-            ];
-        } catch (\Exception $e) {
-            $this->repository->getLogger()->error($e->getMessage());
-        }
-
-        return $result;
-
     }
 
     private function formatHistory($data, $name, $color, $intervals = null)

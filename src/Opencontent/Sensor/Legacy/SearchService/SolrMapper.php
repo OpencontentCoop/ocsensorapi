@@ -3,7 +3,12 @@
 namespace Opencontent\Sensor\Legacy\SearchService;
 
 use Opencontent\Sensor\Api\Repository;
+use Opencontent\Sensor\Api\Values\Message\TimelineItemCollection;
 use Opencontent\Sensor\Api\Values\Participant;
+use Opencontent\Sensor\Api\Values\Participant\ApproverCollection;
+use Opencontent\Sensor\Api\Values\Participant\ObserverCollection;
+use Opencontent\Sensor\Api\Values\Participant\OwnerCollection;
+use Opencontent\Sensor\Api\Values\ParticipantCollection;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Legacy\Utils;
@@ -14,9 +19,13 @@ class SolrMapper
     const SOLR_STORAGE_EXECUTION_TIMES = 'sensorpostexec';
     const SOLR_STORAGE_READ_STATUSES = 'sensorpostread';
 
+    private $debug = false;
+
     private $post;
 
     private $repository;
+
+    private static $collectedData = [];
 
     public function __construct(Repository $repository, Post $post)
     {
@@ -198,7 +207,7 @@ class SolrMapper
         $assignedList = false;
         $firstAssignmentDate = false;
         $closingDate = false;
-        if ($this->post->timelineItems instanceof \Opencontent\Sensor\Api\Values\Message\TimelineItemCollection) {
+        if ($this->post->timelineItems instanceof TimelineItemCollection) {
             $readList = $this->post->timelineItems->getByType('read');
             $data['sensor_is_read_i'] = $readList->count();
             $read = $readList->first();
@@ -271,7 +280,7 @@ class SolrMapper
         if (isset($data['sensor_fixing_time_i']) && isset($data['sensor_closing_time_i']))
             $data['sensor_fix_close_time_i'] = $data['sensor_closing_time_i'] - $data['sensor_fixing_time_i'];;
 
-        if ($this->post->participants instanceof \Opencontent\Sensor\Api\Values\ParticipantCollection) {
+        if ($this->post->participants instanceof ParticipantCollection) {
             $data['sensor_participant_id_list_lk'] = implode(',', $this->post->participants->getUserIdList());
             $participantNameList = array();
             foreach ($this->post->participants->participants as $participant)
@@ -279,7 +288,7 @@ class SolrMapper
             $data['sensor_participant_name_list_lk'] = implode(',', $participantNameList);
         }
 
-        if ($this->post->approvers instanceof \Opencontent\Sensor\Api\Values\Participant\ApproverCollection) {
+        if ($this->post->approvers instanceof ApproverCollection) {
             $data['sensor_approver_id_list_lk'] = implode(',', $this->post->approvers->getUserIdList());
             $participantNameList = array();
             foreach ($this->post->approvers->participants as $participant)
@@ -287,7 +296,7 @@ class SolrMapper
             $data['sensor_approver_name_list_lk'] = implode(',', $participantNameList);
         }
 
-        if ($this->post->owners instanceof \Opencontent\Sensor\Api\Values\Participant\OwnerCollection) {
+        if ($this->post->owners instanceof OwnerCollection) {
             $data['sensor_owner_id_list_lk'] = implode(',', $this->post->owners->getUserIdList());
             $participantNameList = array();
             $participantIdList = [];
@@ -305,7 +314,7 @@ class SolrMapper
             $data['sensor_owner_group_id_list_lk'] = implode(',', $participantGroupIdList);
         }
 
-        if ($this->post->observers instanceof \Opencontent\Sensor\Api\Values\Participant\ObserverCollection) {
+        if ($this->post->observers instanceof ObserverCollection) {
             $data['sensor_observer_id_list_lk'] = implode(',', $this->post->observers->getUserIdList());
             $participantNameList = array();
             foreach ($this->post->observers->participants as $participant)
@@ -397,7 +406,7 @@ class SolrMapper
         $identifier = $solrStorage->getSolrStorageFieldName(self::SOLR_STORAGE_POST);
         $data[$identifier] = $value;
 
-        if ($this->post->participants instanceof \Opencontent\Sensor\Api\Values\ParticipantCollection) {
+        if ($this->post->participants instanceof ParticipantCollection) {
             $currentUser = $this->repository->getCurrentUser();
             foreach ($this->post->participants->participants as $participant) {
                 foreach ($participant->users as $user) {
@@ -584,7 +593,7 @@ class SolrMapper
         return $statData;
     }
 
-    public static function patchSearchIndex($postData)
+    public static function patchSearchIndex($postData, $commit = true)
     {
         if (!is_string($postData)){
             $postData = json_encode($postData);
@@ -597,11 +606,16 @@ class SolrMapper
             $maxRetries = 1;
         }
 
+        $commitParam = $commit ? 'true' : 'false';
         $tries = 0;
         while ($tries < $maxRetries) {
             try {
                 $tries++;
-                return $solrBase->sendHTTPRequest($solrBase->SearchServerURI . '/update?commit=true', $postData, 'application/json', 'OpenSegnalazioni');
+                $success = $solrBase->sendHTTPRequest($solrBase->SearchServerURI . '/update?commit=' . $commitParam, $postData, 'application/json', 'OpenSegnalazioni');
+                if (!$commit) {
+                    exec('sh extension/ocsensor/bin/bash/solr_commit.sh');
+                }
+                return $success;
             } catch (\ezfSolrException $e) {
                 $doRetry = false;
                 $errorMessage = $e->getMessage();
@@ -619,5 +633,164 @@ class SolrMapper
         }
 
         throw new \Exception($errorMessage);
+    }
+
+    private function getLanguages()
+    {
+        $contentObject = \eZContentObject::fetch($this->post->id);
+        /** @var \eZContentObjectVersion $version */
+        $version = $contentObject->currentVersion();
+        return $version->translationList(false, false);
+    }
+
+    public function updatePostModified($timestamp)
+    {
+        $this->debug('Collect modified data');
+        $this->collect(['*' => ['meta_modified_dt' => \ezfSolrDocumentFieldBase::convertTimestampToDate($timestamp)]]);
+    }
+
+    public function updatePostStatus()
+    {
+        $this->debug('Collect status data');
+        $contentObject = \eZContentObject::fetch($this->post->id);
+        $this->collect(['*' => [\ezfSolrDocumentFieldBase::generateMetaFieldName('object_states') => $contentObject->stateIDArray()]]);
+    }
+
+    public function updatePostWorkflowStatus()
+    {
+        $this->debug('Collect workflow data');
+        $this->collect(true);
+    }
+
+    public function updatePostExpirationInfo()
+    {
+        $this->debug('Collect expiration data');
+        $this->collect(true);
+    }
+
+    private function updatePostAttribute($identifier)
+    {
+        $this->debug("Collect $identifier data");
+        $contentObject = \eZContentObject::fetch($this->post->id);
+        $updateData = [];
+        foreach ($this->getLanguages() as $languageCode){
+            $dataMap = $contentObject->fetchDataMap(false, $languageCode);
+            if (isset($dataMap[$identifier])) {
+                $fieldBase = \ezfSolrDocumentFieldBase::getInstance($dataMap[$identifier]);
+                $fieldBaseData = $fieldBase->getData();
+                foreach ($fieldBaseData as $key => $value) {
+                    $updateData[$languageCode][$key] = [
+                        'set' => $value,
+                    ];
+                }
+            }
+        }
+        $this->collect($updateData);
+    }
+
+    public function updatePostCategory()
+    {
+        $this->updatePostAttribute('category');
+    }
+
+    public function updatePostAreas()
+    {
+        $this->updatePostAttribute('area');
+    }
+
+    public function updatePostAttachments()
+    {
+        $this->updatePostAttribute('attachment');
+    }
+
+    public function updatePostImages()
+    {
+        $this->updatePostAttribute('images');
+    }
+
+    public function updatePostFiles()
+    {
+        $this->updatePostAttribute('files');
+    }
+
+    public function updatePostType()
+    {
+        $this->updatePostAttribute('type');
+    }
+
+    public function updatePostTags()
+    {
+        $this->updatePostAttribute('tags');
+    }
+
+    public function updatePostMessages()
+    {
+        $this->debug('Collect message data');
+        $this->collect(true);
+    }
+
+    public function updatePostParticipants()
+    {
+        $this->debug('Collect participant data');
+        $this->collect(true);
+    }
+
+    private function collect($data)
+    {
+        $solr = new \eZSolr();
+        if (!isset(self::$collectedData[$this->post->id])){
+            self::$collectedData[$this->post->id] = [];
+            foreach ($this->getLanguages() as $language){
+                self::$collectedData[$this->post->id][$language] = ['meta_guid_ms' => $solr->guid((int)$this->post->id, $language)];
+            }
+        }
+
+        if ($data === true){
+            self::$collectedData[$this->post->id]['all'] = true;
+        }elseif (is_array($data)){
+            foreach ($data as $locale => $values){
+                foreach ($this->getLanguages() as $language){
+                    if ($locale == $language || $locale == '*'){
+                        foreach ($values as $key => $value){
+                            self::$collectedData[$this->post->id][$language][$key] = $value;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public function commit()
+    {
+        if (isset(self::$collectedData[$this->post->id])){
+
+            if (isset(self::$collectedData[$this->post->id]['all'])) {
+                unset(self::$collectedData[$this->post->id]['all']);
+                foreach ($this->getLanguages() as $language) {
+                    foreach ($this->mapToIndex() as $key => $value) {
+                        self::$collectedData[$this->post->id][$language][$key] = [
+                            'set' => $value,
+                        ];
+                    }
+                }
+            }
+
+            $data = [];
+            $debug = [];
+            foreach (self::$collectedData[$this->post->id] as $values){
+                $debug = array_merge($debug, array_keys($values));
+                $data[] = $values;
+            }
+            $this->debug('Commit data', ['data' => $debug]);
+            self::patchSearchIndex($data);
+            unset(self::$collectedData[$this->post->id]);
+        }
+    }
+
+    private function debug($message, $context = [])
+    {
+        if ($this->debug) {
+            $this->repository->getLogger()->debug($message, $context);
+        }
     }
 }

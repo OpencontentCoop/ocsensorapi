@@ -536,35 +536,15 @@ class PostService extends PostServiceBase
     {
         $this->repository->getLogger()->debug($modifyTimestamp ? 'Hard refresh post #' . $post->id  : 'Refresh post #' . $post->id);
 
+        $mapper = new SolrMapper($this->repository, $post);
         $contentObject = $this->getContentObject($post);
-        $timestamp = time();
         if ($modifyTimestamp) {
+            $timestamp = time();
             $contentObject->setAttribute('modified', $timestamp);
             $contentObject->store();
+            $mapper->updatePostModified($timestamp);
         }
-
-        /** @var \eZContentObjectVersion $version */
-        $version = $contentObject->currentVersion();
-        $availableLanguages = $version->translationList(false, false);
-        $solr = new \eZSolr();
-        $updateData = [];
-        foreach ($availableLanguages as $languageCode) {
-            $mapper = new SolrMapper($this->repository, $post);
-            $updateItem = ['meta_guid_ms' => $solr->guid((int)$post->id, $languageCode)];
-            if ($modifyTimestamp) {
-                $updateItem['meta_modified_dt'] = [
-                    'set' => \ezfSolrDocumentFieldBase::convertTimestampToDate($timestamp),
-                ];
-            }
-            // categories areas status
-            foreach ($mapper->mapToIndex() as $key => $value) {
-                $updateItem[$key] = [
-                    'set' => $value,
-                ];
-            }
-            $updateData[] = $updateItem;
-        }
-        SolrMapper::patchSearchIndex(json_encode($updateData));
+        $mapper->commit();
 
         return $post;
     }
@@ -612,6 +592,9 @@ class PostService extends PostServiceBase
                 $state->label = 'danger';
                 $post->moderation = $state;
             }
+
+            $mapper = new SolrMapper($this->repository, $post);
+            $mapper->updatePostStatus();
         }
     }
 
@@ -642,7 +625,10 @@ class PostService extends PostServiceBase
         }
         $collaborationItem->sync();
 
-        $post->status = Post\WorkflowStatus::instanceByCode($status);
+        $post->workflowStatus = Post\WorkflowStatus::instanceByCode($status);
+
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostWorkflowStatus();
     }
 
     public function setPostExpirationInfo(Post $post, $expiryDays)
@@ -667,6 +653,9 @@ class PostService extends PostServiceBase
             $expirationInfo->days = $diff->days;
         }
         $post->expirationInfo = $expirationInfo;
+
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostExpirationInfo();
     }
 
     public function setPostCategory(Post $post, $category)
@@ -686,6 +675,9 @@ class PostService extends PostServiceBase
             }
         }
         $post->categories = $data;
+
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostCategory();
     }
 
     public function setPostArea(Post $post, $area)
@@ -705,6 +697,9 @@ class PostService extends PostServiceBase
             }
         }
         $post->areas = $data;
+
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostAreas();
     }
 
     public function addAttachment(Post $post, $files)
@@ -729,6 +724,10 @@ class PostService extends PostServiceBase
                 @unlink($tempFilePath);
             }
         }
+        $post->attachments = []; //@todo
+
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostAttachments();
     }
 
     public function removeAttachment(Post $post, $files)
@@ -759,7 +758,10 @@ class PostService extends PostServiceBase
                 $contentObjectDataMap['attachment']->customHTTPAction($http, 'delete_binary', []);
             }
         }
+        $post->attachments = []; //@todo
 
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostAttachments();
     }
 
     public function addImage(Post $post, $files)
@@ -782,6 +784,10 @@ class PostService extends PostServiceBase
                 @unlink($tempFilePath);
             }
         }
+        $post->images = []; //@todo
+
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostImages();
     }
 
     public function addFile(Post $post, $files)
@@ -804,6 +810,10 @@ class PostService extends PostServiceBase
                 @unlink($tempFilePath);
             }
         }
+        $post->files = []; //@todo
+
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostFiles();
     }
 
     public function removeImage(Post $post, $files)
@@ -831,6 +841,10 @@ class PostService extends PostServiceBase
                 }
             }
         }
+        $post->images = []; //@todo
+
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostImages();
     }
 
     public function removeFile(Post $post, $files)
@@ -858,6 +872,10 @@ class PostService extends PostServiceBase
                 }
             }
         }
+        $post->files = []; //@todo
+
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostFiles();
     }
 
     public function setPostType(Post $post, Post\Type $type)
@@ -868,6 +886,9 @@ class PostService extends PostServiceBase
             $contentObjectDataMap['type']->store();
         }
         $post->type = $type;
+
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostType();
     }
 
     public function setPostTags(Post $post, array $tags)
@@ -879,5 +900,8 @@ class PostService extends PostServiceBase
             $contentObjectDataMap['tags']->store();
         }
         $post->tags = $tags;
+
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostTags();
     }
 }

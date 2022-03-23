@@ -17,6 +17,7 @@ use eZCollaborationGroup;
 use eZCollaborationItemGroupLink;
 use eZPersistentObject;
 use eZCollaborationItemStatus;
+use Opencontent\Sensor\Legacy\SearchService\SolrMapper;
 use Opencontent\Sensor\Legacy\Utils\Translator;
 
 
@@ -149,6 +150,8 @@ class ParticipantService extends ParticipantServiceBase
         $GLOBALS['eZCollaborationItemParticipantLinkListCache'] = array();
         unset($this->participantsByPost[$post->internalId]);
         $this->internalLoadPostParticipants($post);
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostParticipants();
     }
 
     public function trashPostParticipant(Post $post, $id)
@@ -197,6 +200,8 @@ class ParticipantService extends ParticipantServiceBase
         $db->commit();
         unset($this->participantsByPost[$post->internalId]);
         $this->internalLoadPostParticipants($post);
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostParticipants();
     }
 
     public function restorePostParticipant(Post $post, $id)
@@ -220,6 +225,8 @@ class ParticipantService extends ParticipantServiceBase
             $db->commit();
             unset($this->participantsByPost[$post->internalId]);
             $this->internalLoadPostParticipants($post);
+            $mapper = new SolrMapper($this->repository, $post);
+            $mapper->updatePostParticipants();
         }
     }
 

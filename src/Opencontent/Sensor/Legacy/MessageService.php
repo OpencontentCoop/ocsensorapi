@@ -11,6 +11,7 @@ use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Core\MessageService as MessageServiceBase;
+use Opencontent\Sensor\Legacy\SearchService\SolrMapper;
 use Opencontent\Sensor\Legacy\Utils\TimelineTools;
 
 class MessageService extends MessageServiceBase
@@ -463,5 +464,8 @@ class MessageService extends MessageServiceBase
         $post->timelineItems = $this->loadTimelineItemCollectionByPost($post);
         $post->responses = $this->loadResponseCollectionByPost($post);
         $post->audits = $this->loadAuditCollectionByPost($post);
+
+        $mapper = new SolrMapper($this->repository, $post);
+        $mapper->updatePostMessages();
     }
 }

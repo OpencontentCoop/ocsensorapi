@@ -1361,7 +1361,7 @@ class Controller
 
     private function loadPost()
     {
-        return $this->repository->getSearchService()->searchPost($this->restController->postId);
+        return $this->repository->getPostService()->loadPost($this->restController->postId);
     }
 
     /**

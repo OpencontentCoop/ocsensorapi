@@ -26,6 +26,8 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
 
     protected static $firstApprovers;
 
+    private $operatorsByGroup = [];
+
     public function loadOperator($id, $limitations = null)
     {
         try {
@@ -74,6 +76,26 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
     }
 
     public function loadOperatorsByGroup(Group $group, $limit, $cursor, $limitations = null)
+    {
+        $items = [];
+        if (!isset($this->operatorsByGroup[$group->id])) {
+            $this->operatorsByGroup[$group->id] = [];
+            $contentObject = eZContentObject::fetch($group->id);
+            if ($contentObject instanceof eZContentObject) {
+                $classAttribute = 'sensor_operator/' . self::GROUP_ATTRIBUTE_IDENTIFIER;
+                $attributeID = \eZContentObjectTreeNode::classAttributeIDByIdentifier($classAttribute);
+                $reverseRelated = $contentObject->reverseRelatedObjectList(false, $attributeID, true);
+                foreach ($reverseRelated as $classAttributeId => $operators) {
+                    foreach ($operators as $operator) {
+                        $this->operatorsByGroup[$group->id][] = self::fromUser($this->repository->getUserService()->loadUser($operator->attribute('id')));
+                    }
+                }
+            }
+        }
+        return ['items' => $this->operatorsByGroup[$group->id], 'next' => null, 'current' => null, 'count' => count($this->operatorsByGroup[$group->id])];
+    }
+
+    public function searchOperatorsByGroup(Group $group, $limit, $cursor, $limitations = null)
     {
         if ($limit > \Opencontent\Sensor\Api\SearchService::MAX_LIMIT) {
             throw new InvalidInputException('Max limit allowed is ' . \Opencontent\Sensor\Api\SearchService::MAX_LIMIT);

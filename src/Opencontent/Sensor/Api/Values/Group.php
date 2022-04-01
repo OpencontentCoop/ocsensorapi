@@ -16,6 +16,10 @@ class Group
 
     public $email;
 
+    public $tag;
+
+    public $reference;
+
     public function __toString()
     {
         return '' . $this->id;

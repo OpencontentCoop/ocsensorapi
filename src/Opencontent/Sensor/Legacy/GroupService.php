@@ -120,6 +120,12 @@ class GroupService extends \Opencontent\Sensor\Core\GroupService
         if (isset($content['data'][$repository->getCurrentLanguage()]['email'])){
             $group->email = $content['data'][$repository->getCurrentLanguage()]['email'];
         }
+        if (isset($content['data'][$repository->getCurrentLanguage()]['tag'])){
+            $group->tag = $content['data'][$repository->getCurrentLanguage()]['tag'];
+        }
+        if (isset($content['data'][$repository->getCurrentLanguage()]['reference'])){
+            $group->reference = $content['data'][$repository->getCurrentLanguage()]['reference'];
+        }
 
         return $group;
     }

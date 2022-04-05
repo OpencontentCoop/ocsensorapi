@@ -202,6 +202,8 @@ class TreeNodeItem implements \JsonSerializable
 
     protected static function reference(eZContentObjectTreeNode $node)
     {
+        /** @var eZContentObjectAttribute[] $dataMap */
+        $dataMap = $node->attribute('data_map');
         if (isset($dataMap['reference']) && $dataMap['reference']->hasContent()) {
             return trim($dataMap['reference']->toString());
         }

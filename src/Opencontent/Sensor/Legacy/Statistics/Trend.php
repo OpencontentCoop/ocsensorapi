@@ -35,6 +35,25 @@ class Trend extends StatisticFactory
         return Translator::translate('Number of issues open and closed by time interval', 'chart');
     }
 
+    private function parseDateBoundary($value, $fallback)
+    {
+        if ($value){
+            if ($value != '*') {
+                $time = new \DateTime($value, new \DateTimeZone('UTC'));
+                if (!$time instanceof \DateTime) {
+                    throw new \Exception("Problem with date $value");
+                }
+                $value = $time->format('U');
+            }else{
+                $value = $fallback;
+            }
+        }else{
+            $value = $fallback;
+        }
+
+        return $value;
+    }
+
     public function getData()
     {
         if ($this->data === null) {
@@ -46,7 +65,9 @@ class Trend extends StatisticFactory
             $intervalNameParser = $this->getIntervalNameParser();
             $categoryFilter = $this->getMainCategoryFilter();
             $areaFilter = $this->getAreaFilter();
-            $rangeFilter = $this->getRangeFilter();
+            $rangeFilter = ''; //$this->getRangeFilter();
+            $start = $this->parseDateBoundary($this->hasParameter('start') ? $this->getParameter('start') : null, 0);
+            $end = $this->parseDateBoundary($this->hasParameter('end') ? $this->getParameter('end') : null, time());
             $groupFilter = $this->getOwnerGroupFilter();
             $typeFilter = $this->getTypeFilter();
             $userGroupFilter = $this->getUserGroupFilter();
@@ -74,11 +95,13 @@ class Trend extends StatisticFactory
             foreach ($facets as $facet) {
                 foreach (array_keys($facet['data']) as $value) {
                     if (!isset($intervals[$value])) {
-                        $intervals[$value] = is_callable($intervalNameParser) ? (int)$intervalNameParser($value) : (int)$value;
+                        $intervalValue = is_callable($intervalNameParser) ? (int)$intervalNameParser($value) : (int)$value;
+                        if ($intervalValue >= $start && $intervalValue <= $end) {
+                            $intervals[$value] = $intervalValue;
+                        }
                     }
                 }
             }
-
             asort($intervals);
             foreach ($intervals as $intervalId => $intervalName) {
                 $hasSerie = [];

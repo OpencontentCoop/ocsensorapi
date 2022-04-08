@@ -18,6 +18,7 @@ use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Api\Values\Message\AuditCollection;
 use Opencontent\Sensor\Api\Values\Message\CommentCollection;
 use Opencontent\Sensor\Api\Values\Message\PrivateMessageCollection;
+use Opencontent\Sensor\Api\Values\Message\ResponseCollection;
 use Opencontent\Sensor\Api\Values\Message\TimelineItemCollection;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\ParticipantCollection;
@@ -271,11 +272,11 @@ class PostService extends PostServiceBase
                 }
                 $replaceStringList = array_fill(0, count($hiddenApprovers), $hiddenApproverName);
                 $hiddenMessage->text = str_replace(array_values($hiddenApprovers), $replaceStringList, $message->text);
-                $hiddenMessage->richText = str_replace(array_values($hiddenApprovers), $replaceStringList, $message->text);
+                $hiddenMessage->richText = str_replace(array_values($hiddenApprovers), $replaceStringList, $message->richText);
 
                 $replaceStringList = array_fill(0, count($hiddenOperators), $hiddenOperatorName);
                 $hiddenMessage->text = str_replace(array_values($hiddenOperators), $replaceStringList, $hiddenMessage->text);
-                $hiddenMessage->richText = str_replace(array_values($hiddenOperators), $replaceStringList, $hiddenMessage->text);
+                $hiddenMessage->richText = str_replace(array_values($hiddenOperators), $replaceStringList, $hiddenMessage->richText);
 
                 $timelineMessages->addMessage($hiddenMessage);
             }
@@ -290,6 +291,16 @@ class PostService extends PostServiceBase
                 $comments->addMessage($hiddenMessage);
             }
             $post->comments = $comments;
+
+            $responses = new ResponseCollection();
+            foreach ($post->responses->messages as $message){
+                $hiddenMessage = clone $message;
+                if (isset($hiddenOperators[$message->creator->id])) {
+                    $hiddenMessage->creator = $this->getHiddenUser($message->creator);
+                }
+                $responses->addMessage($hiddenMessage);
+            }
+            $post->responses = $responses;
 
             if ($post->latestOwner instanceof Participant){
                 if (isset($hiddenOperators[$post->latestOwner->id])) {

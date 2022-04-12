@@ -38,6 +38,8 @@ class TreeNodeItem implements \JsonSerializable
 
     protected $is_enabled;
 
+    private $parent;
+
     /**
      * @var TreeNodeItem[]
      */
@@ -351,16 +353,27 @@ class TreeNodeItem implements \JsonSerializable
     }
 
     /**
+     * @return TreeNodeItem|false
+     */
+    public function getParent()
+    {
+        return $this->parent;
+    }
+
+    /**
      * @param $id
      * @return TreeNodeItem|false
      */
-    public function findById($id){
+    public function findById($id, TreeNodeItem $parent = null){
         if ($this->id == $id){
+            if ($parent){
+                $this->parent = $parent;
+            }
             return $this;
         }
 
         foreach ($this->children as $child){
-            if ($data = $child->findById($id)){
+            if ($data = $child->findById($id, $this)){
                 return $data;
             }
         }

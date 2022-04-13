@@ -13,6 +13,6 @@ class CanRead extends PermissionDefinition
     public function userHasPermission(User $user, Post $post)
     {
         $object = \eZContentObject::fetch($post->id);
-        return $object instanceof \eZContentObject && $object->canRead();
+        return $object instanceof \eZContentObject && ($object->canRead() || \eZUser::currentUserID() == $post->reporter->id);
     }
 }

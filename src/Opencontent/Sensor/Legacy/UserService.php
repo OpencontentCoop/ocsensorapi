@@ -310,12 +310,10 @@ class UserService extends UserServiceBase
         $dataMap = $contentObject->dataMap();
         if (isset($dataMap[OperatorService::GROUP_ATTRIBUTE_IDENTIFIER]) && $dataMap[OperatorService::GROUP_ATTRIBUTE_IDENTIFIER]->hasContent()){
             $idList = explode('-', $dataMap[OperatorService::GROUP_ATTRIBUTE_IDENTIFIER]->toString());
-        }else{
-            $idList = $ezUser->groups();
         }
-
+        $idList = array_merge($idList, $ezUser->groups());
         $idList = array_map('intval', $idList);
-        $idList = array_diff($idList, [4,11,12,42]); // remove default user groups
+        $idList = array_diff($idList, [4,11,12,42,60]); // remove default user groups
         return array_unique(array_values($idList));
     }
     

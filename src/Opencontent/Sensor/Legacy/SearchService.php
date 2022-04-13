@@ -17,6 +17,8 @@ use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Core\SearchService as BaseSearchService;
 use Opencontent\Sensor\Legacy\SearchService\SolrMapper;
+use eZSolr;
+use eZUser;
 
 class SearchService extends BaseSearchService
 {
@@ -182,6 +184,8 @@ class SearchService extends BaseSearchService
             }
         }
 
+        $solr = new eZSolr();
+
         $ezFindQuery = array_merge(
             array(
                 'SearchOffset' => 0,
@@ -195,7 +199,7 @@ class SearchService extends BaseSearchService
                 'AsObjects' => false,
                 //'IgnoreVisibility' => true,
                 'FieldsToReturn' => $fieldsToReturn,
-                'Limitation' => $policies
+                'Limitation' => $this->buildQueryLimitation($policies),
             )
         );
 
@@ -216,8 +220,8 @@ class SearchService extends BaseSearchService
         $languages = $ini->variable( 'RegionalSettings', 'SiteLanguageList' );
         $languageFilter = [
             'or',
-            \eZSolr::getMetaFieldName('language_code') . ':(' . implode( ' OR ' , $languages ) . ')',
-            \eZSolr::getMetaFieldName( 'always_available' ) . ':true'
+            eZSolr::getMetaFieldName('language_code') . ':(' . implode( ' OR ' , $languages ) . ')',
+            eZSolr::getMetaFieldName( 'always_available' ) . ':true'
         ];
         if (empty($ezFindQuery['Filter'])) {
             $ezFindQuery['Filter'] = [$languageFilter];
@@ -225,7 +229,11 @@ class SearchService extends BaseSearchService
             $ezFindQuery['Filter'] = [$ezFindQuery['Filter'], $languageFilter];
         }
 
-        $solr = new \eZSolr();
+        $policyLimitationFilters = $this->buildPolicyLimitationFilters($solr, $policies);
+        if ($policyLimitationFilters) {
+            $ezFindQuery['Filter'][] = $policyLimitationFilters;
+        }
+
         $rawResults = @$solr->search(
             $ezFindQuery['query'],
             $ezFindQuery
@@ -401,5 +409,170 @@ class SearchService extends BaseSearchService
         }
 
         return $data;
+    }
+
+    private function buildQueryLimitation($policies)
+    {
+        $limitation = eZUser::currentUser()->hasAccessTo('content', 'read');
+        if (isset($limitation['accessWord']) && $limitation['accessWord'] === 'yes') {
+            $policies = [];
+        }
+        return $policies === null ? [] : $policies;
+    }
+
+    /**
+     * @param eZSolr $solr
+     * @param $policies
+     * @return false|string
+     * @see ezfeZPSolrQueryBuilder::policyLimitationFilterQuery
+     */
+    private function buildPolicyLimitationFilters(eZSolr $solr, $policies)
+    {
+        $limitation = eZUser::currentUser()->hasAccessTo('content', 'read');
+        if (isset($limitation['accessWord']) && $limitation['accessWord'] === 'yes') {
+            return false;
+        }
+
+        if ($policies !== null){
+            return false;
+        }
+
+        if (isset($limitation['accessWord'])) {
+            switch ($limitation['accessWord']) {
+                case 'limited':
+                    if (isset($limitation['policies'])) {
+                        $policies = $limitation['policies'];
+                        break;
+                    }
+                // break omitted, "limited" without policies == "no"
+                case 'no':
+                    return ' NOT *:* ';
+            }
+        }
+
+        $limitationHash = [
+            'Class' => eZSolr::getMetaFieldName('contentclass_id'),
+            'Section' => eZSolr::getMetaFieldName('section_id'),
+            'User_Section' => eZSolr::getMetaFieldName('section_id'),
+            'Subtree' => eZSolr::getMetaFieldName('path_string'),
+            'User_Subtree' => eZSolr::getMetaFieldName('path_string'),
+            'Node' => eZSolr::getMetaFieldName('main_node_id'),
+            'Owner' => eZSolr::getMetaFieldName('owner_id'),
+            'Group' => eZSolr::getMetaFieldName('owner_group_id'),
+            'ObjectStates' => eZSolr::getMetaFieldName('object_states'),
+        ];
+        $filterQueryPolicies = [];
+        $pathFieldName = eZSolr::getMetaFieldName('visible_path');
+        foreach ($policies as $limitationList) {
+            // policy limitations are concatenated with AND
+            // except for locations policity limitations, concatenated with OR
+            $filterQueryPolicyLimitations = [];
+            $policyLimitationsOnLocations = [];
+
+            foreach ($limitationList as $limitationType => $limitationValues) {
+                // limitation values of one type in a policy are concatenated with OR
+                $filterQueryPolicyLimitationParts = [];
+
+                switch ($limitationType) {
+                    case 'User_Subtree':
+                    case 'Subtree':
+                        {
+                            foreach ($limitationValues as $limitationValue) {
+                                $pathString = trim($limitationValue, '/');
+                                $pathArray = explode('/', $pathString);
+                                // we only take the last node ID in the path identification string
+                                $subtreeNodeID = array_pop($pathArray);
+                                $policyLimitationsOnLocations[] = $pathFieldName . ':' . $subtreeNodeID;
+                                if (isset($solr->postSearchProcessingData['subtree_limitations'])) {
+                                    $solr->postSearchProcessingData['subtree_limitations'][] = $subtreeNodeID;
+                                } else {
+                                    $solr->postSearchProcessingData['subtree_limitations'] = [$subtreeNodeID];
+                                }
+                            }
+                        }
+                        break;
+
+                    case 'Node':
+                        {
+                            foreach ($limitationValues as $limitationValue) {
+                                $pathString = trim($limitationValue, '/');
+                                $pathArray = explode('/', $pathString);
+                                // we only take the last node ID in the path identification string
+                                $nodeID = array_pop($pathArray);
+                                $policyLimitationsOnLocations[] = $limitationHash[$limitationType] . ':' . $nodeID;
+                                if (isset($solr->postSearchProcessingData['subtree_limitations'])) {
+                                    $solr->postSearchProcessingData['subtree_limitations'][] = $nodeID;
+                                } else {
+                                    $solr->postSearchProcessingData['subtree_limitations'] = [$nodeID];
+                                }
+                            }
+                        }
+                        break;
+
+                    case 'Group':
+                        {
+                            foreach (
+                                eZUser::currentUser()->attribute('contentobject')->attribute(
+                                    'parent_nodes'
+                                ) as $groupID
+                            ) {
+                                $filterQueryPolicyLimitationParts[] = $limitationHash[$limitationType] . ':' . $groupID;
+                            }
+                        }
+                        break;
+
+                    case 'Owner':
+                        {
+                            $ownerLimitationParts = [$limitationHash[$limitationType] . ':' . $this->repository->getCurrentUser()->id];
+                            if ($this->repository->getCurrentUser()->behalfOfMode){
+                                $ownerLimitationParts[] = 'sensor_reporter_id_i:' . $this->repository->getCurrentUser()->id;
+                            }
+                            $filterQueryPolicyLimitationParts[] = implode(' OR ', $ownerLimitationParts);
+                        }
+                        break;
+
+                    case 'Class':
+                    case 'Section':
+                    case 'User_Section':
+                        {
+                            foreach ($limitationValues as $limitationValue) {
+                                $filterQueryPolicyLimitationParts[] = $limitationHash[$limitationType] . ':' . $limitationValue;
+                            }
+                        }
+                        break;
+
+                    default :
+                    {
+                        if (strpos($limitationType, 'StateGroup') !== false) {
+                            foreach ($limitationValues as $limitationValue) {
+                                $filterQueryPolicyLimitationParts[] = $limitationHash['ObjectStates'] . ':' . $limitationValue;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
+                if (!empty($filterQueryPolicyLimitationParts)) {
+                    $filterQueryPolicyLimitations[] = '( ' . implode(' OR ', $filterQueryPolicyLimitationParts) . ' )';
+                }
+            }
+
+            // Policy limitations on locations (node and/or subtree) need to be concatenated with OR
+            // unlike the other types of limitation
+            if (!empty($policyLimitationsOnLocations)) {
+                $filterQueryPolicyLimitations[] = '( ' . implode(' OR ', $policyLimitationsOnLocations) . ')';
+            }
+
+            if (!empty($filterQueryPolicyLimitations)) {
+                $filterQueryPolicies[] = '( ' . implode(' AND ', $filterQueryPolicyLimitations) . ')';
+            }
+        }
+
+        if (empty($filterQueryPolicies)){
+            return false;
+        }
+
+        return '(' . implode(' OR ', $filterQueryPolicies) . ')';
     }
 }

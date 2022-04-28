@@ -18,7 +18,8 @@ abstract class StatisticFactory
 
     protected $renderSettings = [
         'engine' => 'highcharts',
-        'highcharts' => ['use_highstock' => false]
+        'highcharts' => ['use_highstock' => false],
+        'allow_reference_filter' => false,
     ];
 
     abstract public function getData();

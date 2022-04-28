@@ -236,6 +236,19 @@ trait FiltersTrait
                 }
                 $map[$groupTagId][] = $groupTreeItem->attribute('id');
             }
+            if ($this->renderSettings['allow_reference_filter']) {
+                $groupReference = $groupTreeItem->attribute('reference');
+                if (!empty($groupReference)) {
+                    $groupReferenceIdentifier = \eZCharTransform::instance()->transformByGroup(
+                        $groupReference,
+                        'urlalias'
+                    );
+                    if (!isset($map[$groupReferenceIdentifier])) {
+                        $map[$groupReferenceIdentifier] = [];
+                    }
+                    $map[$groupReferenceIdentifier][] = $groupTreeItem->attribute('id');
+                }
+            }
         }
 
         return $map;
@@ -255,11 +268,13 @@ trait FiltersTrait
                 foreach ($group as $item){
                     if (isset($mapper[$item])){
                         $groupValues = array_merge($groupValues, $mapper[$item]);
-                    }else{
+                    }elseif (is_numeric($item)){
                         $groupValues[] = $item;
                     }
                 }
-                $groupFilter = 'raw[sensor_last_owner_group_id_i] in [' . implode(',', array_unique($groupValues)) . '] and ';
+                if (count($groupValues) > 0) {
+                    $groupFilter = 'raw[sensor_last_owner_group_id_i] in [' . implode(',', array_unique($groupValues)) . '] and ';
+                }
             }
         }
 

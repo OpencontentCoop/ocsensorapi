@@ -1342,7 +1342,7 @@ class Controller
             'Offset' => 0,
             'AttributeFilter' => [
                 ['node_id', '!=', $this->repository->getOperatorsRootNode()->attribute('node_id')],
-                ['contentobject_id', '=', $this->restController->userGroupId],
+                ['contentobject_id', '=', (int)$this->restController->userGroupId],
             ],
         ], \eZINI::instance()->variable("UserSettings", "DefaultUserPlacement"));
         

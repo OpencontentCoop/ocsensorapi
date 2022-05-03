@@ -5,6 +5,7 @@ namespace Opencontent\Sensor\Core\PermissionDefinitions;
 use Opencontent\Sensor\Api\Permission\PermissionDefinition;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\ParticipantCollection;
+use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 
@@ -21,7 +22,11 @@ abstract class UserIs extends PermissionDefinition
     public function userIs($roleId, User $user, Post $post)
     {
         $collection = $post->participants->getParticipantsByRole($roleId);
-        return $collection->getUserById($user->id);
+        $userHasRole = $collection->getUserById($user->id);
+        if ($roleId === ParticipantRole::ROLE_AUTHOR && $user->id == $post->reporter->id){
+            $userHasRole = true;
+        }
+        return $userHasRole;
     }
 
     /**

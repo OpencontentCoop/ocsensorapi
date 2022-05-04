@@ -159,6 +159,7 @@ class PostService extends PostServiceBase
     public function setUserPostAware(Post $post)
     {
         $currentParticipant = $post->participants->getParticipantByUserId($this->repository->getCurrentUser()->id);
+        $currentUserIsSuperAdmin = PermissionService::isSuperAdmin($this->repository->getCurrentUser());
 
 //        foreach ($post->participants as $participant) {
 //            foreach ($participant as $user) {
@@ -196,7 +197,7 @@ class PostService extends PostServiceBase
         $post->comments = $comments;
 
         if ($this->repository->getSensorSettings()->get('HideTimelineDetails')){
-            if (!$currentParticipant || $currentParticipant->roleIdentifier == ParticipantRole::ROLE_AUTHOR){
+            if (!$currentUserIsSuperAdmin && (!$currentParticipant || $currentParticipant->roleIdentifier == ParticipantRole::ROLE_AUTHOR)){
                 $timelineMessages = new TimelineItemCollection();
                 foreach ($post->timelineItems->messages as $message){
                     if ($message->type == 'read' || $message->type == 'closed'){
@@ -209,8 +210,11 @@ class PostService extends PostServiceBase
 
         if (
             $this->repository->getSensorSettings()->get('HideOperatorNames')
-            && $this->repository->getCurrentUser()->type == 'user'
-            && !PermissionService::isSuperAdmin($this->repository->getCurrentUser())
+            && (
+                $this->repository->getCurrentUser()->type == 'user'
+                && (!$currentParticipant || $currentParticipant->roleIdentifier == ParticipantRole::ROLE_AUTHOR)
+            )
+            && !$currentUserIsSuperAdmin
         ){
             $hiddenOperatorName = $this->repository->getSensorSettings()->get('HiddenOperatorName');
             $hiddenApproverName = $this->repository->getSensorSettings()->get('HiddenApproverName');
@@ -313,7 +317,7 @@ class PostService extends PostServiceBase
             }
         }
 
-        if (!PermissionService::isSuperAdmin($this->repository->getCurrentUser())){
+        if (!$currentUserIsSuperAdmin){
             $post->audits = new AuditCollection();
         }
     }

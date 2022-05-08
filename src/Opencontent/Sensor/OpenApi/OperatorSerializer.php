@@ -26,6 +26,7 @@ class OperatorSerializer extends AbstractSerializer
             'is_enabled' => (boolean)$item->isEnabled,
             'type' => $item->type,
             'groups' => $item->groups,
+            'user_groups' => $item->userGroups,
         ];
 
         return $user;

@@ -89,7 +89,7 @@ class User extends Exportable
     /**
      * @var array
      */
-    public $groups;
+    public $groups = [];
 
     /**
      * @var string
@@ -124,6 +124,11 @@ class User extends Exportable
      * @var bool
      */
     public $isSuperUser = false;
+
+    /**
+     * @var array
+     */
+    public $userGroups = [];
 
     public function jsonSerialize()
     {

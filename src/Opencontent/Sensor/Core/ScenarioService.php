@@ -82,7 +82,11 @@ abstract class ScenarioService implements ScenarioServiceInterface
                     );
                 }
 
-                if ($this->repository->getSensorSettings()->get('AddOperatorSuperUserAsObserver') && $post->author->type == 'sensor_operator'){
+                if ($this->repository->getSensorSettings()->get('AddOperatorSuperUserAsObserver') && $post->author->type == 'sensor_operator'
+                    && !in_array($post->author->id, $scenario->getApprovers())
+                    && !in_array($post->author->id, $scenario->getOwners())
+                    && !in_array($post->author->id, $scenario->getObservers())
+                ){
                     $this->repository->getParticipantService()->addPostParticipant(
                         $post,
                         $post->author->id,

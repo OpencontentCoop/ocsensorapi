@@ -26,8 +26,9 @@ class UserSerializer extends AbstractSerializer
             'can_post_on_behalf_of' => (boolean)$item->behalfOfMode,
             'is_enabled' => (boolean)$item->isEnabled,
             'type' => $item->type,
-            'groups' => $item->groups,
             'phone' => $item->phone,
+            'groups' => $item->groups,
+            'user_groups' => $item->userGroups,
         ];
 
         if (get_class($item) === User::class){

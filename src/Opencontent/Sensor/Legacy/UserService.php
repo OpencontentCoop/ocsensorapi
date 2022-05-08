@@ -313,16 +313,15 @@ class UserService extends UserServiceBase
             $idList = explode('-', $dataMap[OperatorService::GROUP_ATTRIBUTE_IDENTIFIER]->toString());
             $idList = array_map('intval', $idList);
         }
+        $user->groups = array_unique(array_values($idList));
 
         $userGroupList = $ezUser->groups();
         $userGroupList = array_map('intval', $userGroupList);
         $userGroupList = $this->filterUserGroups($userGroupList);
         if (!empty($userGroupList)){
             $user->isSuperUser = true;
+            $user->userGroups = array_unique(array_values($userGroupList));
         }
-
-        $idList = array_merge($userGroupList, $idList);
-        $user->groups = array_unique(array_values($idList));
     }
 
     private function filterUserGroups($userGroupList)

@@ -527,6 +527,14 @@ class SearchService extends BaseSearchService
                             if ($this->repository->getCurrentUser()->behalfOfMode){
                                 $ownerLimitationParts[] = 'sensor_reporter_id_i:' . $this->repository->getCurrentUser()->id;
                             }
+                            if ($this->repository->getSensorSettings()->get('UserCanAccessUserGroupPosts')) {
+                                $userGroups = $this->repository->getCurrentUser()->userGroups;
+                                if (!empty($userGroups)) {
+                                    foreach ($userGroups as $userGroup) {
+                                        $filterQueryPolicyLimitationParts[] = 'sensor_author_group_list_lk:' . $userGroup;
+                                    }
+                                }
+                            }
                             $filterQueryPolicyLimitationParts[] = implode(' OR ', $ownerLimitationParts);
                         }
                         break;

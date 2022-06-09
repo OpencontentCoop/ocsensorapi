@@ -531,7 +531,7 @@ class SearchService extends BaseSearchService
                                 $userGroups = $this->repository->getCurrentUser()->userGroups;
                                 if (!empty($userGroups)) {
                                     foreach ($userGroups as $userGroup) {
-                                        $filterQueryPolicyLimitationParts[] = 'sensor_author_group_list_lk:' . $userGroup;
+                                        $filterQueryPolicyLimitationParts[] = 'sensor_author_group_list_lk:' . (int)$userGroup;
                                     }
                                 }
                             }

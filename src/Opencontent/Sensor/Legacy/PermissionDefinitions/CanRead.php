@@ -18,9 +18,12 @@ class CanRead extends PermissionDefinition
             $user->id == $post->reporter->id
         );
         if (!$canRead && \OpenPaSensorRepository::instance()->getSensorSettings()->get('UserCanAccessUserGroupPosts')) {
-            $userGroups = $post->author->userGroups;
-            $allowGroups = array_diff($userGroups, $user->userGroups);
-            $canRead = !empty($allowGroups);
+            $authorUserGroups = $post->author->userGroups;
+            foreach ($authorUserGroups as $authorUserGroup){
+                if (in_array($authorUserGroup, $user->userGroups)){
+                    return true;
+                }
+            }
         }
 
         return $canRead;

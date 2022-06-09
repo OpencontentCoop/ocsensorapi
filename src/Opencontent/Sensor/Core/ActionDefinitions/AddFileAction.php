@@ -49,6 +49,7 @@ class AddFileAction extends ActionDefinition
             $repository->getMessageService()->createComment($commentStruct);
 
             $post = $repository->getPostService()->refreshPost($post);
+            $this->fireEvent($repository, $post, $user, array('text' => $commentStruct->text), 'on_add_comment');
             $this->fireEvent($repository, $post, $user, array('files' => array_column($files, 'filename')));
         }
     }

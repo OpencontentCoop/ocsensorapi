@@ -225,7 +225,11 @@ class Controller
     {
         $action = new Action();
         $action->identifier = 'assign';
-        $action->setParameter('participant_ids', $this->restController->getPayload()['participant_ids']);
+        $participantIds = (array)$this->restController->getPayload()['participant_ids'];
+        if (in_array($this->repository->getCurrentUser()->id, $participantIds) && count($participantIds) === 1){
+            $action->identifier = 'auto_assign';
+        }
+        $action->setParameter('participant_ids', $participantIds);
         $this->repository->getActionService()->runAction($action, $this->loadPost());
 
         $result = new ezpRestMvcResult();

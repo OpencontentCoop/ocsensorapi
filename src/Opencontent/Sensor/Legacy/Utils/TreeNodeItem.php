@@ -260,7 +260,17 @@ class TreeNodeItem implements \JsonSerializable
     {
         $userSettings = \eZUserSetting::fetch((int)$node->attribute('contentobject_id'));
 
-        return $userSettings instanceof \eZUserSetting ? (bool)$userSettings->attribute('is_enabled') : true;
+        if ($userSettings instanceof \eZUserSetting){
+            return (bool)$userSettings->attribute('is_enabled');
+        }
+
+        /** @var eZContentObjectAttribute[] $dataMap */
+        $dataMap = $node->attribute('data_map');
+        if (isset($dataMap['avoid_assignment']) && (int)$dataMap['avoid_assignment']->attribute('data_int') === 1){
+            return false;
+        }
+
+        return true;
     }
 
     public function attributes()

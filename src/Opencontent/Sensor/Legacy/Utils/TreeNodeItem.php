@@ -45,6 +45,11 @@ class TreeNodeItem implements \JsonSerializable
      */
     protected $children;
 
+    protected static $allChildren = [];
+
+    protected static $allUserSettings = [];
+
+    protected static $allObjectNames = [];
 
     public function __construct($data = array())
     {
@@ -66,8 +71,11 @@ class TreeNodeItem implements \JsonSerializable
         $this->is_enabled = isset($data['is_enabled']) ? $data['is_enabled'] : true;
     }
 
-    public static function walk(eZContentObjectTreeNode $node, $parameters = array(), $level = -1)
+    public static function walk(eZContentObjectTreeNode $node, $parameters = array(), $level = -1, $rootNodeId = false)
     {
+        if (!$rootNodeId){
+            $rootNodeId = $node->attribute('node_id');
+        }
         $canCreate = $canRemove = $canEdit = true;
         if (in_array($node->attribute('class_identifier'), ['sensor_area', 'sensor_category'])) {
             $availableLanguages = $node->object()->availableLanguages();
@@ -77,6 +85,11 @@ class TreeNodeItem implements \JsonSerializable
             if ($node->attribute('class_identifier') == 'sensor_category') {
                 $canCreate = $canRemove = in_array(\eZLocale::currentLocaleCode(), $availableLanguages);
             }
+        }
+
+        if ($level < 0) {
+            \eZDebug::writeDebug('Generate tree #' . $node->attribute('node_id'), __METHOD__);
+            self::getAllChildren($node, $parameters);
         }
 
         $data = array();
@@ -94,10 +107,74 @@ class TreeNodeItem implements \JsonSerializable
         $data['can_create'] = $node->canCreate() && $canCreate;
         $data['languages'] = $node->object()->availableLanguages();
         $level++;
-        $data['children'] = self::children($node, $parameters, $level);
+        $data['children'] = self::children($node, $parameters, $level, $rootNodeId);
         $data['disabled_relations'] = self::disabledRelations($node);
         $data['is_enabled'] = self::isEnabled($node);
         return new TreeNodeItem($data);
+    }
+
+    private static function getAllChildren(eZContentObjectTreeNode $node, $parameters = array())
+    {
+        if (!isset(self::$allChildren[$node->attribute('node_id')])) {
+
+            $userIdList = [];
+            $nameIdList = [];
+
+            /** @var $tree eZContentObjectTreeNode[] */
+            if (!$parameters['classes']) {
+                $tree = $node->subTree([
+                    'Limitation' => [],
+                    'SortBy' => $node->attribute('path_string')
+                ]);
+            } else {
+                $tree = $node->subTree([
+                    'ClassFilterType' => 'include',
+                    'ClassFilterArray' => $parameters['classes'],
+                    'Limitation' => [],
+                    'SortBy' => $node->attribute('path_string')
+                ]);
+            }
+
+            $childrenTree = [];
+            foreach ($tree as $item) {
+                if (!isset($childrenTree[$item->attribute('parent_node_id')])) {
+                    $childrenTree[$item->attribute('parent_node_id')] = [];
+                }
+                $uniqueKey = $item->attribute('name') . '' . $item->attribute('contentobject_id');
+                $childrenTree[$item->attribute('parent_node_id')][$uniqueKey] = $item;
+                ksort($childrenTree[$item->attribute('parent_node_id')]);
+                $userIdList[] = $item->attribute('contentobject_id');
+
+                $dataMap = $item->attribute('data_map');
+                if (isset($dataMap['struttura_di_competenza']) && $dataMap['struttura_di_competenza']->hasContent()) {
+                    $nameIdList = array_merge_recursive($nameIdList, explode('-', $dataMap['struttura_di_competenza']->toString()));
+                }
+
+            }
+
+            self::$allChildren[$node->attribute('node_id')] = $childrenTree;
+
+            $db = \eZDB::instance();
+            if (count($userIdList) > 0) {
+                $sqlCondition = $db->generateSQLINStatement($userIdList, 'ezuser_setting.user_id', false, true, 'int');
+                $userSettings = $db->arrayQuery("SELECT user_id, is_enabled FROM ezuser_setting WHERE $sqlCondition");
+                $userSettingsHash = array_combine(
+                    array_column($userSettings, 'user_id'),
+                    array_column($userSettings, 'is_enabled')
+                );
+                self::$allUserSettings = $userSettingsHash + self::$allUserSettings;
+            }
+
+            if (count($nameIdList) > 0) {
+                $sqlCondition = $db->generateSQLINStatement($nameIdList, 'ezcontentobject_name.contentobject_id', false, true, 'int');
+                $names = $db->arrayQuery("SELECT contentobject_id, name, real_translation FROM ezcontentobject_name WHERE $sqlCondition");
+                $namesHash = array_combine(
+                    array_column($names, 'contentobject_id'),
+                    array_column($names, 'name')
+                );
+                self::$allObjectNames = $namesHash + self::$allObjectNames;
+            }
+        }
     }
 
     public static function __set_state($array)
@@ -112,11 +189,11 @@ class TreeNodeItem implements \JsonSerializable
         $dataMap = $node->attribute('data_map');
         if ($node->attribute('class_identifier') == 'sensor_category'){
             $attributeId = eZContentObjectTreeNode::classAttributeIDByIdentifier('sensor_scenario/criterion_category');
+            $scenarioGroups = [];
             $params = false;
             $scenarios = $node->object()->reverseRelatedObjectList(
                 false, $attributeId, false, $params
             );
-            $scenarioGroups = [];
             foreach ($scenarios as $scenario){
                 $scenarioDataMap = $scenario->dataMap();
                 if (isset($scenarioDataMap['criterion_area'])
@@ -158,9 +235,10 @@ class TreeNodeItem implements \JsonSerializable
         if (isset($dataMap['struttura_di_competenza']) && $dataMap['struttura_di_competenza']->hasContent()) {
             $idList = explode('-', $dataMap['struttura_di_competenza']->toString());
             if (count($idList) > 0){
-                $object = \eZContentObject::fetch((int)$idList[0]);
-                if ($object instanceof \eZContentObject){
-                    return $object->attribute('name');
+                if (isset(self::$allObjectNames[$idList[0]])){
+                    return self::$allObjectNames[$idList[0]];
+                }else {
+                    return '? #' . $idList[0];
                 }
             }
         }
@@ -212,32 +290,16 @@ class TreeNodeItem implements \JsonSerializable
         return null;
     }
 
-    public static function children(eZContentObjectTreeNode $node, $parameters = array(), $level = -1)
+    public static function children(eZContentObjectTreeNode $node, $parameters = array(), $level = -1, $rootNodeId = false)
     {
         $data = array();
-        if ($node->childrenCount(false) > 0) {
-            if (!$parameters['classes']) {
-                $children = $node->subTree(array(
-                    'Depth' => 1,
-                    'DepthOperator' => 'eq',
-                    'Limitation' => array(),
-                    'SortBy' => $node->attribute('sort_array')
-                ));
-            } else {
-                $children = $node->subTree(array(
-                    'Depth' => 1,
-                    'DepthOperator' => 'eq',
-                    'ClassFilterType' => 'include',
-                    'ClassFilterArray' => $parameters['classes'],
-                    'Limitation' => array(),
-                    'SortBy' => $node->attribute('sort_array')
-                ));
-            }
-            /** @var eZContentObjectTreeNode[] $children */
-            foreach ($children as $child) {
-                $data[] = TreeNodeItem::walk($child, $parameters, $level);
+        if (isset(self::$allChildren[$rootNodeId][$node->attribute('node_id')])){
+            $children = self::$allChildren[$rootNodeId][$node->attribute('node_id')];
+            foreach ($children as  $child) {
+                $data[] = TreeNodeItem::walk($child, $parameters, $level, $rootNodeId);
             }
         }
+
         return $data;
     }
 
@@ -258,10 +320,8 @@ class TreeNodeItem implements \JsonSerializable
 
     protected static function isEnabled(eZContentObjectTreeNode $node)
     {
-        $userSettings = \eZUserSetting::fetch((int)$node->attribute('contentobject_id'));
-
-        if ($userSettings instanceof \eZUserSetting){
-            return (bool)$userSettings->attribute('is_enabled');
+        if (isset(self::$allUserSettings[$node->attribute('contentobject_id')])){
+            return self::$allUserSettings[$node->attribute('contentobject_id')];
         }
 
         /** @var eZContentObjectAttribute[] $dataMap */

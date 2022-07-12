@@ -63,7 +63,7 @@ class MessageService extends MessageServiceBase
      */
     protected $auditByPost = array();
 
-    private function clearMemoryCache($post)
+    public function clearMemoryCache($post) //@todo
     {
         unset($this->countMessagesByPost[$post->internalId]);
         unset($this->commentsByPost[$post->internalId]);
@@ -269,7 +269,6 @@ class MessageService extends MessageServiceBase
             $parameters = $struct->creator->id;
         $struct->text = TimelineTools::setText($status, $parameters);
         $message = $this->createTimelineItem($struct);
-        $this->clearMemoryCache($post);
 
         return $message;
     }
@@ -516,15 +515,11 @@ class MessageService extends MessageServiceBase
 
     protected function reloadPostMessages(Post $post)
     {
-        unset($this->countMessagesByPost[$post->internalId]);
+        $this->clearMemoryCache($post);
         $post->comments = $this->loadCommentCollectionByPost($post);
-        $post->privateMessages = $this->loadPrivateMessageCollectionByPost($post);
         $post->privateMessages = $this->loadPrivateMessageCollectionByPost($post);
         $post->timelineItems = $this->loadTimelineItemCollectionByPost($post);
         $post->responses = $this->loadResponseCollectionByPost($post);
         $post->audits = $this->loadAuditCollectionByPost($post);
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostMessages();
     }
 }

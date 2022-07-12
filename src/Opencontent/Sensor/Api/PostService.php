@@ -89,6 +89,12 @@ interface PostService
 
     /**
      * @param Post $post
+     * @return void
+     */
+    public function doRefreshPost(Post $post); //@todo
+
+    /**
+     * @param Post $post
      * @param mixed $status
      * @throw \Exception
      */

@@ -48,6 +48,7 @@ class ModerateCommentAction extends ActionDefinition
                 $commentStruct->id = $message->id;
                 $commentStruct->text = $message->text;
                 $commentStruct->creator = $message->creator;
+                $commentStruct->post = $post;
                 $commentStruct->needModeration = false;
                 $commentStruct->isRejected = $moderation == 'reject';
 

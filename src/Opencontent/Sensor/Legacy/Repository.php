@@ -7,7 +7,6 @@ use League\Event\ListenerInterface;
 use League\Event\ListenerProviderInterface;
 use Opencontent\Opendata\Api\Values\ContentClass;
 use Opencontent\Sensor\Core\Repository as CoreRepository;
-use Opencontent\Sensor\Legacy\PostService\ScenarioInterface;
 use Opencontent\Sensor\Legacy\Utils\Logger;
 use Opencontent\Sensor\Legacy\Utils\TreeNode;
 use Opencontent\Sensor\Legacy\Utils\TreeNodeItem;
@@ -24,8 +23,6 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
      * @var array
      */
     protected $listeners = array();
-
-    protected $useCache = false;
 
     protected $treeCache = [];
 
@@ -181,7 +178,7 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
     public function getPostService()
     {
         if ($this->postService === null) {
-            $this->postService = $this->useCache ? new CachedPostService($this) : new PostService($this);
+            $this->postService = new PostService($this);
         }
         return $this->postService;
     }
@@ -222,7 +219,7 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
     public function getUserService()
     {
         if ($this->userService === null) {
-            $this->userService = $this->useCache ? new CachedUserService($this) : new UserService($this);
+            $this->userService = new UserService($this);
         }
         return $this->userService;
     }

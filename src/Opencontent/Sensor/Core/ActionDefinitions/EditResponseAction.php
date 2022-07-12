@@ -40,6 +40,7 @@ class EditResponseAction extends ActionDefinition
         $responseStruct->id = $action->getParameterValue('id');
         $responseStruct->text = $action->getParameterValue('text');
         $responseStruct->creator = $user;
+        $responseStruct->post = $post;
 
         /** @var Message $response */
         foreach ($post->responses as $response) {

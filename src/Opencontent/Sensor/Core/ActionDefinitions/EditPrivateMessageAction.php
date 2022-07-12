@@ -40,6 +40,7 @@ class EditPrivateMessageAction extends ActionDefinition
         $messageStruct->id = $action->getParameterValue('id');
         $messageStruct->text = $action->getParameterValue('text');
         $messageStruct->creator = $user;
+        $messageStruct->post = $post;
 
         /** @var PrivateMessage[] $comment */
         foreach ($post->privateMessages as $privateMessage) {

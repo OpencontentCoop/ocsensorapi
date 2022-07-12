@@ -3,11 +3,10 @@
 namespace Opencontent\Sensor\Legacy;
 
 use eZCollaborationItem;
-use eZContentCacheManager;
 use eZContentObject;
 use eZContentObjectState;
+use eZDB;
 use eZPersistentObject;
-use eZSearch;
 use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\Exception\DuplicateUuidException;
 use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
@@ -27,7 +26,6 @@ use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\PostCreateStruct;
 use Opencontent\Sensor\Api\Values\PostUpdateStruct;
 use Opencontent\Sensor\Api\Values\User;
-use Opencontent\Sensor\Core\PermissionDefinitions\CanSendPrivateMessage;
 use Opencontent\Sensor\Core\PostService as PostServiceBase;
 use Opencontent\Sensor\Legacy\PostService\PostBuilder;
 use Opencontent\Sensor\Legacy\SearchService\SolrMapper;
@@ -55,6 +53,12 @@ class PostService extends PostServiceBase
      * @var Repository
      */
     protected $repository;
+
+    protected $refreshCalls = [
+        'hard' => [],
+        'soft' => [],
+    ];
+
 
     public function loadPosts($query, $limit, $offset)
     {
@@ -89,7 +93,20 @@ class PostService extends PostServiceBase
             throw new NotFoundException("eZContentObject not found for object $postId");
         }
 
-        $builder = new PostBuilder($this->repository, $contentObject, $collaborationItem);
+        return $this->build($this->getPostBuilder($contentObject, $collaborationItem));
+    }
+
+    private function getPostBuilder(eZContentObject $contentObject, eZCollaborationItem $collaborationItem)
+    {
+        return new PostBuilder($this->repository, $contentObject, $collaborationItem);
+    }
+
+    /**
+     * @param PostBuilder $builder
+     * @return Post
+     */
+    private function build(PostBuilder $builder)
+    {
         $post = $builder->build();
         $this->refreshExpirationInfo($post);
         $this->setCommentsIsOpen($post);
@@ -100,10 +117,10 @@ class PostService extends PostServiceBase
 
     public function loadPostByUuid($postUuid)
     {
-        $postUuid = \eZDB::instance()->escapeString($postUuid);
+        $postUuid = eZDB::instance()->escapeString($postUuid);
         $whereSql = "ezcontentobject.remote_id='$postUuid'";
         $fetchSQLString = "SELECT ezcontentobject.id FROM ezcontentobject WHERE $whereSql";
-        $resArray = \eZDB::instance()->arrayQuery($fetchSQLString);
+        $resArray = eZDB::instance()->arrayQuery($fetchSQLString);
         if (count($resArray) == 1 && $resArray !== false) {
             return $this->loadPost($resArray[0]['id']);
         }
@@ -130,13 +147,7 @@ class PostService extends PostServiceBase
             $postId = $collaborationItem->attribute(self::COLLABORATION_FIELD_OBJECT_ID);
             $contentObject = eZContentObject::fetch(intval($postId));
             if ($contentObject instanceof eZContentObject) {
-                $builder = new PostBuilder($this->repository, $contentObject, $collaborationItem);
-                $post = $builder->build();
-                $this->refreshExpirationInfo($post);
-                $this->setCommentsIsOpen($post);
-                $this->setUserPostAware($post);
-
-                return $post;
+                return $this->build($this->getPostBuilder($contentObject, $collaborationItem));
             }
         }
         throw new NotFoundException("eZCollaborationItem not found for id $postInternalId");
@@ -157,6 +168,11 @@ class PostService extends PostServiceBase
         }
     }
 
+    /**
+     * @see SolrMapper::setPostUserUnaware()
+     * @param Post $post
+     * @return void
+     */
     public function setUserPostAware(Post $post)
     {
         $currentParticipant = $post->participants->getParticipantByUserId($this->repository->getCurrentUser()->id);
@@ -532,36 +548,76 @@ class PostService extends PostServiceBase
 
     public function getCollaborationItem(Post $post)
     {
-        $collaborationItem = eZPersistentObject::fetchObject(
-            eZCollaborationItem::definition(),
-            null,
-            array(
-                'type_identifier' => $this->repository->getSensorCollaborationHandlerTypeString(),
-                'id' => intval($post->internalId)
-            )
-        );
-        if (!$collaborationItem instanceof eZCollaborationItem) {
+        global $sensorCollaborationItemCache;
+
+        if (!isset($sensorCollaborationItemCache[$post->internalId])) {
+            $sensorCollaborationItemCache[$post->internalId] = eZPersistentObject::fetchObject(
+                eZCollaborationItem::definition(),
+                null,
+                [
+                    'type_identifier' => $this->repository->getSensorCollaborationHandlerTypeString(),
+                    'id' => intval($post->internalId)
+                ]
+            );
+        }
+        if (!$sensorCollaborationItemCache[$post->internalId] instanceof eZCollaborationItem) {
             throw new NotFoundException("eZCollaborationItem not found for id {$post->internalId}");
         }
 
-        return $collaborationItem;
+        return $sensorCollaborationItemCache[$post->internalId];
     }
 
     public function refreshPost(Post $post, $modifyTimestamp = true)
     {
-        $this->repository->getLogger()->debug($modifyTimestamp ? 'Hard refresh post #' . $post->id  : 'Refresh post #' . $post->id);
+        $refreshContext = $modifyTimestamp ? 'hard' : 'soft';
 
-        $mapper = new SolrMapper($this->repository, $post);
-        $contentObject = $this->getContentObject($post);
-        if ($modifyTimestamp) {
-            $timestamp = time();
-            $contentObject->setAttribute('modified', $timestamp);
-            $contentObject->store();
-            $mapper->updatePostModified($timestamp);
+        if (!isset($this->refreshCalls['hard'][$post->id])){
+            $this->refreshCalls['hard'][$post->id] = 0;
         }
-        $mapper->commit();
+        if (!isset($this->refreshCalls['soft'][$post->id])){
+            $this->refreshCalls['soft'][$post->id] = 0;
+        }
+        $this->refreshCalls[$refreshContext][$post->id]++;
+
+        $count = $this->refreshCalls['hard'][$post->id] + $this->refreshCalls['soft'][$post->id];
+        $message = '----> [' . $count . '] ';
+
+        $message .= $modifyTimestamp ? 'Hard refresh post #' . $post->id  : 'Refresh post #' . $post->id;
+        $this->repository->getLogger()->debug($message);
 
         return $post;
+    }
+
+    public function doRefreshPost(Post $post)
+    {
+        if (!isset($this->refreshCalls['hard'][$post->id])){
+            $this->refreshCalls['hard'][$post->id] = 0;
+        }
+        if (!isset($this->refreshCalls['soft'][$post->id])){
+            $this->refreshCalls['soft'][$post->id] = 0;
+        }
+        $modifyTimestamp = $this->refreshCalls['hard'][$post->id] > 0;
+        $count = $this->refreshCalls['hard'][$post->id] + $this->refreshCalls['soft'][$post->id];
+
+        if ($count > 0) {
+            eZContentObject::clearCache([$post->id]);
+            $contentObject = $this->getContentObject($post);
+            if ($modifyTimestamp) {
+                $timestamp = time();
+                $contentObject->setAttribute('modified', $timestamp);
+                $contentObject->store();
+                $post->modified = Utils::getDateTimeFromTimestamp($timestamp);
+            }
+            eZContentObject::clearCache([$post->id]);
+            \eZContentCacheManager::clearContentCacheIfNeeded($contentObject->attribute('id'));
+            \eZSearch::addObject($contentObject, true);
+            $this->repository->getLogger()->debug('----> DO REFRESH POST');
+//            $mapper = new SolrMapper($this->repository, $post);
+//            $mapper->updatePost();
+
+            $this->refreshCalls['hard'][$post->id] = 0;
+            $this->refreshCalls['soft'][$post->id] = 0;
+        }
     }
 
     public function setPostStatus(Post $post, $status)
@@ -607,9 +663,6 @@ class PostService extends PostServiceBase
                 $state->label = 'danger';
                 $post->moderation = $state;
             }
-
-            $mapper = new SolrMapper($this->repository, $post);
-            $mapper->updatePostStatus();
         }
     }
 
@@ -641,9 +694,6 @@ class PostService extends PostServiceBase
         $collaborationItem->sync();
 
         $post->workflowStatus = Post\WorkflowStatus::instanceByCode($status);
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostWorkflowStatus();
     }
 
     public function setPostExpirationInfo(Post $post, $expiryDays)
@@ -668,9 +718,6 @@ class PostService extends PostServiceBase
             $expirationInfo->days = $diff->days;
         }
         $post->expirationInfo = $expirationInfo;
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostExpirationInfo();
     }
 
     public function setPostCategory(Post $post, $category)
@@ -690,9 +737,6 @@ class PostService extends PostServiceBase
             }
         }
         $post->categories = $data;
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostCategory();
     }
 
     public function setPostArea(Post $post, $area)
@@ -712,9 +756,6 @@ class PostService extends PostServiceBase
             }
         }
         $post->areas = $data;
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostAreas();
     }
 
     public function addAttachment(Post $post, $files)
@@ -739,10 +780,7 @@ class PostService extends PostServiceBase
                 @unlink($tempFilePath);
             }
         }
-        $post->attachments = []; //@todo
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostAttachments();
+        $post->attachments = $this->getPostBuilder($this->getContentObject($post), $this->getCollaborationItem($post))->loadPostAttachments();
     }
 
     public function removeAttachment(Post $post, $files)
@@ -773,10 +811,7 @@ class PostService extends PostServiceBase
                 $contentObjectDataMap['attachment']->customHTTPAction($http, 'delete_binary', []);
             }
         }
-        $post->attachments = []; //@todo
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostAttachments();
+        $post->attachments = $this->getPostBuilder($this->getContentObject($post), $this->getCollaborationItem($post))->loadPostAttachments();
     }
 
     public function addImage(Post $post, $files)
@@ -799,10 +834,7 @@ class PostService extends PostServiceBase
                 @unlink($tempFilePath);
             }
         }
-        $post->images = []; //@todo
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostImages();
+        $post->images = $this->getPostBuilder($this->getContentObject($post), $this->getCollaborationItem($post))->loadPostImages();
     }
 
     public function addFile(Post $post, $files)
@@ -825,10 +857,7 @@ class PostService extends PostServiceBase
                 @unlink($tempFilePath);
             }
         }
-        $post->files = []; //@todo
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostFiles();
+        $post->files = $this->getPostBuilder($this->getContentObject($post), $this->getCollaborationItem($post))->loadPostFiles();
     }
 
     public function removeImage(Post $post, $files)
@@ -856,10 +885,7 @@ class PostService extends PostServiceBase
                 }
             }
         }
-        $post->images = []; //@todo
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostImages();
+        $post->images = $this->getPostBuilder($this->getContentObject($post), $this->getCollaborationItem($post))->loadPostImages();
     }
 
     public function removeFile(Post $post, $files)
@@ -887,10 +913,7 @@ class PostService extends PostServiceBase
                 }
             }
         }
-        $post->files = []; //@todo
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostFiles();
+        $post->files = $this->getPostBuilder($this->getContentObject($post), $this->getCollaborationItem($post))->loadPostFiles();
     }
 
     public function setPostType(Post $post, Post\Type $type)
@@ -901,9 +924,6 @@ class PostService extends PostServiceBase
             $contentObjectDataMap['type']->store();
         }
         $post->type = $type;
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostType();
     }
 
     public function setPostTags(Post $post, array $tags)
@@ -915,8 +935,5 @@ class PostService extends PostServiceBase
             $contentObjectDataMap['tags']->store();
         }
         $post->tags = $tags;
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostTags();
     }
 }

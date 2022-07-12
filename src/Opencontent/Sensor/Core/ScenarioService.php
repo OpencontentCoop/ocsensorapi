@@ -108,7 +108,6 @@ abstract class ScenarioService implements ScenarioServiceInterface
                         new Action('add_observer', ['participant_ids' => $scenario->getObservers()], true),
                         $post
                     );
-                    $post = $this->repository->getPostService()->loadPost($post->id);
                 }
 
                 if ($scenario->hasOwners() || $scenario->hasOwnerGroups()) {
@@ -116,7 +115,6 @@ abstract class ScenarioService implements ScenarioServiceInterface
                         new Action('assign', ['participant_ids' => $scenario->getOwners(), 'group_ids' => $scenario->getOwnerGroups()], true),
                         $post
                     );
-                    $post = $this->repository->getPostService()->loadPost($post->id);
                 }
 
                 if ($scenario->hasApprovers()) {
@@ -124,7 +122,6 @@ abstract class ScenarioService implements ScenarioServiceInterface
                         new Action('add_approver', ['participant_ids' => $scenario->getApprovers()], true),
                         $post
                     );
-                    $post = $this->repository->getPostService()->loadPost($post->id);
                 }
 
                 if ($scenario->getExpiry() > 0){
@@ -132,7 +129,6 @@ abstract class ScenarioService implements ScenarioServiceInterface
                         new Action('set_expiry', ['expiry_days' => $scenario->getExpiry()], true),
                         $post
                     );
-                    $post = $this->repository->getPostService()->loadPost($post->id);
                 }
 
                 if ($scenario->hasCategory()){
@@ -140,7 +136,6 @@ abstract class ScenarioService implements ScenarioServiceInterface
                         new Action('add_category', ['category_id' => [$scenario->getCategory()]], true),
                         $post
                     );
-                    $post = $this->repository->getPostService()->loadPost($post->id);
                 }
             }
 

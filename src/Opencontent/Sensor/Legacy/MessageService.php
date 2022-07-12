@@ -269,7 +269,6 @@ class MessageService extends MessageServiceBase
             $parameters = $struct->creator->id;
         $struct->text = TimelineTools::setText($status, $parameters);
         $message = $this->createTimelineItem($struct);
-        $this->clearMemoryCache($post);
 
         return $message;
     }
@@ -491,40 +490,41 @@ class MessageService extends MessageServiceBase
 
     public function loadPostComments(Post $post)
     {
+        $this->clearMemoryCache($post);
         $post->comments = $this->loadCommentCollectionByPost($post);
     }
 
     public function loadPostPrivateMessages(Post $post)
     {
+        $this->clearMemoryCache($post);
         $post->privateMessages = $this->loadPrivateMessageCollectionByPost($post);
     }
 
     public function loadPostTimelineItems(Post $post)
     {
+        $this->clearMemoryCache($post);
         $post->timelineItems = $this->loadTimelineItemCollectionByPost($post);
     }
 
     public function loadPostResponses(Post $post)
     {
+        $this->clearMemoryCache($post);
         $post->responses = $this->loadResponseCollectionByPost($post);
     }
 
     public function loadPostAudits(Post $post)
     {
+        $this->clearMemoryCache($post);
         $post->audits = $this->loadAuditCollectionByPost($post);
     }
 
     protected function reloadPostMessages(Post $post)
     {
-        unset($this->countMessagesByPost[$post->internalId]);
+        $this->clearMemoryCache($post);
         $post->comments = $this->loadCommentCollectionByPost($post);
-        $post->privateMessages = $this->loadPrivateMessageCollectionByPost($post);
         $post->privateMessages = $this->loadPrivateMessageCollectionByPost($post);
         $post->timelineItems = $this->loadTimelineItemCollectionByPost($post);
         $post->responses = $this->loadResponseCollectionByPost($post);
         $post->audits = $this->loadAuditCollectionByPost($post);
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostMessages();
     }
 }

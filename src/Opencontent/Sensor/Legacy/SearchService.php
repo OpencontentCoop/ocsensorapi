@@ -2,6 +2,7 @@
 
 namespace Opencontent\Sensor\Legacy;
 
+use eZFindExtendedAttributeFilterFactory;
 use Opencontent\Opendata\Api\ContentSearch;
 use Opencontent\Opendata\Api\QueryLanguage;
 use Opencontent\Opendata\Api\QueryLanguage\EzFind\SearchResultInfo;
@@ -354,7 +355,7 @@ class SearchService extends BaseSearchService
 
         $filtersList = (array)\eZINI::instance('ezfind.ini')->variable('ExtendedAttributeFilters', 'FiltersList');
         foreach (array_keys($filtersList) as $filterId) {
-            $filter = \eZFindExtendedAttributeFilterFactory::getInstance($filterId);
+            $filter = eZFindExtendedAttributeFilterFactory::getInstance($filterId);
             if ($filter instanceof SearchResultDecoratorQueryBuilderAware) {
                 $filter->setQueryBuilder($queryBuilder);
             }

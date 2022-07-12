@@ -76,7 +76,7 @@ class PostBuilder
         $post->description = $this->loadPostDescription();
         $post->type = $this->loadPostType();
         $post->images = $this->loadPostImages();
-        $post->files = $this->loadPostAttachments('files');
+        $post->files = $this->loadPostFiles();
         $post->attachments = $this->loadPostAttachments();
         $post->categories = $this->loadPostCategories();
         $post->areas = $this->loadPostAreas();
@@ -318,7 +318,7 @@ class PostBuilder
         return $status;
     }
 
-    protected function loadPostImages()
+    public function loadPostImages()
     {
         $data = array();
         if (isset($this->contentObjectDataMap['image'])
@@ -407,7 +407,12 @@ class PostBuilder
         return $data;
     }
 
-    protected function loadPostAttachments($identifier = 'attachment')
+    public function loadPostFiles()
+    {
+        return $this->loadPostAttachments('files');
+    }
+
+    public function loadPostAttachments($identifier = 'attachment')
     {
         $data = array();
         if (isset($this->contentObjectDataMap[$identifier])
@@ -549,7 +554,7 @@ class PostBuilder
         return $this->repository->getChannelService()->loadPostDefaultChannel();
     }
 
-    protected function loadLatestOwnerAndOwnerGroup(Post $post)
+    public function loadLatestOwnerAndOwnerGroup(Post $post)
     {
         $assignedList = $post->timelineItems->getByType('assigned');
         foreach ($assignedList->messages as $message) {

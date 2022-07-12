@@ -1336,31 +1336,18 @@ class Controller
 
     public function getUserGroupById()
     {
-        /** @var \eZContentObjectTreeNode[] $userGroups */
-        $userGroups = \eZContentObjectTreeNode::subTreeByNodeID([
-            'ClassFilterType' => 'include',
-            'ClassFilterArray' => ['user_group'],
-            'LoadDataMap' => false,
-            'Limit' => 1,
-            'Limitation' => [],
-            'Offset' => 0,
-            'AttributeFilter' => [
-                ['node_id', '!=', $this->repository->getOperatorsRootNode()->attribute('node_id')],
-                ['contentobject_id', '=', (int)$this->restController->userGroupId],
-            ],
-        ], \eZINI::instance()->variable("UserSettings", "DefaultUserPlacement"));
-        
-        if (count($userGroups) === 0){
-            throw new NotFoundException();
+        $groups = $this->repository->getMembersAvailableGroups();
+        if (isset($groups[(int)$this->restController->userGroupId])){
+            $result = new ezpRestMvcResult();
+            $result->variables = [
+                'id' => (int)$this->restController->userGroupId,
+                'name' => $groups[(int)$this->restController->userGroupId]['name'],
+            ];
+
+            return $result;
         }
 
-        $result = new ezpRestMvcResult();
-        $result->variables = [
-            'id' => (int)$userGroups[0]->attribute('contentobject_id'),
-            'name' => $userGroups[0]->attribute('name'),
-        ];
-
-        return $result;
+        throw new NotFoundException();
     }
 
     private function loadPost()

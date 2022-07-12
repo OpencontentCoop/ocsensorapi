@@ -147,11 +147,14 @@ class ParticipantService extends ParticipantServiceBase
             $link->setAttribute('participant_role', $role->id);
             $link->sync();
         }
+        $this->refreshPostParticipants($post);
+    }
+
+    private function refreshPostParticipants(Post $post)
+    {
         $GLOBALS['eZCollaborationItemParticipantLinkListCache'] = array();
         unset($this->participantsByPost[$post->internalId]);
         $this->internalLoadPostParticipants($post);
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostParticipants();
     }
 
     public function trashPostParticipant(Post $post, $id)
@@ -173,8 +176,8 @@ class ParticipantService extends ParticipantServiceBase
             );
             $trashGroupLink->store();
             $db->commit();
-            unset($this->participantsByPost[$post->internalId]);
-            $this->internalLoadPostParticipants($post);
+
+            $this->refreshPostParticipants($post);
         }
     }
 
@@ -198,10 +201,8 @@ class ParticipantService extends ParticipantServiceBase
             $groupLink->remove();
         }
         $db->commit();
-        unset($this->participantsByPost[$post->internalId]);
-        $this->internalLoadPostParticipants($post);
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updatePostParticipants();
+
+        $this->refreshPostParticipants($post);
     }
 
     public function restorePostParticipant(Post $post, $id)
@@ -223,10 +224,8 @@ class ParticipantService extends ParticipantServiceBase
             );
             $sensorGroupLink->store();
             $db->commit();
-            unset($this->participantsByPost[$post->internalId]);
-            $this->internalLoadPostParticipants($post);
-            $mapper = new SolrMapper($this->repository, $post);
-            $mapper->updatePostParticipants();
+
+            $this->refreshPostParticipants($post);
         }
     }
 

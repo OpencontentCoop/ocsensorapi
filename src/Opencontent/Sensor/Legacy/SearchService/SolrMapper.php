@@ -741,7 +741,7 @@ class SolrMapper
 
     public function updateSearchIndex($returnValue = false)
     {
-//        $this->setPostUserUnaware();
+        $this->setPostUserUnaware();
 
         $contentObject = \eZContentObject::fetch($this->post->id);
         /** @var \eZContentObjectVersion $version */

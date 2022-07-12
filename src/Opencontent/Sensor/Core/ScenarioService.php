@@ -70,6 +70,7 @@ abstract class ScenarioService implements ScenarioServiceInterface
                 $this->setObservers($post, $scenario->getObservers());
                 if ($post->reporter instanceof User
                     && $post->reporter->id != $post->author->id
+                    && ($post->author->type == 'sensor_operator' || $this->repository->getSensorSettings()->get('AddBehalfOfUserAsObserver'))
                     && !in_array($post->reporter->id, $scenario->getApprovers())
                     && !in_array($post->reporter->id, $scenario->getOwners())
                     && !in_array($post->reporter->id, $scenario->getObservers())
@@ -77,6 +78,18 @@ abstract class ScenarioService implements ScenarioServiceInterface
                     $this->repository->getParticipantService()->addPostParticipant(
                         $post,
                         $post->reporter->id,
+                        $this->roles->getParticipantRoleById(ParticipantRole::ROLE_OBSERVER)
+                    );
+                }
+
+                if ($this->repository->getSensorSettings()->get('AddOperatorSuperUserAsObserver') && $post->author->type == 'sensor_operator'
+                    && !in_array($post->author->id, $scenario->getApprovers())
+                    && !in_array($post->author->id, $scenario->getOwners())
+                    && !in_array($post->author->id, $scenario->getObservers())
+                ){
+                    $this->repository->getParticipantService()->addPostParticipant(
+                        $post,
+                        $post->author->id,
                         $this->roles->getParticipantRoleById(ParticipantRole::ROLE_OBSERVER)
                     );
                 }

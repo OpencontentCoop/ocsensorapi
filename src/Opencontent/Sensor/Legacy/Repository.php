@@ -27,6 +27,8 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
 
     protected $useCache = false;
 
+    protected $treeCache = [];
+
     /**
      * @return string
      */
@@ -130,7 +132,11 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
      */
     public function getAreasTree()
     {
-        return TreeNode::walk($this->getAreasRootNode(), array('classes' => array('sensor_area')));
+        if (!isset($this->treeCache['areas'])) {
+            $this->treeCache['areas'] = TreeNode::walk($this->getAreasRootNode(), ['classes' => ['sensor_area']]);
+        }
+
+        return $this->treeCache['areas'];
     }
 
     /**
@@ -138,7 +144,11 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
      */
     public function getCategoriesTree()
     {
-        return TreeNode::walk($this->getCategoriesRootNode());
+        if (!isset($this->treeCache['categories'])) {
+            $this->treeCache['categories'] = TreeNode::walk($this->getCategoriesRootNode());
+        }
+
+        return $this->treeCache['categories'];
     }
 
     /**
@@ -146,7 +156,11 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
      */
     public function getOperatorsTree()
     {
-        return TreeNode::walk($this->getOperatorsRootNode(), array('classes' => array('sensor_operator')));
+        if (!isset($this->treeCache['operators'])) {
+            $this->treeCache['operators'] = TreeNode::walk($this->getOperatorsRootNode(), ['classes' => ['sensor_operator']]);
+        }
+
+        return $this->treeCache['operators'];
     }
 
     /**
@@ -154,7 +168,11 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
      */
     public function getGroupsTree()
     {
-        return TreeNode::walk($this->getGroupsRootNode(), array('classes' => array('sensor_group')));
+        if (!isset($this->treeCache['groups'])) {
+            $this->treeCache['groups'] = TreeNode::walk($this->getGroupsRootNode(), ['classes' => ['sensor_group']]);
+        }
+
+        return $this->treeCache['groups'];
     }
 
     /**

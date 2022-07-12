@@ -77,7 +77,6 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
 
     public function loadOperatorsByGroup(Group $group, $limit, $cursor, $limitations = null)
     {
-        $items = [];
         if (!isset($this->operatorsByGroup[$group->id])) {
             $this->operatorsByGroup[$group->id] = [];
             $contentObject = eZContentObject::fetch($group->id);
@@ -85,7 +84,7 @@ class OperatorService extends \Opencontent\Sensor\Core\OperatorService
                 $classAttribute = 'sensor_operator/' . self::GROUP_ATTRIBUTE_IDENTIFIER;
                 $attributeID = \eZContentObjectTreeNode::classAttributeIDByIdentifier($classAttribute);
                 $reverseRelated = $contentObject->reverseRelatedObjectList(false, $attributeID, true);
-                foreach ($reverseRelated as $classAttributeId => $operators) {
+                foreach ($reverseRelated as $operators) {
                     foreach ($operators as $operator) {
                         $this->operatorsByGroup[$group->id][] = self::fromUser($this->repository->getUserService()->loadUser($operator->attribute('id')));
                     }

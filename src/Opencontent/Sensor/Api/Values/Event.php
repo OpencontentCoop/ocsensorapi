@@ -26,4 +26,15 @@ class Event
      * @var array
      */
     public $parameters = array();
+
+    public static function create($identifier, Post $post, User $user, array $parameters = [])
+    {
+        $event = new static();
+        $event->identifier = $identifier;
+        $event->post = $post;
+        $event->user = $user;
+        $event->parameters = $parameters;
+
+        return $event;
+    }
 }

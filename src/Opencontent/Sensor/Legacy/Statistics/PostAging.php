@@ -21,6 +21,7 @@ class PostAging extends StatisticFactory
     public function __construct($repository)
     {
         $this->repository = $repository;
+        $this->renderSettings['allow_reference_filter'] = true;
     }
 
     public function getIdentifier()

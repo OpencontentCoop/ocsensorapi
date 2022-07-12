@@ -181,8 +181,7 @@ class SolrMapper
         if ($this->post->author) {
             $data['sensor_author_id_i'] = (int)$this->post->author->id;
             $data['sensor_author_name_t'] = $this->post->author->name;
-            $data['sensor_author_group_list_lk'] = !empty($this->post->author->groups) && $this->post->author->type == 'user' ?
-                implode(',', array_unique($this->post->author->groups)) : '0';
+            $data['sensor_author_group_list_lk'] = !empty($this->post->author->userGroups) ? implode(',', array_unique($this->post->author->userGroups)) : '0';
         }
 
         if ($this->post->reporter) {

@@ -247,7 +247,7 @@ class SensorScenario extends Scenario
 
     public static function generateRemoteId(array $stringAttributes)
     {
-        $triggers = explode('|', $stringAttributes['triggers']);
+        $triggers = is_array($stringAttributes['triggers']) ? $stringAttributes['triggers'] : explode('|', $stringAttributes['triggers']);
         sort($triggers);
 
         $typeCriteria = [];

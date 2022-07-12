@@ -13,6 +13,19 @@ class CanRead extends PermissionDefinition
     public function userHasPermission(User $user, Post $post)
     {
         $object = \eZContentObject::fetch($post->id);
-        return $object instanceof \eZContentObject && $object->canRead();
+        $canRead = $object instanceof \eZContentObject && (
+            $object->canRead() ||
+            $user->id == $post->reporter->id
+        );
+        if (!$canRead && \OpenPaSensorRepository::instance()->getSensorSettings()->get('UserCanAccessUserGroupPosts')) {
+            $authorUserGroups = $post->author->userGroups;
+            foreach ($authorUserGroups as $authorUserGroup){
+                if (in_array($authorUserGroup, $user->userGroups)){
+                    return true;
+                }
+            }
+        }
+
+        return $canRead;
     }
 }

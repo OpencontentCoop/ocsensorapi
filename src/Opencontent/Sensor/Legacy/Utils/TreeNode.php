@@ -9,7 +9,6 @@ use eZSys;
 use eZClusterFileHandler;
 use eZLocale;
 
-
 class TreeNode
 {
     /**
@@ -23,14 +22,11 @@ class TreeNode
         if (!isset($parameters['classes']))
             $parameters['classes'] = null;
 
-        $treeId = $node->attribute('node_id');
-        return self::getCacheManager($treeId)->processCache(
+        $language = isset($parameters['language']) ? $parameters['language'] : false;
+
+        return self::getCacheManager($node, $language)->processCache(
             function ($file, $mtime, $args) {
                 $tree = include($file);
-//                if ($tree instanceof \eZClusterFileFailure){
-//                    list($node, $parameters) = $args;
-//                    $tree = TreeNodeItem::walk($node, $parameters);
-//                }
                 return $tree;
             },
             function ($file, $args) {
@@ -59,11 +55,12 @@ class TreeNode
         }
     }
 
-    public static function getCacheManager($treeId)
+    protected static function getCacheManager(eZContentObjectTreeNode $treeNode, $language = false)
     {
-        $userRoleIdList = \eZUser::currentUser()->roleIDList();
-        $cacheFile = 'tree_' . $treeId . '_' . md5(implode('_', $userRoleIdList)) . '.cache';
-        $language = eZLocale::currentLocaleCode();
+        $treeId = $treeNode->attribute('node_id');
+        $userRoleIdList = [(int)$treeNode->canCreate(), (int)$treeNode->canEdit(), (int)$treeNode->canRemove()];
+        $cacheFile = 'tree_' . $treeId . '_' . implode('_', $userRoleIdList) . '.cache';
+        $language = $language ?: eZLocale::currentLocaleCode();
         $extraPath = eZDir::filenamePath($treeId);
         $cacheFilePath = eZDir::path(array(eZSys::cacheDirectory(), 'ocopendata', 'sensor', $language, 'tree', $extraPath, $cacheFile));
         return eZClusterFileHandler::instance($cacheFilePath);

@@ -77,6 +77,14 @@ class MailNotificationListener extends AbstractListener
         }
     }
 
+    private function replacePlaceholders($text, $post)
+    {
+        if (class_exists('SensorPlaceholderCompiler')){
+            return \SensorPlaceholderCompiler::instance()->compileValue($text, $post);
+        }
+        return $text;
+    }
+
     /**
      * @param SensorEvent $event
      * @param NotificationType $notificationType
@@ -94,7 +102,6 @@ class MailNotificationListener extends AbstractListener
 
         try {
             $notificationTexts = $notificationType->template[$roleIdentifier][$locale];
-
             \eZTemplate::resetInstance();
             $tpl = \eZTemplate::factory();
             $tpl->resetVariables();
@@ -111,8 +118,8 @@ class MailNotificationListener extends AbstractListener
             $tpl->setVariable('event_details', $event->parameters);
             $tpl->setVariable('body', '');
             $tpl->setVariable('subject', $notificationTexts['title']);
-            $tpl->setVariable('header', $notificationTexts['header']);
-            $tpl->setVariable('text', $notificationTexts['text']);
+            $tpl->setVariable('header', $this->replacePlaceholders($notificationTexts['header'], $event->post));
+            $tpl->setVariable('text', $this->replacePlaceholders($notificationTexts['text'], $event->post));
             $tpl->setVariable('object', $this->repository->getPostService()->getContentObject($event->post));
             $tpl->setVariable('node', $this->repository->getPostService()->getContentObject($event->post)->attribute('main_node'));
             $tpl->fetch($templatePath);

@@ -20,6 +20,8 @@ class TreeNodeItem implements \JsonSerializable
 
     protected $bounding_box;
 
+    protected $reference;
+
     protected $group;
 
     protected $level;
@@ -36,6 +38,8 @@ class TreeNodeItem implements \JsonSerializable
 
     protected $is_enabled;
 
+    private $parent;
+
     /**
      * @var TreeNodeItem[]
      */
@@ -50,6 +54,7 @@ class TreeNodeItem implements \JsonSerializable
         $this->type = $data['type'];
         $this->geo = $data['geo'];
         $this->bounding_box = $data['bounding_box'];
+        $this->reference = $data['reference'];
         $this->group = $data['group'];
         $this->children = $data['children'];
         $this->level = $data['level'];
@@ -81,6 +86,7 @@ class TreeNodeItem implements \JsonSerializable
         $data['type'] = $node->attribute('class_identifier');
         $data['geo'] = self::geo($node);
         $data['bounding_box'] = self::boundingBox($node);
+        $data['reference'] = self::reference($node);
         $data['group'] = self::group($node);
         $data['level'] = $level;
         $data['can_remove'] = $node->canRemove() && $canRemove;
@@ -161,6 +167,7 @@ class TreeNodeItem implements \JsonSerializable
         if (isset($dataMap['tag']) && $dataMap['tag']->hasContent()) {
             return trim($dataMap['tag']->toString());
         }
+
         return null;
     }
 
@@ -191,6 +198,16 @@ class TreeNodeItem implements \JsonSerializable
             /** @var eZGmapLocation $content */
             $content = $dataMap['bounding_box']->content();
             return $content;
+        }
+        return null;
+    }
+
+    protected static function reference(eZContentObjectTreeNode $node)
+    {
+        /** @var eZContentObjectAttribute[] $dataMap */
+        $dataMap = $node->attribute('data_map');
+        if (isset($dataMap['reference']) && $dataMap['reference']->hasContent()) {
+            return trim($dataMap['reference']->toString());
         }
         return null;
     }
@@ -243,7 +260,17 @@ class TreeNodeItem implements \JsonSerializable
     {
         $userSettings = \eZUserSetting::fetch((int)$node->attribute('contentobject_id'));
 
-        return $userSettings instanceof \eZUserSetting ? (bool)$userSettings->attribute('is_enabled') : true;
+        if ($userSettings instanceof \eZUserSetting){
+            return (bool)$userSettings->attribute('is_enabled');
+        }
+
+        /** @var eZContentObjectAttribute[] $dataMap */
+        $dataMap = $node->attribute('data_map');
+        if (isset($dataMap['avoid_assignment']) && (int)$dataMap['avoid_assignment']->attribute('data_int') === 1){
+            return false;
+        }
+
+        return true;
     }
 
     public function attributes()
@@ -254,6 +281,7 @@ class TreeNodeItem implements \JsonSerializable
             'node_id',
             'geo',
             'bounding_box',
+            'reference',
             'group',
             'children',
             'level',
@@ -273,26 +301,9 @@ class TreeNodeItem implements \JsonSerializable
      */
     public function attribute($name)
     {
-        if ($name == 'id')
-            return $this->id;
-        elseif ($name == 'name')
-            return $this->name;
-        elseif ($name == 'node_id')
-            return $this->node_id;
-        elseif ($name == 'geo')
-            return $this->geo;
-        elseif ($name == 'bounding_box')
-            return $this->bounding_box;
-        elseif ($name == 'group')
-            return $this->group;
-        elseif ($name == 'children')
-            return $this->children;
-        elseif ($name == 'level')
-            return $this->level;
-        elseif ($name == 'disabled_relations')
-            return $this->disabled_relations;
-        elseif ($name == 'is_enabled')
-            return $this->is_enabled;
+        if (isset($this->{$name})){
+            return $this->{$name};
+        }
 
         return false;
     }
@@ -306,6 +317,7 @@ class TreeNodeItem implements \JsonSerializable
             'name' => $this->name,
             'geo' => $this->geo,
             'bounding_box' => $this->bounding_box,
+            'reference' => $this->reference,
             'group' => $this->group,
             'level' => $this->level,
             'can_remove' => $this->can_remove,
@@ -333,6 +345,7 @@ class TreeNodeItem implements \JsonSerializable
         $data['type'] = $this->type;
         $data['geo'] = $this->geo;
         $data['bounding_box'] = $this->bounding_box;
+        $data['reference'] = $this->reference;
         $data['group'] = $this->group;
         $data['level'] = $this->level;
         $data['can_remove'] = $this->can_remove;
@@ -347,6 +360,35 @@ class TreeNodeItem implements \JsonSerializable
         }
 
         return $data;
+    }
+
+    /**
+     * @return TreeNodeItem|false
+     */
+    public function getParent()
+    {
+        return $this->parent;
+    }
+
+    /**
+     * @param $id
+     * @return TreeNodeItem|false
+     */
+    public function findById($id, TreeNodeItem $parent = null){
+        if ($this->id == $id){
+            if ($parent){
+                $this->parent = $parent;
+            }
+            return $this;
+        }
+
+        foreach ($this->children as $child){
+            if ($data = $child->findById($id, $this)){
+                return $data;
+            }
+        }
+
+        return false;
     }
 
 }

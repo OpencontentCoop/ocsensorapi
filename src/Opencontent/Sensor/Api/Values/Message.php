@@ -34,4 +34,8 @@ abstract class Message extends Exportable
 
     public $richText;
 
+    public function __toString()
+    {
+        return get_called_class() . '#' . $this->id;
+    }
 }

@@ -18,6 +18,7 @@ use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Api\Values\Message\AuditCollection;
 use Opencontent\Sensor\Api\Values\Message\CommentCollection;
 use Opencontent\Sensor\Api\Values\Message\PrivateMessageCollection;
+use Opencontent\Sensor\Api\Values\Message\ResponseCollection;
 use Opencontent\Sensor\Api\Values\Message\TimelineItemCollection;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\ParticipantCollection;
@@ -159,6 +160,7 @@ class PostService extends PostServiceBase
     public function setUserPostAware(Post $post)
     {
         $currentParticipant = $post->participants->getParticipantByUserId($this->repository->getCurrentUser()->id);
+        $currentUserIsSuperAdmin = PermissionService::isSuperAdmin($this->repository->getCurrentUser());
 
 //        foreach ($post->participants as $participant) {
 //            foreach ($participant as $user) {
@@ -196,7 +198,7 @@ class PostService extends PostServiceBase
         $post->comments = $comments;
 
         if ($this->repository->getSensorSettings()->get('HideTimelineDetails')){
-            if (!$currentParticipant || $currentParticipant->roleIdentifier == ParticipantRole::ROLE_AUTHOR){
+            if (!$currentUserIsSuperAdmin && (!$currentParticipant || $currentParticipant->roleIdentifier == ParticipantRole::ROLE_AUTHOR)){
                 $timelineMessages = new TimelineItemCollection();
                 foreach ($post->timelineItems->messages as $message){
                     if ($message->type == 'read' || $message->type == 'closed'){
@@ -209,8 +211,11 @@ class PostService extends PostServiceBase
 
         if (
             $this->repository->getSensorSettings()->get('HideOperatorNames')
-            && $this->repository->getCurrentUser()->type == 'user'
-            && !PermissionService::isSuperAdmin($this->repository->getCurrentUser())
+            && (
+                $this->repository->getCurrentUser()->type == 'user'
+                && (!$currentParticipant || $currentParticipant->roleIdentifier == ParticipantRole::ROLE_AUTHOR)
+            )
+            && !$currentUserIsSuperAdmin
         ){
             $hiddenOperatorName = $this->repository->getSensorSettings()->get('HiddenOperatorName');
             $hiddenApproverName = $this->repository->getSensorSettings()->get('HiddenApproverName');
@@ -272,11 +277,11 @@ class PostService extends PostServiceBase
                 }
                 $replaceStringList = array_fill(0, count($hiddenApprovers), $hiddenApproverName);
                 $hiddenMessage->text = str_replace(array_values($hiddenApprovers), $replaceStringList, $message->text);
-                $hiddenMessage->richText = str_replace(array_values($hiddenApprovers), $replaceStringList, $message->text);
+                $hiddenMessage->richText = str_replace(array_values($hiddenApprovers), $replaceStringList, $message->richText);
 
                 $replaceStringList = array_fill(0, count($hiddenOperators), $hiddenOperatorName);
                 $hiddenMessage->text = str_replace(array_values($hiddenOperators), $replaceStringList, $hiddenMessage->text);
-                $hiddenMessage->richText = str_replace(array_values($hiddenOperators), $replaceStringList, $hiddenMessage->text);
+                $hiddenMessage->richText = str_replace(array_values($hiddenOperators), $replaceStringList, $hiddenMessage->richText);
 
                 $timelineMessages->addMessage($hiddenMessage);
             }
@@ -292,6 +297,16 @@ class PostService extends PostServiceBase
             }
             $post->comments = $comments;
 
+            $responses = new ResponseCollection();
+            foreach ($post->responses->messages as $message){
+                $hiddenMessage = clone $message;
+                if (isset($hiddenOperators[$message->creator->id])) {
+                    $hiddenMessage->creator = $this->getHiddenUser($message->creator);
+                }
+                $responses->addMessage($hiddenMessage);
+            }
+            $post->responses = $responses;
+
             if ($post->latestOwner instanceof Participant){
                 if (isset($hiddenOperators[$post->latestOwner->id])) {
                     $post->latestOwner = new Participant();
@@ -303,7 +318,7 @@ class PostService extends PostServiceBase
             }
         }
 
-        if (!PermissionService::isSuperAdmin($this->repository->getCurrentUser())){
+        if (!$currentUserIsSuperAdmin){
             $post->audits = new AuditCollection();
         }
     }

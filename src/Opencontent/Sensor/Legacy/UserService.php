@@ -38,6 +38,7 @@ class UserService extends UserServiceBase
 
     private $firstApprovers;
 
+    private static $filterGroups;
     /**
      * @param $id
      * @return Post|User
@@ -205,7 +206,7 @@ class UserService extends UserServiceBase
                     $user->commentMode = $this->loadUserCanComment($ezUser);
                     $user->moderationMode = $this->loadUserIsModerated($ezUser);
                     $user->type = $userObject->attribute('class_identifier');
-                    $user->groups = $this->loadUserGroups($userObject, $ezUser);
+                    $this->loadUserGroups($userObject, $ezUser, $user);
                     $user->language = $this->getLocale($userObject);
                     $user->restrictMode = $this->loadUserHasRestrictMode($ezUser);
 
@@ -304,19 +305,45 @@ class UserService extends UserServiceBase
         }
     }
 
-    private function loadUserGroups(eZContentObject $contentObject, eZUser $ezUser)
+    private function loadUserGroups(eZContentObject $contentObject, eZUser $ezUser, User $user)
     {
         $idList = [];
         $dataMap = $contentObject->dataMap();
         if (isset($dataMap[OperatorService::GROUP_ATTRIBUTE_IDENTIFIER]) && $dataMap[OperatorService::GROUP_ATTRIBUTE_IDENTIFIER]->hasContent()){
             $idList = explode('-', $dataMap[OperatorService::GROUP_ATTRIBUTE_IDENTIFIER]->toString());
-        }else{
-            $idList = $ezUser->groups();
+            $idList = array_map('intval', $idList);
+        }
+        $user->groups = array_unique(array_values($idList));
+
+        $userGroupList = $ezUser->groups();
+        $userGroupList = array_map('intval', $userGroupList);
+        $userGroupList = $this->filterUserGroups($userGroupList);
+        if (!empty($userGroupList)){
+            $user->isSuperUser = true;
+            $user->userGroups = array_unique(array_values($userGroupList));
+        }
+    }
+
+    private function filterUserGroups($userGroupList)
+    {
+        if (self::$filterGroups === null) {
+            self::$filterGroups = [
+                4, // Users
+                11, // Guest accounts
+                12, // Administrator users
+                42, // Anonymous Users
+            ];
+            $operatorRootNode = $this->repository->getOperatorsRootNode();
+            if ($operatorRootNode instanceof \eZContentObjectTreeNode) {
+                self::$filterGroups[] = $operatorRootNode->attribute('contentobject_id');
+            }
+            $rootNode = $this->repository->getRootNode();
+            if ($rootNode instanceof \eZContentObjectTreeNode) {
+                self::$filterGroups[] = $rootNode->attribute('contentobject_id');
+            }
         }
 
-        $idList = array_map('intval', $idList);
-        $idList = array_diff($idList, [4,11,12,42]); // remove default user groups
-        return array_unique(array_values($idList));
+        return array_diff($userGroupList, self::$filterGroups); // remove default user groups
     }
     
     private function loadUserFiscalCode(eZContentObject $contentObject)

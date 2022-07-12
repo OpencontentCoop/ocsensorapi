@@ -63,7 +63,7 @@ class MessageService extends MessageServiceBase
      */
     protected $auditByPost = array();
 
-    private function clearMemoryCache($post)
+    public function clearMemoryCache($post) //@todo
     {
         unset($this->countMessagesByPost[$post->internalId]);
         unset($this->commentsByPost[$post->internalId]);
@@ -490,31 +490,26 @@ class MessageService extends MessageServiceBase
 
     public function loadPostComments(Post $post)
     {
-        $this->clearMemoryCache($post);
         $post->comments = $this->loadCommentCollectionByPost($post);
     }
 
     public function loadPostPrivateMessages(Post $post)
     {
-        $this->clearMemoryCache($post);
         $post->privateMessages = $this->loadPrivateMessageCollectionByPost($post);
     }
 
     public function loadPostTimelineItems(Post $post)
     {
-        $this->clearMemoryCache($post);
         $post->timelineItems = $this->loadTimelineItemCollectionByPost($post);
     }
 
     public function loadPostResponses(Post $post)
     {
-        $this->clearMemoryCache($post);
         $post->responses = $this->loadResponseCollectionByPost($post);
     }
 
     public function loadPostAudits(Post $post)
     {
-        $this->clearMemoryCache($post);
         $post->audits = $this->loadAuditCollectionByPost($post);
     }
 

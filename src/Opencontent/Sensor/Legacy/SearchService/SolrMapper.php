@@ -47,6 +47,7 @@ class SolrMapper
     private function setPostUserUnaware()
     {
         $userUnawarePost = clone $this->post;
+        $this->repository->getMessageService()->clearMemoryCache($userUnawarePost); //@todo
         $this->repository->getMessageService()->loadPostPrivateMessages($userUnawarePost);
         $this->repository->getMessageService()->loadPostComments($userUnawarePost);
         $this->repository->getMessageService()->loadPostAudits($userUnawarePost);
@@ -60,6 +61,7 @@ class SolrMapper
             $this->repository->getPostService()->getCollaborationItem($userUnawarePost)
         );
         $builder->loadLatestOwnerAndOwnerGroup($userUnawarePost);
+        $this->post = $userUnawarePost;
     }
 
     /**
@@ -742,7 +744,6 @@ class SolrMapper
     public function updateSearchIndex($returnValue = false)
     {
         $this->setPostUserUnaware();
-
         $contentObject = \eZContentObject::fetch($this->post->id);
         /** @var \eZContentObjectVersion $version */
         $version = $contentObject->currentVersion();

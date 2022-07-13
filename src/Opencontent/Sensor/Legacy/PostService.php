@@ -54,6 +54,12 @@ class PostService extends PostServiceBase
      */
     protected $repository;
 
+    protected $refreshCalls = [
+        'hard' => [],
+        'soft' => [],
+    ];
+
+
     public function loadPosts($query, $limit, $offset)
     {
         if ($limit > \Opencontent\Sensor\Api\SearchService::MAX_LIMIT) {
@@ -561,54 +567,53 @@ class PostService extends PostServiceBase
         return $sensorCollaborationItemCache[$post->internalId];
     }
 
-    private function getCaller()
-    {
-        $trace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS);
-        $register = array();
-        $startRegister = true;
-        foreach ($trace as $item) {
-            if ($startRegister) {
-                if (!isset($item['class'])){
-                    $item['class'] = '';
-                }
-                if (!isset($item['type'])){
-                    $item['type'] = '';
-                }
-                if (!isset($item['file'])){
-                    $item['file'] = '';
-                }
-                if (!isset($item['line'])){
-                    $item['line'] = '';
-                }
-                $register[] = $item['file'] . '#' . $item['line'] . '(' . $item['class'] . $item['type'] . $item['function'] . ')';
-            }
-        }
-
-        return implode(' ## ', $register);
-    }
-
     public function refreshPost(Post $post, $modifyTimestamp = true)
     {
-        global $count;
-        if (!isset($count[$post->id])) $count[$post->id] = 0;
-        $count[$post->id]++;
-        $message = '----> [' . $count[$post->id] . '] ' . $this->getCaller() . ' ';
+        $refreshContext = $modifyTimestamp ? 'hard' : 'soft';
+
+        if (!isset($this->refreshCalls['hard'][$post->id])){
+            $this->refreshCalls['hard'][$post->id] = 0;
+        }
+        if (!isset($this->refreshCalls['soft'][$post->id])){
+            $this->refreshCalls['soft'][$post->id] = 0;
+        }
+        $this->refreshCalls[$refreshContext][$post->id]++;
+
+        $count = $this->refreshCalls['hard'][$post->id] + $this->refreshCalls['soft'][$post->id];
+        $message = '----> [' . $count . '] ';
 
         $message .= $modifyTimestamp ? 'Hard refresh post #' . $post->id  : 'Refresh post #' . $post->id;
         $this->repository->getLogger()->debug($message);
 
-        $contentObject = $this->getContentObject($post);
-        if ($modifyTimestamp) {
-            $timestamp = time();
-            $contentObject->setAttribute('modified', $timestamp);
-            $contentObject->store();
-            $post->modified = Utils::getDateTimeFromTimestamp($timestamp);
-        }
-
-        $mapper = new SolrMapper($this->repository, $post);
-        $mapper->updateSearchIndex();
-
         return $post;
+    }
+
+    public function doRefreshPost(Post $post)
+    {
+        if (!isset($this->refreshCalls['hard'][$post->id])){
+            $this->refreshCalls['hard'][$post->id] = 0;
+        }
+        if (!isset($this->refreshCalls['soft'][$post->id])){
+            $this->refreshCalls['soft'][$post->id] = 0;
+        }
+        $modifyTimestamp = $this->refreshCalls['hard'][$post->id] > 0;
+        $count = $this->refreshCalls['hard'][$post->id] + $this->refreshCalls['soft'][$post->id];
+
+        if ($count > 0) {
+            $contentObject = $this->getContentObject($post);
+            if ($modifyTimestamp) {
+                $timestamp = time();
+                $contentObject->setAttribute('modified', $timestamp);
+                $contentObject->store();
+                $post->modified = Utils::getDateTimeFromTimestamp($timestamp);
+            }
+
+            $mapper = new SolrMapper($this->repository, $post);
+            $mapper->updatePost();
+
+            $this->refreshCalls['hard'][$post->id] = 0;
+            $this->refreshCalls['soft'][$post->id] = 0;
+        }
     }
 
     public function setPostStatus(Post $post, $status)

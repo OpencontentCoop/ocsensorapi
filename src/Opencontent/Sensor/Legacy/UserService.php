@@ -13,6 +13,7 @@ use Opencontent\Sensor\Api\Values\Event;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Core\UserService as UserServiceBase;
+use Opencontent\Sensor\Legacy\SearchService\SolrMapper;
 use Opencontent\Sensor\Legacy\Utils\MailValidator;
 use SocialUser;
 

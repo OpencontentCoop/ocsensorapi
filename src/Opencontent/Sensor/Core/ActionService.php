@@ -121,6 +121,7 @@ class ActionService implements ActionServiceInterface
                 'is_main' => true,
             ];
             $this->repository->getEventService()->fire($event);
+            $this->repository->getPostService()->doRefreshPost($post);
         }else{
             $event = new Event();
             $event->identifier = 'after_run_action';

@@ -7,6 +7,7 @@ use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Repository;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
+use Opencontent\Sensor\Legacy\SearchService\SolrMapper;
 
 class ReadAction extends ActionDefinition
 {
@@ -32,11 +33,10 @@ class ReadAction extends ActionDefinition
             $this->fireEvent($repository, $post, $user);
 
         }elseif ($post->participants->getUserById($user->id) instanceof User){
-
             $repository->getUserService()->setLastAccessDateTime($user, $post);
-            $post = $repository->getPostService()->refreshPost($post, false);
+            $mapper = new SolrMapper($repository, $post);
+            $mapper->updateUserLastAccessDateTime($user);
             $this->fireEvent($repository, $post, $user);
-
         }
     }
 }

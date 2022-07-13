@@ -741,8 +741,49 @@ class SolrMapper
         throw new \Exception($errorMessage);
     }
 
-    public function updateSearchIndex($returnValue = false)
+    public function updateUserLastAccessDateTime(User $user, $returnValue = false)
     {
+        $this->repository->getLogger()->debug('----> DO REFRESH USER');
+        $userUnawarePost = clone $this->post;
+        $this->repository->getParticipantService()->loadPostParticipants($userUnawarePost);
+        $this->post = $userUnawarePost;
+
+        $contentObject = \eZContentObject::fetch($this->post->id);
+        /** @var \eZContentObjectVersion $version */
+        $version = $contentObject->currentVersion();
+        $languages = $version->translationList(false, false);
+
+        $solr = new eZSolr();
+        $collectedData = [];
+        foreach ($languages as $languageCode) {
+            $collectedData[$languageCode] = [
+                'meta_guid_ms' => $solr->guid((int)$this->post->id, $languageCode),
+            ];
+            foreach ($this->mapParticipants() as $key => $value) {
+                if (!empty($value)) {
+                    $collectedData[$languageCode][$key] = [
+                        'set' => $value,
+                    ];
+                }
+            }
+        }
+
+        $data = [];
+        foreach ($collectedData as $values){
+            $data[] = $values;
+        }
+
+        if ($returnValue){
+            $data['post'] = $this->post;
+            return $data;
+        }
+
+        return self::patchSearchIndex($data);
+    }
+
+    public function updatePost($returnValue = false)
+    {
+        $this->repository->getLogger()->debug('----> DO REFRESH POST');
         $this->setPostUserUnaware();
         $contentObject = \eZContentObject::fetch($this->post->id);
         /** @var \eZContentObjectVersion $version */

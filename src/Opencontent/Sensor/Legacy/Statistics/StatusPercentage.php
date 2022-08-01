@@ -75,7 +75,8 @@ class StatusPercentage extends StatisticFactory
 
             $newSearch = $this->repository->getStatisticsService()->searchPosts(
                 "{$query}
-                    facets [raw[sensor_status_lk]|alpha] facet_range [field=>meta_published_dt,start=>{$startRange},end=>{$endRange},gap=>{$gap}] limit 1"
+                    facets [raw[sensor_status_lk]|alpha] facet_range [field=>meta_published_dt,start=>{$startRange},end=>{$endRange},gap=>{$gap}] limit 1",
+                ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
             $newCounts = $newSearch->facet_range['meta_published_dt']['counts'];
             $availableDates = array_unique(array_merge($availableDates, array_keys($newCounts)));
@@ -89,7 +90,8 @@ class StatusPercentage extends StatisticFactory
             $readSearch = $this->repository->getStatisticsService()->searchPosts(
                 "{$query}
                     (raw[sensor_is_read_i] range ['1','*'] or raw[sensor_is_assigned_i] range ['1','*']) and
-                    facets [raw[sensor_status_lk]] facet_range [field=>sensor_read_dt,start=>{$startRange},end=>{$endRange},gap=>{$gap}] limit 1"
+                    facets [raw[sensor_status_lk]] facet_range [field=>sensor_read_dt,start=>{$startRange},end=>{$endRange},gap=>{$gap}] limit 1",
+                ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
             $readCounts = isset($readSearch->facet_range['sensor_read_dt']['counts']) ?
                 $readSearch->facet_range['sensor_read_dt']['counts'] : [];
@@ -98,7 +100,8 @@ class StatusPercentage extends StatisticFactory
             $onlyAssignedSearch = $this->repository->getStatisticsService()->searchPosts(
                 "{$query}
                     raw[sensor_is_read_i] = 0 and raw[sensor_is_assigned_i] range ['1','*'] and
-                    facets [raw[sensor_status_lk]] facet_range [field=>sensor_assigned_dt,start=>{$startRange},end=>{$endRange},gap=>{$gap}] limit 1"
+                    facets [raw[sensor_status_lk]] facet_range [field=>sensor_assigned_dt,start=>{$startRange},end=>{$endRange},gap=>{$gap}] limit 1",
+                ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
             $onlyAssignedCounts = isset($onlyAssignedSearch->facet_range['sensor_assigned_dt']['counts']) ?
                 $onlyAssignedSearch->facet_range['sensor_assigned_dt']['counts'] : [];
@@ -107,7 +110,8 @@ class StatusPercentage extends StatisticFactory
             $closeSearch = $this->repository->getStatisticsService()->searchPosts(
                 "{$query}
                     raw[sensor_status_lk] = 'close' and raw[sensor_is_closed_i] range ['1','*'] and
-                    facets [raw[sensor_status_lk]] facet_range [field=>sensor_close_dt,start=>{$startRange},end=>{$endRange},gap=>{$gap}] limit 1"
+                    facets [raw[sensor_status_lk]] facet_range [field=>sensor_close_dt,start=>{$startRange},end=>{$endRange},gap=>{$gap}] limit 1",
+                ['authorFiscalCode' => $this->getAuthorFiscalCode()]
             );
             $closeCounts = isset($closeSearch->facet_range['sensor_close_dt']['counts']) ?
                 $closeSearch->facet_range['sensor_close_dt']['counts'] : [];

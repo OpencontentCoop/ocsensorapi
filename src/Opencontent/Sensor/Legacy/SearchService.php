@@ -329,6 +329,14 @@ class SearchService extends BaseSearchService
                         $post->capabilities = $this->repository->getPermissionService()->loadCurrentUserPostPermissionCollection($post)->getArrayCopy();
                     }
                     $post->commentsToModerate = $post->comments->commentsToModerate();
+
+                    //@todo
+                    $slimAreas = [];
+                    foreach ($post->areas as $area) {
+                        $area->geoBounding = null;
+                        $slimAreas[] = $area;
+                    }
+                    $post->areas = $slimAreas;
                     $searchResults->searchHits[] = $post;
                 }
             } catch (\Exception $e) {

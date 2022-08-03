@@ -1436,7 +1436,7 @@ class Controller
         }
 
         if ($this->apiSettings->getRepository()->getSensorSettings()->get('HidePrivacyChoice')){
-            $postCreateStruct->privacy = 'private';
+            $postCreateStruct->privacy = str_replace('privacy.', '', $this->repository->getSensorSettings()->get('DefaultPrivacyStatus'));
         }else {
             $postCreateStruct->privacy = isset($payload['is_private']) && $payload['is_private'] ? 'private' : 'public';
         }

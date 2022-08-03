@@ -157,7 +157,7 @@ class PostInitializer
         }
 
         if ($this->repository->getSensorSettings()->get('HidePrivacyChoice')){
-            $this->repository->getPostService()->setPostStatus($post, 'privacy.private');
+            $this->repository->getPostService()->setPostStatus($post, $this->repository->getSensorSettings()->get('DefaultPrivacyStatus'));
             return false;
         }
 

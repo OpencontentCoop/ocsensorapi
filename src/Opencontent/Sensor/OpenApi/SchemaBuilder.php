@@ -6,6 +6,7 @@ use erasys\OpenApi as OpenApiBase;
 use erasys\OpenApi\Spec\v3 as OA;
 use Opencontent\Sensor\Api\StatisticFactory;
 use Opencontent\Sensor\Legacy\SearchService;
+use Opencontent\Sensor\Legacy\UserService;
 use Opencontent\Sensor\OpenApi;
 
 class SchemaBuilder
@@ -2201,6 +2202,8 @@ class SchemaBuilder
             array_column($this->postClassDataMap['on_behalf_of_mode']->content()['options'], 'name') :
             [];
 
+        $userTypeEnum = UserService::USER_TYPES;
+
         switch ($schemaName) {
             case 'Address':
                 $schema->title = 'Address';
@@ -2548,6 +2551,7 @@ class SchemaBuilder
                 $schema->properties = [
                     'id' => $this->buildSchemaProperty(['type' => 'integer', 'format' => 'int64', 'readOnly' => true, 'description' => 'ID', 'description' => 'Unique identifier']),
                     'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'user_type' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'User type', 'enum' => $userTypeEnum]),
                     'description' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Description']),
                     'email' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Email', 'format' => 'email']),
                     'last_access_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Last access date', 'nullable' => true]),
@@ -2563,10 +2567,10 @@ class SchemaBuilder
             case 'NewUser':
                 $schema->title = 'NewUser';
                 $schema->type = 'object';
-                $schema->required = ['first_name', 'last_name', 'email'];
+                $schema->required = ['name', 'user_type', 'email'];
                 $schema->properties = [
-                    'first_name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'First name']),
-                    'last_name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Last name']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'user_type' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'User type', 'enum' => $userTypeEnum]),
                     'email' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Email', 'format' => 'email']),
                     'fiscal_code' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Fiscal Code']),
                     'phone' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Phone']),
@@ -2576,8 +2580,8 @@ class SchemaBuilder
                 $schema->title = 'PatchUser';
                 $schema->type = 'object';
                 $schema->properties = [
-                    'first_name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'First name']),
-                    'last_name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Last name']),
+                    'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
+                    'user_type' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'User type', 'enum' => $userTypeEnum]),
                     'email' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Email', 'format' => 'email']),
                     'fiscal_code' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Fiscal Code']),
                     'phone' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Phone']),
@@ -2641,7 +2645,7 @@ class SchemaBuilder
             case 'NewOperator':
                 $schema->title = 'NewOperator';
                 $schema->type = 'object';
-                $schema->required = ['first_name', 'last_name', 'email', 'role', 'groups'];
+                $schema->required = ['name', 'email', 'role', 'groups'];
                 $schema->properties = [
                     'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
                     'email' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Email', 'format' => 'email']),

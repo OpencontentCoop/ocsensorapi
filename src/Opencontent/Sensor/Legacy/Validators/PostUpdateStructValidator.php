@@ -9,6 +9,7 @@ use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Legacy\UserService;
 
 class PostUpdateStructValidator extends BasePostUpdateStructValidator
 {
@@ -91,8 +92,8 @@ class PostUpdateStructValidator extends BasePostUpdateStructValidator
                     $updateStruct->author = $user->id();
                 }else{
                     $updateStruct->author = $this->repository->getUserService()->createUser([
-                        'first_name' => $updateStruct->author,
-                        'last_name' => '',
+                        'name' => $updateStruct->author,
+                        'user_type' => UserService::USER_TYPES[0],
                         'email' => $updateStruct->author,
                         'fiscal_code' => '',
                     ], true)->id;

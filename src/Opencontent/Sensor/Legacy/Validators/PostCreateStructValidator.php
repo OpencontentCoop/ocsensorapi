@@ -11,6 +11,7 @@ use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
 use Opencontent\Sensor\Api\Values\Event;
 use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Legacy\UserService;
 
 class PostCreateStructValidator extends BasePostCreateStructValidator
 {
@@ -90,8 +91,8 @@ class PostCreateStructValidator extends BasePostCreateStructValidator
                     $createStruct->author = $user->id();
                 }else{
                     $author = $this->repository->getUserService()->createUser([
-                        'first_name' => $createStruct->author,
-                        'last_name' => $createStruct->author,
+                        'name' => $createStruct->author,
+                        'user_type' => UserService::USER_TYPES[0],
                         'email' => $createStruct->author,
                         'fiscal_code' => '',
                     ], true);

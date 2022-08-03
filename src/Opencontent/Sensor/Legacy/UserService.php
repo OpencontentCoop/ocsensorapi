@@ -23,6 +23,8 @@ class UserService extends UserServiceBase
 
     const ADDITIONAL_FIELD_PREFIX = 'sensoruser_';
 
+    const USER_TYPES = ['Persona fisica', 'Soggetto collettivo'];
+
     /**
      * @var Repository
      */
@@ -86,12 +88,18 @@ class UserService extends UserServiceBase
 
         $contentClass = $this->getUserContentClass();
 
-        if (empty($payload['first_name'])) {
-            throw new InvalidInputException("Field first_name is required");
+        if (empty($payload['name'])) {
+            throw new InvalidInputException("Field name is required");
         }
-        if (empty($payload['last_name'])) {
-            throw new InvalidInputException("Field last_name is required");
+
+        if (empty($payload['user_type'])) {
+            throw new InvalidInputException("Field user_type is required");
         }
+        $payload['user_type'] = trim($payload['user_type']);
+        if (!in_array($payload['user_type'], self::USER_TYPES)){
+            throw new InvalidInputException("Invalid user_type");
+        }
+
         if (empty($payload['email'])) {
             throw new InvalidInputException("Field email is required");
         }
@@ -111,8 +119,8 @@ class UserService extends UserServiceBase
             'class_identifier' => $contentClass->attribute('identifier'),
             'parent_node_id' => $parentNodeId,
             'attributes' => [
-                'first_name' => (string)$payload['first_name'],
-                'last_name' => (string)$payload['last_name'],
+                'name' => (string)$payload['name'],
+                'user_type' => (string)$payload['user_type'],
                 'user_account' => $payload['email'].'|'.$payload['email'] .'||md5_password|1', // foo|foo@ez.no|1234|md5_password|0
                 'fiscal_code' => isset($payload['fiscal_code']) ? (string)$payload['fiscal_code'] : '',
                 'phone' => isset($payload['phone']) ? (string)$payload['phone'] : '',
@@ -152,19 +160,24 @@ class UserService extends UserServiceBase
             }
 
             $attributes = [];
-            if (isset($payload['first_name']) && !empty($payload['first_name'])){
-                $attributes['first_name'] = (string)$payload['first_name'];
+            if (isset($payload['name']) && !empty($payload['name'])){
+                $attributes['name'] = (string)$payload['name'];
             }
-            if (isset($payload['last_name']) && !empty($payload['last_name'])){
-                $attributes['last_name'] = (string)$payload['last_name'];
+
+            if (empty($payload['user_type'])) {
+                $payload['user_type'] = $user->userType;
             }
+            if (!in_array($payload['user_type'], self::USER_TYPES)){
+                throw new InvalidInputException("Invalid user_type");
+            }
+            $attributes['user_type'] = $payload['user_type'];
+
             if (isset($payload['fiscal_code']) && !empty($payload['fiscal_code'])){
                 $attributes['fiscal_code'] = (string)$payload['fiscal_code'];
             }
             if (isset($payload['phone']) && !empty($payload['phone'])){
                 $attributes['phone'] = (string)$payload['phone'];
             }
-
             if (
                 \eZContentFunctions::updateAndPublishObject($contentObject, ['attributes' => $attributes])
                 || (empty($attributes) && isset($payload['email']) && !empty($payload['email']))
@@ -193,8 +206,7 @@ class UserService extends UserServiceBase
                 if ($userObject instanceof \eZContentObject) {
                     $user->email = $ezUser->Email;
                     $user->name = $userObject->name(false, $this->repository->getCurrentLanguage());
-                    $user->firstName = $this->loadUserFirstName($userObject);
-                    $user->lastName = $this->loadUserLastName($userObject);
+                    $user->userType = $this->loadUserType($userObject);
                     $user->description = $this->loadUserDescription($userObject);
                     $user->fiscalCode = $this->loadUserFiscalCode($userObject);
                     $user->phone = $this->loadUserPhone($userObject);
@@ -369,26 +381,17 @@ class UserService extends UserServiceBase
         return '';
     }
 
-    private function loadUserFirstName(eZContentObject $contentObject)
+    private function loadUserType(eZContentObject $contentObject)
     {
         $dataMap = $contentObject->dataMap();
-        $attributeIdentifier = 'first_name';
+        $attributeIdentifier = 'user_type';
+        $default = self::USER_TYPES[0];
         if (isset($dataMap[$attributeIdentifier]) && $dataMap[$attributeIdentifier]->hasContent()) {
-            return $dataMap[$attributeIdentifier]->content();
+            $content = $dataMap[$attributeIdentifier]->content();
+            return $dataMap[$attributeIdentifier]->toString();
         }
 
-        return '';
-    }
-
-    private function loadUserLastName(eZContentObject $contentObject)
-    {
-        $dataMap = $contentObject->dataMap();
-        $attributeIdentifier = 'last_name';
-        if (isset($dataMap[$attributeIdentifier]) && $dataMap[$attributeIdentifier]->hasContent()) {
-            return $dataMap[$attributeIdentifier]->content();
-        }
-
-        return '';
+        return $default;
     }
 
     private function loadUserDescription(eZContentObject $contentObject)

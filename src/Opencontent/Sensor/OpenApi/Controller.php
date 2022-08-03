@@ -737,11 +737,11 @@ class Controller
     private function updateUser($user, $payload)
     {
         $payload = $this->restController->getPayload();
-        if (empty($payload['first_name'])) {
-            throw new InvalidInputException("Field first_name is required");
+        if (empty($payload['name'])) {
+            throw new InvalidInputException("Field name is required");
         }
-        if (empty($payload['last_name'])) {
-            throw new InvalidInputException("Field last_name is required");
+        if (empty($payload['user_type'])) {
+            throw new InvalidInputException("Field user_type is required");
         }
         if (empty($payload['email'])) {
             throw new InvalidInputException("Field email is required");

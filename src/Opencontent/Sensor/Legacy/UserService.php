@@ -60,7 +60,7 @@ class UserService extends UserServiceBase
         return $this->users[$id];
     }
 
-    public function loadUsers($query, $limit, $cursor)
+    public function loadUsers($query, $limit, $cursor, $filterOnlyOrganizations = false)
     {
         if ($limit > \Opencontent\Sensor\Api\SearchService::MAX_LIMIT) {
             throw new InvalidInputException('Max limit allowed is ' . \Opencontent\Sensor\Api\SearchService::MAX_LIMIT);
@@ -68,6 +68,9 @@ class UserService extends UserServiceBase
 
         $searchQuery = $query ? 'q = \'' . addcslashes($query, "')([]") . '\' and ': '';
         $limitations = $this->repository->getCurrentUser()->behalfOfMode ? [] : null;
+        if ($filterOnlyOrganizations){
+            $searchQuery .= 'user_type = "' . self::USER_TYPES[1] . '" and ';
+        }
         $result = $this->search("$searchQuery sort [name=>asc] limit $limit cursor [$cursor]", $limitations);
         $items = [];
         foreach ($result->searchHits as $item) {

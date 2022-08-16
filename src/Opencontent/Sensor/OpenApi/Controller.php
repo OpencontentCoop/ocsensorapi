@@ -625,7 +625,7 @@ class Controller
         return $result;
     }
 
-    public function loadUsers()
+    public function loadUsers($filterOnlyOrganizations = false)
     {
         $q = $this->getRequestParameter('q');
         $limit = $this->getRequestParameter('limit');
@@ -636,7 +636,7 @@ class Controller
             throw new InvalidArgumentException('Max limit allowed is ' . SearchService::MAX_LIMIT);
         }
 
-        $searchResults = $this->repository->getUserService()->loadUsers($q, $limit, $cursor);
+        $searchResults = $this->repository->getUserService()->loadUsers($q, $limit, $cursor, $filterOnlyOrganizations);
         $parameters = [
             'limit' => $limit,
             'cursor' => $searchResults['current'],

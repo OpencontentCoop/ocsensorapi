@@ -203,6 +203,11 @@ class Post extends Exportable
      * @var string[]
      */
     public $tags;
+    
+    /**
+     * @var string[]
+     */
+    public $protocols;
 
     public function jsonSerialize()
     {

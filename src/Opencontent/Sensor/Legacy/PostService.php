@@ -936,4 +936,20 @@ class PostService extends PostServiceBase
         }
         $post->tags = $tags;
     }
+
+    public function setPostProtocols(Post $post, $protocols)
+    {
+        $contentObjectDataMap = $this->getContentObject($post)->dataMap();
+        if (isset($contentObjectDataMap['protocols'])
+            && $contentObjectDataMap['protocols']->attribute('data_type_string') == \eZMatrixType::DATA_TYPE_STRING) {
+            $protocols = array_map(function ($n){
+                return str_replace('&', '$', $n);
+            }, $protocols);
+            $contentObjectDataMap['protocols']->fromString(implode('&', $protocols));
+            $contentObjectDataMap['protocols']->store();
+        }
+        $post->protocols = $protocols;
+    }
+
+
 }

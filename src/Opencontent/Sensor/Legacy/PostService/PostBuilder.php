@@ -104,6 +104,8 @@ class PostBuilder
 
         $post->tags = $this->loadPostTags();
 
+        $post->protocols = $this->loadPostProtocols();
+
         $this->loadLatestOwnerAndOwnerGroup($post);
 
         $this->checkApproversConsistency($post);
@@ -166,6 +168,31 @@ class PostBuilder
             $keyword = new \eZKeyword();
             $keyword->fetch($this->contentObjectDataMap['tags']);
             return $keyword->attribute('keywords');
+        }
+
+        return [];
+    }
+
+    protected function loadPostProtocols()
+    {
+        if (isset($this->contentObjectDataMap['protocols'])
+            && $this->contentObjectDataMap['protocols']->attribute('data_type_string') == \eZMatrixType::DATA_TYPE_STRING
+            && $this->contentObjectDataMap['protocols']->hasContent()
+        ) {
+            /** @var \eZMatrix $attributeContents */
+            $attributeContents = $this->contentObjectDataMap['protocols']->content();
+            $columns = (array) $attributeContents->attribute( 'columns' );
+            $rows = (array) $attributeContents->attribute( 'rows' );
+            $keys = [];
+            foreach ($columns['sequential'] as $column) {
+                $keys[] = $column['identifier'];
+            }
+            $data = [];
+            foreach ($rows['sequential'] as $row) {
+                $data[] = array_combine($keys, $row['columns']);
+            }
+
+            return (array)array_column($data, 'protocol');
         }
 
         return [];

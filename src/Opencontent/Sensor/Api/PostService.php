@@ -187,4 +187,11 @@ interface PostService
      * @return mixed
      */
     public function setPostTags(Post $post, array $tags);
+
+    /**
+     * @param Post $post
+     * @param array $protocols
+     * @throw \Exception
+     */
+    public function setPostProtocols(Post $post, $protocols);
 }

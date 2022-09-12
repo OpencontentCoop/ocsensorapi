@@ -10,16 +10,8 @@ class CanSubscribe extends UserIs
 {
     public $identifier = 'can_subscribe';
 
-    private $currentUserId;
-
-    public function __construct($currentUserId)
-    {
-        $this->currentUserId = (int)$currentUserId;
-    }
-
     public function userHasPermission(User $user, Post $post)
     {
-        return intval($post->author->id) === $this->currentUserId
-            && !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED);
+        return !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED);
     }
 }

@@ -484,8 +484,6 @@ class UserService extends UserServiceBase
             }
         }
 
-        $user->isSubscriber = $this->repository->getSubscriptionService()->getUserSubscription($user, $post) instanceof Subscription;
-
         return $user;
     }
 

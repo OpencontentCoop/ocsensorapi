@@ -135,11 +135,6 @@ class User extends Exportable
      */
     public $userGroups = [];
 
-    /**
-     * @var bool
-     */
-    public $isSubscriber = false;
-
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);

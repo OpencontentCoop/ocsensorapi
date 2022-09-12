@@ -11,6 +11,7 @@ use Opencontent\Sensor\Api\Exception\ForbiddenException;
 use Opencontent\Sensor\Api\Exception\UnexpectedException;
 use Opencontent\Sensor\Api\Values\Event;
 use Opencontent\Sensor\Api\Values\Post;
+use Opencontent\Sensor\Api\Values\Subscription;
 use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Core\UserService as UserServiceBase;
 use Opencontent\Sensor\Legacy\SearchService\SolrMapper;
@@ -482,6 +483,8 @@ class UserService extends UserServiceBase
                 $user->firstApproverLastAccessDateTime = Utils::getDateTimeFromTimestamp($itemStatus->attribute('last_read'));;
             }
         }
+
+        $user->isSubscriber = $this->repository->getSubscriptionService()->getUserSubscription($user, $post) instanceof Subscription;
 
         return $user;
     }

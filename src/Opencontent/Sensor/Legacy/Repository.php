@@ -367,4 +367,13 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
     {
         return $this->language;
     }
+
+    public function getSubscriptionService()
+    {
+        if ($this->subscriptionService === null) {
+            $this->subscriptionService = new SubscriptionService($this);
+        }
+
+        return $this->subscriptionService;
+    }
 }

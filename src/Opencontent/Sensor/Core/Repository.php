@@ -7,6 +7,7 @@ use Opencontent\Sensor\Api\PostStatusService;
 use Opencontent\Sensor\Api\Repository as RepositoryInterface;
 use Opencontent\Sensor\Api\Action\ActionDefinition;
 use Opencontent\Sensor\Api\Permission\PermissionDefinition;
+use Opencontent\Sensor\Api\SubscriptionService;
 use Opencontent\Sensor\Api\Values\Participant;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
@@ -125,6 +126,11 @@ abstract class Repository implements RepositoryInterface
      * @var \Opencontent\Sensor\Api\PostStatusService
      */
     protected $postStatusService;
+
+    /**
+     * @var \Opencontent\Sensor\Api\SubscriptionService
+     */
+    protected $subscriptionService;
 
     public function getCurrentUser()
     {

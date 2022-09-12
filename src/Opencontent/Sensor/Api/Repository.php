@@ -15,6 +15,7 @@ use Opencontent\Sensor\Api\UserService;
 use Opencontent\Sensor\Api\EventService;
 use Opencontent\Sensor\Api\ScenarioService;
 use Opencontent\Sensor\Api\Values\Settings;
+use Opencontent\Sensor\Api\SubscriptionService;
 use Psr\Log\LoggerInterface;
 
 interface Repository
@@ -139,4 +140,9 @@ interface Repository
      * @return PostStatusService
      */
     public function getPostStatusService();
+
+    /**
+     * @return SubscriptionService
+     */
+    public function getSubscriptionService();
 }

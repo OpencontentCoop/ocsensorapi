@@ -12,6 +12,6 @@ class CanSubscribe extends UserIs
 
     public function userHasPermission(User $user, Post $post)
     {
-        return !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED);
+        return $user->commentMode && !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED);
     }
 }

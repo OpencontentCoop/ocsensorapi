@@ -34,6 +34,7 @@ class UserSerializer extends AbstractSerializer
         if (get_class($item) === User::class){
             $user['first_name'] = $item->firstName;
             $user['last_name'] = $item->lastName;
+            $user['is_super_user'] = $item->isSuperUser;
         }
 
         return $user;

@@ -2558,6 +2558,7 @@ class SchemaBuilder
                     'type' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'User type']),
                     'groups' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'integer'], 'description' => 'User groups']),
                     'phone' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'User phone']),
+                    'is_super_user' => $this->buildSchemaProperty(['type' => 'boolean', 'readOnly' => true, 'description' => 'Is super user']),
                 ];
                 break;
             case 'NewUser':

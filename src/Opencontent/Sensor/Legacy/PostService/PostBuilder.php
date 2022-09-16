@@ -445,7 +445,7 @@ class PostBuilder
                     $attachment->apiUrl = 'api/sensor/file/'
                         . $attribute->attribute('id') . '-' . $attribute->attribute('version') . '-' . $attribute->attribute('language_code')
                         . '/' . base64_encode($file->attribute('filename'))
-                        . '/' . $file->attribute('original_filename');
+                        . '/' . urlencode($file->attribute('original_filename'));
 
                     $attachment->mimeType = $file->attribute('mime_type');
                     $attachment->size = $file->attribute('filesize');

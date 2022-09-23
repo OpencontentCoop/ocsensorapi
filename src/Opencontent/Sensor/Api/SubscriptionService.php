@@ -31,4 +31,6 @@ interface SubscriptionService
     public function getSubscriptionsByPost(Post $post);
 
     public function getSubscriptionsByUser(User $user);
+
+    public function countSubscriptionsByPost(Post $post);
 }

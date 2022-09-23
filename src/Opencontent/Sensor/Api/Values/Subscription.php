@@ -17,6 +17,11 @@ class Subscription extends Exportable
     public $createdAt;
 
     /**
+     * @var int
+     */
+    public $createdTimestamp;
+
+    /**
      * @var integer
      */
     public $userId;

@@ -382,7 +382,7 @@ class PostBuilder
                     . '/' . $attribute->attribute('id')
                     . '/' . $attribute->attribute('version')
                     . '/' . $file->attribute('filename')
-                    . '/file/' . $file->attribute('original_filename');
+                    . '/file/' . urlencode($file->attribute('original_filename'));
 
 
                 $image->original = $image->thumbnail = array(
@@ -440,7 +440,7 @@ class PostBuilder
                     if ($prefix == 'ocmultibinary'){
                         $attachment->downloadUrl .= '/' . $file->attribute('filename') . '/file';
                     }
-                    $attachment->downloadUrl .= '/' . $file->attribute('original_filename');
+                    $attachment->downloadUrl .= '/' . urlencode($file->attribute('original_filename'));
 
                     $attachment->apiUrl = 'api/sensor/file/'
                         . $attribute->attribute('id') . '-' . $attribute->attribute('version') . '-' . $attribute->attribute('language_code')

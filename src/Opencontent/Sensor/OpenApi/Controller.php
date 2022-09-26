@@ -1443,8 +1443,10 @@ class Controller
 
         if (isset($payload['images'])) {
             $imagePaths = [];
-            foreach ($payload['images'] as $image) {
-                if (!empty($image)) {
+            foreach ($payload['images'] as $index => $image) {
+                if ($image === '?'){
+                    unset($payload['images'][$index]);
+                }elseif (!empty($image)) {
                     $this->isValidUpload($image);
                 }
             }
@@ -1466,11 +1468,14 @@ class Controller
 
         if (isset($payload['files'])) {
             $filesPaths = [];
-            foreach ($payload['files'] as $file) {
-                if (!empty($file)) {
+            foreach ($payload['files'] as $index => $file) {
+                if ($file === '?'){
+                    unset($payload['files'][$index]);
+                }elseif (!empty($file)) {
                     $this->isValidUpload($file);
                 }
             }
+
             foreach ($payload['files'] as $file) {
                 if (!empty($file)) {
                     $filesPaths[] = $this->downloadBinary($file);

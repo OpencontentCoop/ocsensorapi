@@ -61,6 +61,15 @@ class Controller
             'type' => 'type',
         ];
     }
+    
+    private function cleanCommaSeperatedIntegers($csi)
+    {
+        $csi = explode(',', $csi);
+        $csi = array_map('trim', $csi);
+        $csi = array_map('intval', $csi);
+        
+        return implode(',', $csi);
+    }
 
     public function loadPosts($authorId = null)
     {
@@ -69,6 +78,11 @@ class Controller
         $offset = $this->getRequestParameter('offset');
         $cursor = $this->getRequestParameter('cursor');
         $authorFiscalCode = $this->getRequestParameter('authorFiscalCode');
+        $categories = $this->getRequestParameter('categories');
+        $areas = $this->getRequestParameter('areas');
+        $status = $this->getRequestParameter('status');
+        $type = $this->getRequestParameter('type');
+        $channel = $this->getRequestParameter('channel');
 
         $parameters = [];
 
@@ -107,6 +121,26 @@ class Controller
         $query = '';
         if ($q) {
             $query = 'q = "' . $q . '" and ';
+        }
+        if ($categories){
+            $query .= 'raw[submeta_category___id____si] in [' . $this->cleanCommaSeperatedIntegers($categories) . '] and ';
+            $parameters['categories'] = $categories;
+        }
+        if ($areas){
+            $query .= 'raw[submeta_area___id____si] in [' . $this->cleanCommaSeperatedIntegers($areas) . '] and ';
+            $parameters['areas'] = $areas;
+        }
+        if ($status){
+            $query .= 'raw[sensor_status_lk] = "' . $status . '" and ';
+            $parameters['status'] = $status;
+        }
+        if ($type){
+            $query .= 'raw[attr_type_s] = "' . $type . '" and ';
+            $parameters['type'] = $type;
+        }
+        if ($channel){
+            $query .= 'raw[attr_on_behalf_of_mode_s] = "' . $channel . '" and ';
+            $parameters['status'] = $channel;
         }
         if ($authorId){
             $query .= 'author_id = "' . (int)$authorId . '" ';

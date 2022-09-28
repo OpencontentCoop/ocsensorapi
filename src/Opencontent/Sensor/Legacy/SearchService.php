@@ -236,10 +236,9 @@ class SearchService extends BaseSearchService
         }
 
         $rawResults = @$solr->search(
-            $ezFindQuery['query'],
+            $ezFindQuery['_query'],
             $ezFindQuery
         );
-
         $searchExtra = null;
         if ($rawResults['SearchExtras'] instanceof \ezfSearchResultInfo) {
             if ($rawResults['SearchExtras']->attribute('hasError')) {

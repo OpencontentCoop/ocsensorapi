@@ -207,7 +207,7 @@ class SchemaBuilder
                         'description' => 'Returns a list of post',
                         'tags' => [self::$tags['posts']],
                         'parameters' => array_merge(
-                            $this->buildSearchParameters(['q', 'limit', 'offset', 'cursor', 'authorFiscalCode']),
+                            $this->buildSearchParameters(['q', 'limit', 'offset', 'cursor', 'authorFiscalCode', 'categories', 'areas', 'status', 'type', 'channel']),
                             $this->buildEmbedParameters(),
                             $this->buildSortParameters()
                         ),
@@ -1985,6 +1985,35 @@ class SchemaBuilder
                 'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true]),
             ]);
         }
+        if (in_array('categories', $keys)) {
+            $parameters[] = new OA\Parameter('categories', OA\Parameter::IN_QUERY, 'Filter by category id list', [
+                'schema' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'integer'], 'nullable' => true]),
+                'style' =>  'form',
+                'explode' =>  false,
+            ]);
+        }
+        if (in_array('areas', $keys)) {
+            $parameters[] = new OA\Parameter('areas', OA\Parameter::IN_QUERY, 'Filter by area id list', [
+                'schema' => $this->buildSchemaProperty(['type' => 'array', 'items' => ['type' => 'string'], 'nullable' => true]),
+                'style' =>  'form',
+                'explode' =>  false,
+            ]);
+        }
+        if (in_array('status', $keys)) {
+            $parameters[] = new OA\Parameter('status', OA\Parameter::IN_QUERY, 'Filter by status identifier', [
+                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true, 'enum' => $this->getStatusEnum()]),
+            ]);
+        }
+        if (in_array('type', $keys)) {
+            $parameters[] = new OA\Parameter('type', OA\Parameter::IN_QUERY, 'Filter by type identifier', [
+                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true, 'enum' => $this->getTypeEnum()]),
+            ]);
+        }
+        if (in_array('channel', $keys)) {
+            $parameters[] = new OA\Parameter('channel', OA\Parameter::IN_QUERY, 'Filter by channel', [
+                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true, 'enum' => $this->getChannelEnum()]),
+            ]);
+        }
         return $parameters;
     }
 
@@ -2193,13 +2222,9 @@ class SchemaBuilder
     {
         $schema = new OA\Schema();
 
-        $typeEnum = isset($this->postClassDataMap['type']) && $this->postClassDataMap['type']->attribute('data_type_string') == \eZSelectionType::DATA_TYPE_STRING ?
-            array_column($this->postClassDataMap['type']->content()['options'], 'name') :
-            [];
+        $typeEnum = $this->getTypeEnum();
 
-        $channelEnum = isset($this->postClassDataMap['on_behalf_of_mode']) && $this->postClassDataMap['on_behalf_of_mode']->attribute('data_type_string') == \eZSelectionType::DATA_TYPE_STRING ?
-            array_column($this->postClassDataMap['on_behalf_of_mode']->content()['options'], 'name') :
-            [];
+        $channelEnum = $this->getChannelEnum();
 
         switch ($schemaName) {
             case 'Address':
@@ -2362,7 +2387,7 @@ class SchemaBuilder
                     'description' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Description']),
                     'address' => $this->buildSchemaProperty(['ref' => '#/components/schemas/Address']),
                     'type' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Type', 'enum' => $typeEnum]),
-                    'status' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Status', 'enum' => ['pending', 'open', 'close']]),
+                    'status' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Status', 'enum' => $this->getStatusEnum()]),
                     'privacy_status' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Privacy status', 'enum' => ['public', 'private']]),
                     'moderation_status' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Moderation status', 'enum' => ['waiting', 'approved']]),
                     'author' => $this->buildSchemaProperty(['type' => 'integer', 'description' => 'Author']),
@@ -2800,7 +2825,7 @@ class SchemaBuilder
                             ]]),
                             'status' => $this->buildSchemaProperty(['type' => 'object', 'properties' => [
                                 'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Status label']),
-                                'identifier' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Status identifier', 'enum' => ['pending', 'open', 'close']]),
+                                'identifier' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Status identifier', 'enum' => $this->getStatusEnum()]),
                             ]]),
                             'subject' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Subject']),
                             'published_at' => $this->buildSchemaProperty(['type' => 'string', 'format' => 'date-time', 'description' => 'Publication date']),
@@ -2853,5 +2878,24 @@ class SchemaBuilder
         }
 
         return $link;
+    }
+
+    private function getStatusEnum()
+    {
+        return  ['pending', 'open', 'close']; //@todo
+    }
+
+    private function getTypeEnum()
+    {
+        return  isset($this->postClassDataMap['type']) && $this->postClassDataMap['type']->attribute('data_type_string') == \eZSelectionType::DATA_TYPE_STRING ?
+            array_column($this->postClassDataMap['type']->content()['options'], 'name') :
+            [];
+    }
+
+    private function getChannelEnum()
+    {
+        return isset($this->postClassDataMap['on_behalf_of_mode']) && $this->postClassDataMap['on_behalf_of_mode']->attribute('data_type_string') == \eZSelectionType::DATA_TYPE_STRING ?
+            array_column($this->postClassDataMap['on_behalf_of_mode']->content()['options'], 'name') :
+            [];
     }
 }

@@ -28,7 +28,23 @@ class SubscriptionService extends BaseSubscriptionService
 
     public function getSubscriptionsByPost(Post $post)
     {
-        return [];
+        $data = [];
+        $subscriptions = SensorSubscriptionPersistentObject::fetchByPost($post->id);
+        foreach ($subscriptions as $subscriptionStorage){
+            $subscription = new Subscription();
+            $subscription->id = (int)$subscriptionStorage->attribute('id');
+            $subscription->postId = (int)$subscriptionStorage->attribute('post_id');
+            $subscription->userId = (int)$subscriptionStorage->attribute('user_id');
+            $subscription->createdAt = Utils::getDateTimeFromTimestamp($subscriptionStorage->attribute('created_at'));
+            $subscription->createdTimestamp = (int)$subscriptionStorage->attribute('created_at');
+            $userObject = \eZContentObject::fetch((int)$subscriptionStorage->attribute('user_id'));
+            if ($userObject instanceof \eZContentObject) {
+                $subscription->userName = $userObject->attribute('name');
+                $data[] = $subscription;
+            }
+        }
+
+        return $data;
     }
 
     public function countSubscriptionsByPost(Post $post)

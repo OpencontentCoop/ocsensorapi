@@ -103,9 +103,10 @@ interface PostService
     /**
      * @param Post $post
      * @param string $status
+     * @param string $postStatusLabel
      * @throw \Exception
      */
-    public function setPostWorkflowStatus(Post $post, $status);
+    public function setPostWorkflowStatus(Post $post, $status, $postStatusLabel = false);
 
     /**
      * @param Post $post

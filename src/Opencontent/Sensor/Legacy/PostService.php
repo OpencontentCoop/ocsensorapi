@@ -666,9 +666,12 @@ class PostService extends PostServiceBase
         }
     }
 
-    public function setPostWorkflowStatus(Post $post, $status)
+    public function setPostWorkflowStatus(Post $post, $status, $postStatusLabel = false)
     {
         $states = $this->repository->getSensorPostStates('sensor');
+        if ($postStatusLabel && isset($states[$postStatusLabel])){
+            $postStatus = $states[$postStatusLabel];
+        }
         $collaborationItem = $this->getCollaborationItem($post);
 
         $timestamp = time();
@@ -678,18 +681,18 @@ class PostService extends PostServiceBase
         $collaborationItem->setAttribute(self::COLLABORATION_FIELD_LAST_CHANGE, $timestamp);
 
         if ($status == Post\WorkflowStatus::READ || $status == Post\WorkflowStatus::ASSIGNED) {
-            $this->setPostStatus($post, $states['sensor.open']);
+            $this->setPostStatus($post, $postStatus ? $postStatus : $states['sensor.open']);
         } elseif ($status == Post\WorkflowStatus::CLOSED) {
             $collaborationItem->setAttribute('status', eZCollaborationItem::STATUS_INACTIVE);
             $this->repository->getParticipantService()->deactivatePostParticipants($post);
-            $this->setPostStatus($post, $states['sensor.close']);
+            $this->setPostStatus($post, $postStatus ? $postStatus : $states['sensor.close']);
         } elseif ($status == Post\WorkflowStatus::WAITING) {
             $collaborationItem->setAttribute('status', eZCollaborationItem::STATUS_ACTIVE);
             $this->repository->getParticipantService()->activatePostParticipants($post);
         } elseif ($status == Post\WorkflowStatus::REOPENED) {
             $collaborationItem->setAttribute('status', eZCollaborationItem::STATUS_ACTIVE);
             $this->repository->getParticipantService()->activatePostParticipants($post);
-            $this->setPostStatus($post, $states['sensor.pending']);
+            $this->setPostStatus($post, $postStatus ? $postStatus : $states['sensor.pending']);
         }
         $collaborationItem->sync();
 

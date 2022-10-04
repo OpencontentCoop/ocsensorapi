@@ -83,6 +83,10 @@ class Controller
         $status = $this->getRequestParameter('status');
         $type = $this->getRequestParameter('type');
         $channel = $this->getRequestParameter('channel');
+        $publishedFrom = $this->getRequestParameter('publishedFrom');
+        $publishedTo = $this->getRequestParameter('publishedTo');
+        $modifiedFrom = $this->getRequestParameter('modifiedFrom');
+        $$modifiedTo = $this->getRequestParameter('modifiedTo');
 
         $parameters = [];
 
@@ -121,6 +125,7 @@ class Controller
         $query = '';
         if ($q) {
             $query = 'q = "' . $q . '" and ';
+            $parameters['q'] = $q;
         }
         if ($categories){
             $query .= 'raw[submeta_category___id____si] in [' . $this->cleanCommaSeperatedIntegers($categories) . '] and ';
@@ -142,6 +147,31 @@ class Controller
             $query .= 'raw[attr_on_behalf_of_mode_s] = "' . $channel . '" and ';
             $parameters['status'] = $channel;
         }
+        if ($publishedFrom || $publishedTo){
+            if (!$publishedFrom){
+                $publishedFrom = '*';
+            }
+            if (!$publishedTo){
+                $publishedTo = '*';
+            }
+            $query .= "published range  [$publishedFrom, $publishedTo] and ";
+            $parameters['publishedFrom'] = $publishedFrom;
+            $parameters['publishedTo'] = $publishedTo;
+        }
+
+        if ($modifiedFrom || $modifiedTo){
+            if (!$modifiedFrom){
+                $modifiedFrom = '*';
+            }
+            if (!$modifiedTo){
+                $modifiedTo = '*';
+            }
+            $query .= "modified range  [$modifiedFrom, $modifiedTo] and ";
+            $parameters['modifiedFrom'] = $modifiedFrom;
+            $parameters['modifiedTo'] = $modifiedTo;
+        }
+
+
         if ($authorId){
             $query .= 'author_id = "' . (int)$authorId . '" ';
         }
@@ -437,9 +467,30 @@ class Controller
     public function addAttachmentsToPostId()
     {
         $post = $this->loadPost();
+
+        $files = $this->restController->getPayload()['files'];
+        foreach ($files as $index => $file) {
+            if ($files === '?'){
+                unset($files[$index]);
+            }elseif (!empty($file)) {
+                if (filter_var($file['file'], FILTER_VALIDATE_URL)) {
+                    $context = null;
+                    $apiRequestHttpStreamContext = (array)\eZINI::instance('ocsensor.ini')->variable('SensorConfig', 'ApiRequestHttpStreamContext');
+                    if (!empty($apiRequestHttpStreamContext)) {
+                        $httpOpts = [];
+                        foreach ($apiRequestHttpStreamContext as $key => $value){
+                            $httpOpts[$key] = $value;
+                        }
+                        $context = stream_context_create(['http' => $httpOpts]);
+                    }
+                    $files[$index]['file'] = base64_encode(file_get_contents($file['file'], false, $context));
+                }
+            }
+        }
+
         $action = new Action();
         $action->identifier = 'add_attachment';
-        $action->setParameter('files', $this->restController->getPayload()['files']);
+        $action->setParameter('files', $files);
         $this->repository->getActionService()->runAction($action, $post);
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
@@ -1636,6 +1687,7 @@ class Controller
                 $this->restController->getRequest()->variables,
                 $this->restController->getRequest()->get
             );
+
             foreach ($parameters as $key => $value) {
                 if (isset($convertedQuery[$key])) {
                     $data[$key] = is_array($convertedQuery[$key]) ? $convertedQuery[$key][0] : $convertedQuery[$key];

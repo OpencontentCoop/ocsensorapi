@@ -207,7 +207,7 @@ class SchemaBuilder
                         'description' => 'Returns a list of post',
                         'tags' => [self::$tags['posts']],
                         'parameters' => array_merge(
-                            $this->buildSearchParameters(['q', 'limit', 'offset', 'cursor', 'authorFiscalCode', 'categories', 'areas', 'status', 'type', 'channel']),
+                            $this->buildSearchParameters(['q', 'limit', 'offset', 'cursor', 'authorFiscalCode', 'categories', 'areas', 'status', 'type', 'channel', 'published', 'modified']),
                             $this->buildEmbedParameters(),
                             $this->buildSortParameters()
                         ),
@@ -2012,6 +2012,22 @@ class SchemaBuilder
         if (in_array('channel', $keys)) {
             $parameters[] = new OA\Parameter('channel', OA\Parameter::IN_QUERY, 'Filter by channel', [
                 'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true, 'enum' => $this->getChannelEnum()]),
+            ]);
+        }
+        if (in_array('published', $keys)) {
+            $parameters[] = new OA\Parameter('publishedFrom', OA\Parameter::IN_QUERY, 'Filter from publication date (full-date notation as defined by RFC 3339, section 5.6)', [
+                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true, 'format' => 'date-time', 'example' => '2017-12-05']),
+            ]);
+            $parameters[] = new OA\Parameter('publishedTo', OA\Parameter::IN_QUERY, 'Filter to publication date (full-date notation as defined by RFC 3339, section 5.6)', [
+                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true, 'format' => 'date-time']),
+            ]);
+        }
+        if (in_array('modified', $keys)) {
+            $parameters[] = new OA\Parameter('modifiedFrom', OA\Parameter::IN_QUERY, 'Filter from modification date (full-date notation as defined by RFC 3339, section 5.6)', [
+                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true, 'format' => 'date-time']),
+            ]);
+            $parameters[] = new OA\Parameter('modifiedTo', OA\Parameter::IN_QUERY, 'Filter to modification date (full-date notation as defined by RFC 3339, section 5.6)', [
+                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true, 'format' => 'date-time']),
             ]);
         }
         return $parameters;

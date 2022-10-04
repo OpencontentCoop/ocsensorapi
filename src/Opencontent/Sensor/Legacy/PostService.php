@@ -334,6 +334,19 @@ class PostService extends PostServiceBase
             }
         }
 
+        if (
+            $this->repository->getSensorSettings()->get('HideUserNames')
+            && $this->repository->getCurrentUser()->type == 'user'
+            && !$currentUserIsSuperAdmin
+        ){
+            $cloneAuthor = clone $post->author;
+            $cloneAuthor->name = '';
+            $cloneAuthor->firstName = '';
+            $cloneAuthor->lastName = '';
+            $cloneAuthor->fiscalCode = '';
+            $post->author = $cloneAuthor;
+        }
+
         if (!$currentUserIsSuperAdmin){
             $post->audits = new AuditCollection();
         }

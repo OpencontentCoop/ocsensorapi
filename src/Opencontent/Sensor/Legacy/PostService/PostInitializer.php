@@ -4,6 +4,7 @@ namespace Opencontent\Sensor\Legacy\PostService;
 
 use Opencontent\Sensor\Api\ScenarioService;
 use Opencontent\Sensor\Api\Values\Event;
+use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\ParticipantRole;
 use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
 use Opencontent\Sensor\Api\Values\Scenario\SearchScenarioParameters;
@@ -82,6 +83,15 @@ class PostInitializer
         $this->setPrivacy($post);
 
         $this->repository->getPostService()->setPostWorkflowStatus($post, WorkflowStatus::WAITING);
+
+        if (\eZHTTPTool::instance()->hasSessionVariable('SIRACUserLoggedIn') || \eZHTTPTool::instance()->hasSessionVariable('CASUserLoggedIn')){
+            $auditStruct = new AuditStruct();
+            $auditStruct->createdDateTime = new \DateTime();
+            $auditStruct->creator = $post->author;
+            $auditStruct->post = $post;
+            $auditStruct->text = "Utente autenticato con sistema di autenticazione esterno";
+            $this->repository->getMessageService()->createAudit($auditStruct);
+        }
 
         $roles = $this->repository->getParticipantService()->loadParticipantRoleCollection();
 

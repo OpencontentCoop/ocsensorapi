@@ -26,11 +26,11 @@ class PostStatusService extends BasePostStatusService
                 $status->name = $state->translationByLocale($this->repository->getCurrentLanguage())->attribute('name');
                 $status->label = 'info';
                 if ($state->attribute('identifier') == 'pending') {
-                    $status->label = 'danger';
+                    $status->label = 'default';
                 } elseif ($state->attribute('identifier') == 'open') {
                     $status->label = 'warning';
                 } elseif ($state->attribute('identifier') == 'close') {
-                    $status->label = 'success';
+                    $status->label = 'danger';
                 }
                 $this->statuses[] = $status;
             }

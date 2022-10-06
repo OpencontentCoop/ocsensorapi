@@ -36,7 +36,7 @@ class ModerateCommentAction extends ActionDefinition
         $commentId = $action->getParameterValue('comment_id');
         $moderation = 'approve';
         if ($action->hasParameter('moderation')){
-            $moderation = $action->getParameterValue('moderation');
+            $moderation = trim($action->getParameterValue('moderation'));
         }
         if (!in_array($moderation, ['approve', 'reject'])){
             throw new InvalidArgumentException("Moderation $moderation unhandled");
@@ -50,8 +50,7 @@ class ModerateCommentAction extends ActionDefinition
                 $commentStruct->creator = $message->creator;
                 $commentStruct->post = $post;
                 $commentStruct->needModeration = false;
-                $commentStruct->isRejected = $moderation == 'reject';
-
+                $commentStruct->isRejected = intval($moderation == 'reject');
                 $repository->getMessageService()->updateComment($commentStruct);
 
                 $auditStruct = new AuditStruct();

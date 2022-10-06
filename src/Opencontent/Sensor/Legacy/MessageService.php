@@ -374,6 +374,7 @@ class MessageService extends MessageServiceBase
 
             if ($struct instanceof Message\CommentStruct){
                 $needUpdate = $needUpdate || (int)$struct->needModeration != $simpleMessage->attribute('data_int1');
+                $needUpdate = $needUpdate || (int)$struct->isRejected != $simpleMessage->attribute('data_int2');
             }
 
             if ($simpleMessage instanceof eZCollaborationSimpleMessage

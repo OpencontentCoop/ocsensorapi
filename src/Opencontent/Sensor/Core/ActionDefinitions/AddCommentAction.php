@@ -39,7 +39,7 @@ class AddCommentAction extends ActionDefinition
         $commentStruct->creator = $repository->getCurrentUser();
         $commentStruct->post = $post;
         $commentStruct->text = $text;
-        if ($repository->getCurrentUser()->moderationMode){
+        if ($repository->getCurrentUser()->moderationMod || $repository->isModerationEnabled()){
             $commentStruct->needModeration = true;
         }
 

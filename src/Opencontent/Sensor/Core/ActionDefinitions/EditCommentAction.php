@@ -41,7 +41,7 @@ class EditCommentAction extends ActionDefinition
         $commentStruct->text = $action->getParameterValue('text');
         $commentStruct->creator = $user;
         $commentStruct->post = $post;
-        if ($repository->getCurrentUser()->moderationMode){
+        if ($repository->getCurrentUser()->moderationMode || $repository->isModerationEnabled()){
             $commentStruct->needModeration = true;
         }
 

@@ -32,11 +32,11 @@ class SuperUserPostFixListener extends AbstractListener
                 if ($lastPrivateNote instanceof PrivateMessage){
                     $responseStruct = new ResponseStruct();
                     $responseStruct->createdDateTime = new \DateTime();
-                    $responseStruct->creator = $repository->getCurrentUser();
+                    $responseStruct->creator = $this->repository->getCurrentUser();
                     $responseStruct->post = $post;
                     $responseStruct->text = $lastPrivateNote->text;
 
-                    $repository->getMessageService()->createResponse($responseStruct);
+                    $this->repository->getMessageService()->createResponse($responseStruct);
                 }
 
                 $auditMessage = 'Segnalazione inserita da un utente appartenente a un gruppo di utenti e chiusa automaticamente in base alla configurazione del sistema';

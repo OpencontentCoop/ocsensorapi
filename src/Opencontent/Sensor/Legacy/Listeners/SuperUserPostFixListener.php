@@ -24,7 +24,7 @@ class SuperUserPostFixListener extends AbstractListener
     {
         if ($param instanceof SensorEvent && in_array($param->identifier, ['on_fix'])) {
             $post = $param->post;
-            if ($post->author->isSuperUser || $post->reporter->isSuperUser){
+            if ($post->author->isSuperUser){
                 $this->repository->getLogger()->info('Auto-closing a fixed post created by a super user');
 
                 $hasResponse = $post->responses->count() > 0;

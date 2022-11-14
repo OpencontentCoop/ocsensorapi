@@ -167,6 +167,43 @@ class MessageService extends MessageServiceBase
         }
     }
 
+    public function getCommentRejectionReasonCodeFromIdentifier($identifier)
+    {
+        switch ($identifier){
+            case 'reject_privacy':
+                return 2;
+            case 'reject_terms':
+                return 3;
+            case 'reject_other':
+                return 100;
+        }
+
+        return 1;
+    }
+
+    public function getCommentRejectionReasonIdentifierFromCode($code)
+    {
+        switch ($code){
+            case 2:
+                return 'reject_privacy';
+            case 3:
+                return 'reject_terms';
+            case 100:
+                return 'reject_other';
+        }
+
+        return null;
+    }
+
+    public function getCommentRejectionReasonIdentifierList()
+    {
+        return [
+            'reject_privacy',
+            'reject_terms',
+            'reject_other',
+        ];
+    }
+
     /**
      * @param Post $post
      * @param eZCollaborationSimpleMessage $simpleMessage
@@ -183,7 +220,11 @@ class MessageService extends MessageServiceBase
                 $message = new Message\Comment();
                 $message->text = $simpleMessage->attribute('data_text1');
                 $message->needModeration = $simpleMessage->attribute('data_int1') == 1;
-                $message->isRejected = $simpleMessage->attribute('data_int2') == 1;
+                $dataInt2 = intval($simpleMessage->attribute('data_int2'));
+                $message->isRejected = $dataInt2 > 0;
+                if ($message->isRejected){
+                    $message->rejectionReason = $this->getCommentRejectionReasonIdentifierFromCode($dataInt2);
+                }
 
             } elseif ($firstLink->attribute('message_type') == self::RESPONSE) {
                 $message = new Message\Response();

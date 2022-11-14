@@ -107,4 +107,9 @@ interface MessageService
 
     public function createAudit(Message\AuditStruct $struct);
 
+    public function getCommentRejectionReasonCodeFromIdentifier($identifier);
+
+    public function getCommentRejectionReasonIdentifierFromCode($code);
+
+    public function getCommentRejectionReasonIdentifierList();
 }

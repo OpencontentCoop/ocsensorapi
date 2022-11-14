@@ -31,6 +31,8 @@ class PostStatusService extends BasePostStatusService
                     $status->label = 'warning';
                 } elseif ($state->attribute('identifier') == 'close') {
                     $status->label = 'danger';
+                } elseif ($state->attribute('identifier') == 'success') {
+                    $status->label = 'success';
                 }
                 $this->statuses[] = $status;
             }

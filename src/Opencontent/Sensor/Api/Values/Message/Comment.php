@@ -19,4 +19,6 @@ class Comment extends Message
      * @var bool
      */
     public $isRejected = false;
+
+    public $rejectionReason;
 }

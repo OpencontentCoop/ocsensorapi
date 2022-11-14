@@ -17,7 +17,7 @@ class ModerateCommentAction extends ActionDefinition
     public function __construct()
     {
         $this->identifier = 'moderate_comment';
-        $this->permissionDefinitionIdentifiers = array('can_read', 'can_moderate_comment');
+        $this->permissionDefinitionIdentifiers = ['can_read', 'can_moderate_comment'];
         $this->inputName = 'ModerateComment';
 
         $parameter = new ActionDefinitionParameter();
@@ -35,14 +35,20 @@ class ModerateCommentAction extends ActionDefinition
     {
         $commentId = $action->getParameterValue('comment_id');
         $moderation = 'approve';
-        if ($action->hasParameter('moderation')){
+        if ($action->hasParameter('moderation')) {
             $moderation = trim($action->getParameterValue('moderation'));
         }
-        if (!in_array($moderation, ['approve', 'reject'])){
+        $availableModerationIdentifierList = array_merge(
+            ['approve', 'reject'],
+            $repository->getMessageService()->getCommentRejectionReasonIdentifierList()
+        );
+        if (!in_array($moderation, $availableModerationIdentifierList)) {
             throw new InvalidArgumentException("Moderation $moderation unhandled");
         }
-        foreach ($post->comments->messages as $message){
-            if ($message->id == $commentId){
+        foreach ($post->comments->messages as $message) {
+            if ($message->id == $commentId) {
+                $isRejected = $moderation === 'approve' ?
+                    0 : $repository->getMessageService()->getCommentRejectionReasonCodeFromIdentifier($moderation);
 
                 $commentStruct = new CommentStruct();
                 $commentStruct->id = $message->id;
@@ -50,7 +56,7 @@ class ModerateCommentAction extends ActionDefinition
                 $commentStruct->creator = $message->creator;
                 $commentStruct->post = $post;
                 $commentStruct->needModeration = false;
-                $commentStruct->isRejected = intval($moderation == 'reject');
+                $commentStruct->isRejected = $isRejected;
                 $repository->getMessageService()->updateComment($commentStruct);
 
                 $auditStruct = new AuditStruct();
@@ -61,7 +67,7 @@ class ModerateCommentAction extends ActionDefinition
                 $repository->getMessageService()->createAudit($auditStruct);
 
                 $post = $repository->getPostService()->refreshPost($post);
-                $this->fireEvent($repository, $post, $user, array('text' => $message->text), 'on_add_comment');
+                $this->fireEvent($repository, $post, $user, ['text' => $message->text], 'on_add_comment');
             }
         }
     }

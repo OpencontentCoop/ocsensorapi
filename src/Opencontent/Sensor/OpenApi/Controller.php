@@ -1437,7 +1437,12 @@ class Controller
 
     private function loadPost()
     {
-        return $this->repository->getPostService()->loadPost($this->restController->postId);
+        $id = $this->restController->postId;
+        if (is_numeric($id)) {
+            return $this->repository->getPostService()->loadPost($id);
+        }
+
+        return $this->repository->getPostService()->loadPostByUuid($id);
     }
 
     /**

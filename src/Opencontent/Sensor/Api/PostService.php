@@ -34,14 +34,6 @@ interface PostService
     public function loadPosts($query, $limit, $offset);
 
     /**
-     * @param $postInternalId
-     *
-     * @return Post
-     * @throw \Exception
-     */
-    public function loadPostByInternalId($postInternalId);
-
-    /**
      * @param PostCreateStruct $post
      *
      * @return Post

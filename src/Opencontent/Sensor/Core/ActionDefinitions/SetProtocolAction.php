@@ -30,21 +30,14 @@ class SetProtocolAction extends ActionDefinition
         $parameter->isRequired = true;
         $parameter->type = 'string';
         $this->parameterDefinitions[] = $parameter;
-
-        $parameter = new ActionDefinitionParameter();
-        $parameter->identifier = 'protocol3';
-        $parameter->isRequired = true;
-        $parameter->type = 'string';
-        $this->parameterDefinitions[] = $parameter;
     }
 
     public function run(Repository $repository, Action $action, Post $post, User $user)
     {
         $protocol1 = $action->getParameterValue('protocol1');
         $protocol2 = $action->getParameterValue('protocol2');
-        $protocol3 = $action->getParameterValue('protocol3');
 
-        $protocols = [$protocol1, $protocol2, $protocol3,];
+        $protocols = [$protocol1, $protocol2,];
         $repository->getPostService()->setPostProtocols($post, $protocols);
 
         $auditStruct = new AuditStruct();

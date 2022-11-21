@@ -20,14 +20,17 @@ class CanClose extends UserIs
 
     public function userHasPermission(User $user, Post $post)
     {
+        $isApprover = $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post);
         if (!empty($this->restrictResponders)){
-            return !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
-                && $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post)
+            return $isApprover
+                //&& !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
+                && ($post->status->identifier !== 'deployed' || $isApprover)
                 && in_array($user->id, $this->restrictResponders);
         }
 
-        return $this->userIs(ParticipantRole::ROLE_APPROVER, $user, $post)
-            && !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
+        return $isApprover
+            //&& !$post->workflowStatus->is(Post\WorkflowStatus::CLOSED)
+            && ($post->status->identifier !== 'deployed' || $isApprover)
             && (!$post->workflowStatus->is(Post\WorkflowStatus::ASSIGNED) || $this->participantIs(ParticipantRole::ROLE_OWNER, $user, $post));
     }
 }

@@ -20,6 +20,11 @@ class Post extends Exportable
     public $id;
 
     /**
+     * @var int
+     */
+    public $version;
+
+    /**
      * @var string
      */
     public $uuid;

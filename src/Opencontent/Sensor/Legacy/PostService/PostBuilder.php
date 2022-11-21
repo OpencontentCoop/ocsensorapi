@@ -52,6 +52,7 @@ class PostBuilder
         $post = new Post();
         $post->id = (int)$this->contentObject->attribute('id');
         $post->uuid = $this->contentObject->attribute('remote_id');
+        $post->version = (int)$this->contentObject->attribute('current_version');
         $post->internalId = (int)$this->collaborationItem->attribute('id');
 
         $post->published = Utils::getDateTimeFromTimestamp(

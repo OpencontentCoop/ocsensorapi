@@ -214,6 +214,11 @@ class Post extends Exportable
      */
     public $protocols;
 
+    /**
+     * @var Post\DeployInfo
+     */
+    public $deployInfo;
+
     public function jsonSerialize()
     {
         $objectVars = get_object_vars($this);

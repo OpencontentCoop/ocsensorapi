@@ -111,6 +111,8 @@ class PostBuilder
 
         $this->checkApproversConsistency($post);
 
+        $post->deployInfo = $this->loadPostDeployInfo();
+
         return $post;
     }
 
@@ -597,5 +599,31 @@ class PostBuilder
                 }
             }
         }
+    }
+
+    protected function loadPostDeployInfo()
+    {
+        $deployInfo = new Post\DeployInfo();
+        if (isset($this->contentObjectDataMap['start_date'])
+            && $this->contentObjectDataMap['start_date']->hasContent()
+        ) {
+            $deployInfo->validFrom = Utils::getDateTimeFromTimestamp(
+                $this->contentObjectDataMap['start_date']->toString()
+            );
+        }
+        if (isset($this->contentObjectDataMap['end_date'])
+            && $this->contentObjectDataMap['end_date']->hasContent()
+        ) {
+            $deployInfo->validTo = Utils::getDateTimeFromTimestamp(
+                $this->contentObjectDataMap['end_date']->toString()
+            );
+        }
+        if (isset($this->contentObjectDataMap['document_number'])
+            && $this->contentObjectDataMap['document_number']->hasContent()
+        ) {
+            $deployInfo->documentNumber = $this->contentObjectDataMap['document_number']->toString();
+        }
+
+        return $deployInfo;
     }
 }

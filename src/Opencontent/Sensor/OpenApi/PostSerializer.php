@@ -43,6 +43,7 @@ class PostSerializer extends AbstractSerializer
             'is_comments_allowed' => $post->commentsIsOpen,
             'address_meta_info' => $post->meta,
             'channel' => $post->channel instanceof Post\Channel ? $post->channel->name : null,
+            'deploy_info' => $post->deployInfo,
         ]);
     }
 }

@@ -125,6 +125,11 @@ abstract class Repository extends CoreRepository implements ListenerProviderInte
     abstract public function getFaqRootNode();
 
     /**
+     * @return bool
+     */
+    abstract public function isCurrentUserExternal();
+
+    /**
      * @return TreeNodeItem
      */
     public function getAreasTree()

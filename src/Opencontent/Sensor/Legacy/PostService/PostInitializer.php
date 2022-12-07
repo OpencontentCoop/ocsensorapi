@@ -84,7 +84,7 @@ class PostInitializer
 
         $this->repository->getPostService()->setPostWorkflowStatus($post, WorkflowStatus::WAITING);
 
-        if (\eZHTTPTool::instance()->hasSessionVariable('SIRACUserLoggedIn') || \eZHTTPTool::instance()->hasSessionVariable('CASUserLoggedIn')){
+        if ($this->repository->isCurrentUserExternal()){
             $auditStruct = new AuditStruct();
             $auditStruct->createdDateTime = new \DateTime();
             $auditStruct->creator = $post->author;

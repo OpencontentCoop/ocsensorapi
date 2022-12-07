@@ -1439,10 +1439,17 @@ class Controller
     {
         $id = $this->restController->postId;
         if (is_numeric($id)) {
-            return $this->repository->getPostService()->loadPost($id);
+            $post = $this->repository->getPostService()->loadPost($id);
+        }else {
+            $post = $this->repository->getPostService()->loadPostByUuid($id);
         }
 
-        return $this->repository->getPostService()->loadPostByUuid($id);
+        $this->repository->getActionService()->runAction(
+            new Action('read'),
+            $post
+        );
+
+        return $post;
     }
 
     /**

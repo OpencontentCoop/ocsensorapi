@@ -135,9 +135,6 @@ class MailNotificationListener extends AbstractListener
                 if ($tpl->hasVariable('references')) {
                     $mailParameters['references'] = $tpl->variable('references');
                 }
-                if ($tpl->hasVariable('reply_to')) {
-                    $mailParameters['reply_to'] = $tpl->variable('reply_to');
-                }
                 if ($tpl->hasVariable('from')) {
                     $mailParameters['from'] = $tpl->variable('from');
                 }
@@ -146,6 +143,12 @@ class MailNotificationListener extends AbstractListener
                 } else {
                     $mailParameters['content_type'] = 'text/html';
                 }
+//                if ($tpl->hasVariable('message_id')) {
+//                    $mailParameters['message_id'] = $tpl->variable('message_id');
+//                }
+//                if ($tpl->hasVariable('reply_to')) {
+//                    $mailParameters['reply_to'] = $tpl->variable('reply_to');
+//                }
 
                 //$mailParameters['sensor_post_id'] = $event->post->id;
                 return [
@@ -294,8 +297,9 @@ class MailNotificationListener extends AbstractListener
 
 //        if (isset($parameters['sensor_post_id']))
 //            $mail->addExtraHeader('X-Sensor-Post-ID', $parameters['sensor_post_id']);
-        if (isset($parameters['message_id']))
-            $mail->addExtraHeader('Message-ID', $parameters['message_id']);
+        if (isset($parameters['message_id'])) {
+            $mail->setMessageID($parameters['message_id']);
+        }
         if (isset($parameters['references']))
             $mail->addExtraHeader('References', $parameters['references']);
         if (isset($parameters['reply_to']))

@@ -101,9 +101,6 @@ class ReminderNotificationListener extends AbstractListener
                                 if ($tpl->hasVariable('references')) {
                                     $mailParameters['references'] = $tpl->variable('references');
                                 }
-                                if ($tpl->hasVariable('reply_to')) {
-                                    $mailParameters['reply_to'] = $tpl->variable('reply_to');
-                                }
                                 if ($tpl->hasVariable('from')) {
                                     $mailParameters['from'] = $tpl->variable('from');
                                 }
@@ -112,6 +109,12 @@ class ReminderNotificationListener extends AbstractListener
                                 } else {
                                     $mailParameters['content_type'] = 'text/html';
                                 }
+//                                if ($tpl->hasVariable('reply_to')) {
+//                                    $mailParameters['reply_to'] = $tpl->variable('reply_to');
+//                                }
+//                                if ($tpl->hasVariable('message_id')) {
+//                                    $mailParameters['message_id'] = $tpl->variable('message_id');
+//                                }
 
                                 if ($this->sendMail($user->email, $mailSubject, $mailBody, $mailParameters)) {
                                     \eZPreferences::setValue(self::LAST_NOTIFICATION_TIMESTAMP, $now, $user->id);
@@ -151,8 +154,9 @@ class ReminderNotificationListener extends AbstractListener
         $mail->setSubject($subject);
         $mail->setBody($body);
 
-        if (isset($parameters['message_id']))
-            $mail->addExtraHeader('Message-ID', $parameters['message_id']);
+        if (isset($parameters['message_id'])) {
+            $mail->setMessageID($parameters['message_id']);
+        }
         if (isset($parameters['references']))
             $mail->addExtraHeader('References', $parameters['references']);
         if (isset($parameters['reply_to']))

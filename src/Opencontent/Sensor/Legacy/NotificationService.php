@@ -93,12 +93,15 @@ class NotificationService extends \Opencontent\Sensor\Core\NotificationService
         foreach ($notificationTypes as $type) {
             $searchNotificationRules[] = $notificationPrefix . $type->identifier;
         }
-        /** @var eZCollaborationNotificationRule[] $subscriptions */
-        $subscriptions = (array)\eZPersistentObject::fetchObjectList(
-            eZCollaborationNotificationRule::definition(),
-            null,
-            array('user_id' => $user->id, 'collab_identifier' => array($searchNotificationRules))
-        );
+        $subscriptions = [];
+        if (count($searchNotificationRules)) {
+            /** @var eZCollaborationNotificationRule[] $subscriptions */
+            $subscriptions = (array)\eZPersistentObject::fetchObjectList(
+                eZCollaborationNotificationRule::definition(),
+                null,
+                ['user_id' => $user->id, 'collab_identifier' => [$searchNotificationRules]]
+            );
+        }
 
         $result = array();
         foreach ($subscriptions as $subscription) {
@@ -116,12 +119,15 @@ class NotificationService extends \Opencontent\Sensor\Core\NotificationService
         $notificationPrefix = $this->repository->getSensorCollaborationHandlerTypeString() . '_';
         $searchNotificationRules = [$notificationPrefix . $notification->identifier];
 
-        /** @var eZCollaborationNotificationRule[] $subscriptions */
-        $subscriptions = (array)\eZPersistentObject::fetchObjectList(
-            eZCollaborationNotificationRule::definition(),
-            null,
-            array('collab_identifier' => array($searchNotificationRules))
-        );
+        $subscriptions = [];
+        if (count($searchNotificationRules)) {
+            /** @var eZCollaborationNotificationRule[] $subscriptions */
+            $subscriptions = (array)\eZPersistentObject::fetchObjectList(
+                eZCollaborationNotificationRule::definition(),
+                null,
+                ['collab_identifier' => [$searchNotificationRules]]
+            );
+        }
 
         $result = array();
         foreach ($subscriptions as $subscription) {

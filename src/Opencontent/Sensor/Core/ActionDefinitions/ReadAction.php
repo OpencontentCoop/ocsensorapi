@@ -17,6 +17,10 @@ class ReadAction extends ActionDefinition
 
     public function run(Repository $repository, Action $action, Post $post, User $user)
     {
+        if (\OpenPaSensorRepository::isReadOnlyModeEnabled()){
+            return null;
+        }
+
         if ($post->approvers->getUserById($user->id) instanceof User
             && ($post->workflowStatus->is(Post\WorkflowStatus::WAITING)
                 || $post->workflowStatus->is(Post\WorkflowStatus::REOPENED))) {

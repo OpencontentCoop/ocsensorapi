@@ -8,6 +8,8 @@ use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 use Opencontent\Sensor\Core\PermissionDefinitions\SettingPermissionInterface;
 use Opencontent\Sensor\Core\PermissionService as BasePermissionService;
+use OpenPaSensorRepository;
+use Opencontent\Sensor\Core\PermissionDefinitions\ReadOnlyAllowedInterface;
 
 class PermissionService extends BasePermissionService
 {
@@ -19,8 +21,14 @@ class PermissionService extends BasePermissionService
         foreach ($this->permissionDefinitions as $permissionDefinition) {
             $permission = new Permission();
             $permission->identifier = $permissionDefinition->identifier;
-            $permission->grant = self::isSuperAdmin($user) && !$permissionDefinition instanceof SettingPermissionInterface ? true :
-                (bool)$permissionDefinition->userHasPermission($user, $post);
+
+            if (OpenPaSensorRepository::isReadOnlyModeEnabled() && !$permissionDefinition instanceof ReadOnlyAllowedInterface){
+                $permission->grant = false;
+            }elseif (self::isSuperAdmin($user) && !$permissionDefinition instanceof SettingPermissionInterface) {
+                $permission->grant = true;
+            }else{
+                $permission->grant = (bool)$permissionDefinition->userHasPermission($user, $post);
+            }
             $permissionCollection->addPermission($permission);
         }
         return $permissionCollection;

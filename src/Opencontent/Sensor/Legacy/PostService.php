@@ -187,7 +187,7 @@ class PostService extends PostServiceBase
             $this->repository->getCurrentUser(),
             $post
         );
-        $userCanSendPrivateMessage = $this->repository->getPermissionService()->loadCurrentUserPostPermissionCollection($post)->hasPermission('can_send_private_message');
+        $userCanSendPrivateMessage = $this->repository->getPermissionService()->loadCurrentUserPostPermissionCollection($post)->hasPermission('can_read_private_message');
         $useDirectPrivateMessage = $this->repository->getSensorSettings()->get('UseDirectPrivateMessage');
         $privateMessages = new PrivateMessageCollection();
         foreach ($post->privateMessages->messages as $message) {
@@ -203,7 +203,7 @@ class PostService extends PostServiceBase
         }
         $post->privateMessages = $privateMessages;
 
-        $userIsModerator = $this->repository->getPermissionService()->loadCurrentUserPostPermissionCollection($post)->hasPermission('can_moderate_comment');
+        $userIsModerator = $this->repository->getPermissionService()->loadCurrentUserPostPermissionCollection($post)->hasPermission('can_read_unmoderated_comment');
         $comments = new CommentCollection();
         foreach ($post->comments->messages as $message){
             $userIsCreator = $message->creator->id == $this->repository->getCurrentUser()->id;

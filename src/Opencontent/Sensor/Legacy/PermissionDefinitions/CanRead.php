@@ -2,11 +2,12 @@
 
 namespace Opencontent\Sensor\Legacy\PermissionDefinitions;
 
+use Opencontent\Sensor\Core\PermissionDefinitions\ReadOnlyAllowedInterface;
 use Opencontent\Sensor\Api\Permission\PermissionDefinition;
 use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\User;
 
-class CanRead extends PermissionDefinition
+class CanRead extends PermissionDefinition implements ReadOnlyAllowedInterface
 {
     public $identifier = 'can_read';
 

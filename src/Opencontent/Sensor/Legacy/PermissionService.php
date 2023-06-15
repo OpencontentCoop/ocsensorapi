@@ -22,10 +22,10 @@ class PermissionService extends BasePermissionService
             $permission = new Permission();
             $permission->identifier = $permissionDefinition->identifier;
 
-            if (OpenPaSensorRepository::isReadOnlyModeEnabled() && !$permissionDefinition instanceof ReadOnlyAllowedInterface){
-                $permission->grant = false;
-            }elseif (self::isSuperAdmin($user) && !$permissionDefinition instanceof SettingPermissionInterface) {
+            if (self::isSuperAdmin($user) && !$permissionDefinition instanceof SettingPermissionInterface) {
                 $permission->grant = true;
+            }elseif (OpenPaSensorRepository::isReadOnlyModeEnabled() && !$permissionDefinition instanceof ReadOnlyAllowedInterface){
+                $permission->grant = false;
             }else{
                 $permission->grant = (bool)$permissionDefinition->userHasPermission($user, $post);
             }

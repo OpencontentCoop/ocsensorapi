@@ -43,12 +43,27 @@ class Controller
      */
     private $serializer;
 
+    private $geolocationIsRequired = false;
+
     public function __construct(OpenApi $apiSettings, SensorOpenApiControllerInterface $restController)
     {
         $this->apiSettings = $apiSettings;
         $this->repository = $this->apiSettings->getRepository();
         $this->restController = $restController;
         $this->serializer = new Serializer($this->apiSettings);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isGeolocationFieldRequired(): bool
+    {
+        return $this->geolocationIsRequired;
+    }
+
+    public function setGeolocationRequired(): void
+    {
+        $this->geolocationIsRequired = true;
     }
 
     public static function getSortFieldMap()
@@ -1495,6 +1510,12 @@ class Controller
         $postCreateStruct->description = $payload['description'];
 
         if (isset($payload['address']) && is_array($payload['address'])) {
+            if (isset($payload['address']['latitude']) && $payload['address']['latitude'] === '0E-15'){
+                $payload['address']['latitude'] = '0';
+            }
+            if (isset($payload['address']['longitude']) && $payload['address']['longitude'] === '0E-15'){
+                $payload['address']['longitude'] = '0';
+            }
             if (empty($payload['address']['address']) || empty($payload['address']['latitude']) || empty($payload['address']['longitude'])) {
                 throw new InvalidInputException("Field address has wrong format");
             }
@@ -1503,6 +1524,8 @@ class Controller
             $geoLocation->latitude = $payload['address']['latitude'];
             $geoLocation->longitude = $payload['address']['longitude'];
             $postCreateStruct->geoLocation = $geoLocation;
+        } elseif ($this->isGeolocationFieldRequired()) {
+            throw new InvalidInputException("Field address is required");
         }
 
         if (isset($payload['area'])) {
@@ -1569,7 +1592,7 @@ class Controller
                 if ($file === '?'){
                     unset($payload['files'][$index]);
                 }elseif (!empty($file)) {
-                    $this->isValidUpload($file);
+                    $this->isValidUpload($file, 'files');
                 }
             }
 
@@ -1605,10 +1628,10 @@ class Controller
         return $postCreateStruct;
     }
 
-    private function isValidUpload($image)
+    private function isValidUpload($image, $field = 'images')
     {
         if (!filter_var($image, FILTER_VALIDATE_URL) && (empty($image['filename']) || empty($image['file']))) {
-            throw new InvalidInputException("Field images has wrong format");
+            throw new InvalidInputException("Field $field has wrong format");
         }
 
         return true;

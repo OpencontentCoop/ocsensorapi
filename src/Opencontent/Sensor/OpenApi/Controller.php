@@ -1552,7 +1552,8 @@ class Controller
         if ($this->apiSettings->getRepository()->getSensorSettings()->get('HideTypeChoice')){
             $postCreateStruct->type = $this->repository->getPostTypeService()->loadPostTypes()[0]->identifier;
         }elseif (isset($payload['type'])) {
-            $postCreateStruct->type = $payload['type'];
+            $apiTypeMap = $this->apiSettings->getRepository()->getSensorSettings()->get('ApiTypeMap');
+            $postCreateStruct->type = isset($apiTypeMap[$payload['type']]) ? $apiTypeMap[$payload['type']] : $payload['type'];
         }
 
         if ($this->apiSettings->getRepository()->getSensorSettings()->get('HidePrivacyChoice')){

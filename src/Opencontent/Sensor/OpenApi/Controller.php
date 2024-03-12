@@ -5,14 +5,20 @@ namespace Opencontent\Sensor\OpenApi;
 use Opencontent\Sensor\Api\Action\Action;
 use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
+use Opencontent\Sensor\Api\Exception\NotAcceptableException;
 use Opencontent\Sensor\Api\Exception\NotFoundException;
+use Opencontent\Sensor\Api\Values\Message\Comment;
+use Opencontent\Sensor\Api\Values\Post;
 use Opencontent\Sensor\Api\Values\Post\Field\Area;
 use Opencontent\Sensor\Api\Values\Post\Field\GeoLocation;
 use Opencontent\Sensor\Api\Values\Post\Field\Image;
 use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
 use Opencontent\Sensor\Api\Values\PostCreateStruct;
 use Opencontent\Sensor\Api\Values\PostUpdateStruct;
+use Opencontent\Sensor\Inefficiency\PostAdapter;
+use Opencontent\Sensor\Inefficiency\PostMessageAdapter;
 use Opencontent\Sensor\OpenApi;
+use Opencontent\Stanzadelcittadino\Client\Request\PatchApplicationMessageWithExternalId;
 use SensorOpenApiControllerInterface;
 use ezpRestMvcResult;
 use Opencontent\Sensor\Api\SearchService;
@@ -230,7 +236,60 @@ class Controller
     public function createPost()
     {
         $postCreateStruct = $this->loadPostCreateStruct();
+        return $this->createPostFromStruct($postCreateStruct);
+    }
 
+    public function createInefficiency()
+    {
+        $payload = $this->restController->getPayload();
+        $inefficiency = PostAdapter::instance($this->repository, (array)$payload);
+        if ($inefficiency->isValidPayload()){
+            $payload = $inefficiency->adaptPayload();
+            $postCreateStruct = $this->loadPostStruct(new PostCreateStruct(), $payload);
+            return $this->createPostFromStruct($postCreateStruct);
+        }
+        throw new NotAcceptableException('Can not handle application payload');
+    }
+
+    public function createInefficiencyMessage()
+    {
+        $payload = $this->restController->getPayload();
+        $inefficiency = PostMessageAdapter::instance($this->repository, (array)$payload);
+        if ($inefficiency->isValidPayload()){
+            $post = $this->repository->getPostService()->loadPostByUuid($payload['application']);
+            if (!$post instanceof Post){
+                throw new NotFoundException('post by uuid not found');
+            }
+            $text = $payload['message'];
+            
+            $action = new Action();
+            $action->identifier = 'add_comment';
+            $action->setParameter('text', $this->cleanMessageText($text));
+            $action->setParameter('creator_id', $post->author->id); // @todo author validation?
+            $this->repository->getActionService()->runAction($action, $post);
+
+            /** @var Comment $message */
+            $message = $this->repository->getMessageService()->loadCommentCollectionByPost($post)->last();
+
+            if ($this->repository instanceof \OpenPaSensorRepository) {
+                ($this->repository->getInefficiencyClient())(new PatchApplicationMessageWithExternalId(
+                    $payload['application'],
+                    $payload['id'],
+                    $message->id
+                ));
+            }
+
+            header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
+            $result = new ezpRestMvcResult();
+            $result->variables = $this->serializer->serialize($message);
+
+            return $result;
+        }
+        throw new NotAcceptableException('Can not handle message payload');
+    }
+
+    private function createPostFromStruct(PostCreateStruct $postCreateStruct)
+    {
         $post = $this->repository->getPostService()->createPost($postCreateStruct);
         if ($postCreateStruct->imagePath) $this->cleanupTempImage($postCreateStruct->imagePath);
         if (count($postCreateStruct->imagePaths) > 0) {
@@ -365,9 +424,11 @@ class Controller
     public function addCommentsToPostId()
     {
         $post = $this->loadPost();
+        $text = $this->restController->getPayload()['text'];
+
         $action = new Action();
         $action->identifier = 'add_comment';
-        $action->setParameter('text', $this->cleanMessageText($this->restController->getPayload()['text']));
+        $action->setParameter('text', $this->cleanMessageText($text));
         $this->repository->getActionService()->runAction($action, $post);
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
@@ -1475,7 +1536,7 @@ class Controller
     private function loadPostUpdateStruct()
     {
         $postStruct = new PostUpdateStruct();
-        return $this->loadPostStruct($postStruct);
+        return $this->loadPostStruct($postStruct, $this->restController->getPayload());
     }
 
     /**
@@ -1486,7 +1547,7 @@ class Controller
     private function loadPostCreateStruct()
     {
         $postStruct = new PostCreateStruct();
-        return $this->loadPostStruct($postStruct);
+        return $this->loadPostStruct($postStruct, $this->restController->getPayload());
     }
 
     /**
@@ -1495,10 +1556,8 @@ class Controller
      * @throws InvalidArgumentException
      * @throws InvalidInputException
      */
-    private function loadPostStruct($postCreateStruct)
+    private function loadPostStruct($postCreateStruct, $payload)
     {
-        $payload = $this->restController->getPayload();
-
         if (empty($payload['subject'])) {
             throw new InvalidInputException("Field subject is required");
         }

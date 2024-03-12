@@ -17,7 +17,7 @@ class AddCommentAction extends ActionDefinition
     public function __construct()
     {
         $this->identifier = 'add_comment';
-        $this->permissionDefinitionIdentifiers = array('can_read', 'can_comment');
+        $this->permissionDefinitionIdentifiers = ['can_read', 'can_comment'];
         $this->inputName = 'Comment';
 
         $parameter = new ActionDefinitionParameter();
@@ -25,30 +25,44 @@ class AddCommentAction extends ActionDefinition
         $parameter->isRequired = true;
         $parameter->type = 'string';
         $this->parameterDefinitions[] = $parameter;
+
+        $parameter = new ActionDefinitionParameter();
+        $parameter->identifier = 'creator_id';
+        $parameter->isRequired = false;
+        $parameter->type = 'integer';
+        $this->parameterDefinitions[] = $parameter;
     }
 
     public function run(Repository $repository, Action $action, Post $post, User $user)
     {
         $text = $action->getParameterValue('text');
-        if (trim($text) == ''){
+        if (trim($text) == '') {
             throw new InvalidInputException("Text is required");
+        }
+
+        $creator = $repository->getCurrentUser();
+        $requestCreatorId = (int)$action->getParameterValue('creator_id');
+        if ($requestCreatorId > 0
+            && $requestCreatorId != $repository->getCurrentUser()->id
+            && $repository->getCurrentUser()->behalfOfMode) {
+            $creator = $repository->getUserService()->loadUser($requestCreatorId);
         }
 
         $commentStruct = new CommentStruct();
         $commentStruct->createdDateTime = new \DateTime();
-        $commentStruct->creator = $repository->getCurrentUser();
+        $commentStruct->creator = $creator;
         $commentStruct->post = $post;
         $commentStruct->text = $text;
-        if ($repository->getCurrentUser()->moderationMode){
+        if ($creator->moderationMode) {
             $commentStruct->needModeration = true;
         }
 
         $repository->getMessageService()->createComment($commentStruct);
         $post = $repository->getPostService()->refreshPost($post);
-        if ($commentStruct->needModeration){
-            $this->fireEvent($repository, $post, $user, array('text' => $text), 'on_add_comment_to_moderate');
-        }else {
-            $this->fireEvent($repository, $post, $user, array('text' => $text));
+        if ($commentStruct->needModeration) {
+            $this->fireEvent($repository, $post, $user, ['text' => $text], 'on_add_comment_to_moderate');
+        } else {
+            $this->fireEvent($repository, $post, $user, ['text' => $text]);
         }
 
         if ($post->workflowStatus->is(Post\WorkflowStatus::CLOSED)

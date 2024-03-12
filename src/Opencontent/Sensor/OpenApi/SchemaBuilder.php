@@ -5,11 +5,16 @@ namespace Opencontent\Sensor\OpenApi;
 use erasys\OpenApi as OpenApiBase;
 use erasys\OpenApi\Spec\v3 as OA;
 use Opencontent\Sensor\Api\StatisticFactory;
+use Opencontent\Sensor\Inefficiency\PostAdapter;
+use Opencontent\Sensor\Inefficiency\PostMessageAdapter;
+use Opencontent\Sensor\Inefficiency\CategoryAdapter;
 use Opencontent\Sensor\Legacy\SearchService;
 use Opencontent\Sensor\OpenApi;
 
 class SchemaBuilder
 {
+    use BuildSchemaPropertyTrait;
+
     private $apiSettings;
 
     private $siteIni;
@@ -42,6 +47,10 @@ class SchemaBuilder
     
     private $isJwtEnabled = false;
 
+    private $isInefficiencyAdapterEnabled = false;
+
+    private static $languageList;
+
     public function __construct(OpenApi $apiSettings)
     {
         $this->apiSettings = $apiSettings;
@@ -51,6 +60,8 @@ class SchemaBuilder
         if (class_exists('\SensorJwtManager')) {
             $this->isJwtEnabled = \SensorJwtManager::instance()->isJwtAuthEnabled();
         }
+        $this->isInefficiencyAdapterEnabled = $this->apiSettings->getRepository()->getSensorSettings()
+            ->get('Inefficiency')->is_enabled;
     }
 
     /**
@@ -58,6 +69,12 @@ class SchemaBuilder
      */
     public function build()
     {
+        $inefficiencyPaths = [];
+        if ($this->isInefficiencyAdapterEnabled){
+            self::$tags['inefficiencies'] = "Adapters";
+            $inefficiencyPaths = $this->buildInefficiencyPaths();
+        }
+
         $security = [
             ['basicAuth' => []],
         ];
@@ -77,7 +94,8 @@ class SchemaBuilder
                 $this->buildTypePaths(),
                 $this->buildAreaPaths(),
                 $this->buildStatisticPaths(),
-                $this->buildFaqPaths()
+                $this->buildFaqPaths(),
+                $inefficiencyPaths
             ),
             '3.0.1',
             [
@@ -227,9 +245,9 @@ class SchemaBuilder
                     'createPost',
                     'Add a new post',
                     [
-                        'summary' => 'Returns a list of post',
+                        'summary' => 'Post or application',
                         'tags' => [self::$tags['posts']],
-                        'requestBody' => new OA\Reference('#/components/requestBodies/Post')
+                        'requestBody' => new OA\Reference('#/components/requestBodies/NewPost')
                     ]
                 ),
             ]),
@@ -1957,6 +1975,75 @@ class SchemaBuilder
         ];
     }
 
+    private function buildInefficiencyPaths()
+    {
+        return [
+            '/inefficiency' => new OA\PathItem([
+                'post' => new OA\Operation(
+                    [
+                        '201' => new OA\Response('Successful response', [
+                            'application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/Post')
+                            ])
+                        ]),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '403' => new OA\Response('Forbidden'),
+                        '405' => new OA\Response('Invalid input'),
+                        '406' => new OA\Response('Not accetable'),
+                    ],
+                    'createInefficiency',
+                    'Create a new post from inefficiency application',
+                    [
+                        'summary' => 'Create a new post from inefficiency application',
+                        'tags' => [self::$tags['inefficiencies']],
+                        'requestBody' => new OA\Reference('#/components/requestBodies/InefficiencyApplication')
+                    ]
+                ),
+            ]),
+            '/inefficiency/message' => new OA\PathItem([
+                'post' => new OA\Operation(
+                    [
+                        '201' => new OA\Response('Successful response', [
+                            'application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/Comment')
+                            ])
+                        ]),
+                        '400' => new OA\Response('Invalid input provided'),
+                        '403' => new OA\Response('Forbidden'),
+                        '405' => new OA\Response('Invalid input'),
+                        '406' => new OA\Response('Not accetable'),
+                    ],
+                    'createInefficiencyMessage',
+                    'Create a new post message from inefficiency application message',
+                    [
+                        'summary' => 'Create a new post message from inefficiency application message',
+                        'tags' => [self::$tags['inefficiencies']],
+                        'requestBody' => new OA\Reference('#/components/requestBodies/InefficiencyApplicationMessage')
+                    ]
+                ),
+            ]),
+            '/inefficiency/categories' => new OA\PathItem([
+                'get' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response.', [
+                            'application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/InefficiencyCategories')
+                            ])
+                        ]),
+                        '400' => new OA\Response('Invalid search limit provided.'),
+                    ],
+                    'loadInefficiencyCategories',
+                    'Get inefficiency application categories',
+                    [
+                        'description' => 'Get inefficiency application categories',
+                        'tags' => [self::$tags['inefficiencies']],
+                    ]
+                ),
+            ]),
+        ];
+    }
+
+
     private function buildSearchParameters($keys = ['q', 'limit', 'cursor'])
     {
         $parameters = [];
@@ -2119,9 +2206,9 @@ class SchemaBuilder
         $components->schemas = [
             'PostCollection' => $this->buildSchema('PostCollection'),
             'FeatureCollection' => $this->buildSchema('FeatureCollection'),
+            'Post' => $this->buildSchema('Post'),
             'NewPost' => $this->buildSchema('NewPost'),
             'UpdatePost' => $this->buildSchema('UpdatePost'),
-            'Post' => $this->buildSchema('Post'),
 
             'Address' => $this->buildSchema('Address'),
             'Image' => $this->buildSchema('Image'),
@@ -2186,23 +2273,22 @@ class SchemaBuilder
             'Post' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewPost')
             ])], 'Post object that needs to be created', true),
-
+            'NewPost' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/NewPost'),
+            ])], 'New post struct', true),
             'UpdatePost' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Reference('#/components/schemas/UpdatePost')
-            ])], 'Post object that needs to be updated', true),
+                'schema' => new OA\Reference('#/components/schemas/UpdatePost'),
+            ])], 'Update post struct', true),
 
             'User' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewUser')
             ])], 'User object that needs to be added or updated', true),
-
             'PatchUser' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/PatchUser')
             ])], 'User object that needs to be patched', true),
-
             'Operator' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewOperator')
             ])], 'Operator object that needs to be added or updated', true),
-
             'Group' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewGroup')
             ])], 'Group object that needs to be added or updated', true),
@@ -2210,7 +2296,6 @@ class SchemaBuilder
             'Area' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewArea')
             ])], 'Area object that needs to be added or updated', true),
-
             'Category' => new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/NewCategory')
             ])], 'Category object that needs to be added or updated', true),
@@ -2230,6 +2315,20 @@ class SchemaBuilder
                 'schema' => new OA\Reference('#/components/schemas/NewFaq')
             ])], 'Faq object that needs to be added or updated', true),
         ];
+
+        if ($this->isInefficiencyAdapterEnabled){
+            $components->schemas['InefficiencyApplication'] = PostAdapter::buildApplicationSchema();
+            $components->schemas['InefficiencyApplicationMessage'] = PostMessageAdapter::buildMessageSchema();
+            $components->requestBodies['InefficiencyApplication'] = new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/InefficiencyApplication')
+            ])], 'Inefficiency application', true);
+            $components->requestBodies['InefficiencyApplicationMessage'] = new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/InefficiencyApplicationMessage')
+            ])], 'Inefficiency application message', true);
+            $components->schemas['InefficiencyCategories'] = CategoryAdapter::buildCategorySchema();
+        }
+        ksort($components->schemas);
+        ksort($components->requestBodies);
 
         return $components;
     }
@@ -2871,16 +2970,6 @@ class SchemaBuilder
                     'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
                 ];
                 break;
-        }
-
-        return $schema;
-    }
-
-    private function buildSchemaProperty($properties)
-    {
-        $schema = new ReferenceSchema();
-        foreach ($properties as $key => $value) {
-            $schema->{$key} = $value;
         }
 
         return $schema;

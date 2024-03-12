@@ -743,7 +743,7 @@ class SolrMapper
 
     public function updateUserLastAccessDateTime(User $user, $returnValue = false)
     {
-        $this->repository->getLogger()->debug('----> DO REFRESH USER');
+//        $this->repository->getLogger()->debug('----> DO REFRESH USER');
         $userUnawarePost = clone $this->post;
         $this->repository->getParticipantService()->loadPostParticipants($userUnawarePost);
         $this->post = $userUnawarePost;
@@ -781,7 +781,7 @@ class SolrMapper
 
     public function updatePost($returnValue = false)
     {
-        $this->repository->getLogger()->debug('----> DO REFRESH POST');
+//        $this->repository->getLogger()->debug('----> DO REFRESH POST');
         $this->setPostUserUnaware();
         $contentObject = \eZContentObject::fetch($this->post->id);
         /** @var \eZContentObjectVersion $version */

@@ -14,7 +14,8 @@ class EventService extends BaseEventService implements EmitterAwareInterface
 
     public function fire(Event $event)
     {
-        $this->repository->getLogger()->debug("Fire event '{$event->identifier}' on post {$event->post->id} from user {$event->user->id}", $event->parameters);
+        $postId = $event->post->id ?? null;
+        $this->repository->getLogger()->debug("Fire event '{$event->identifier}' on post {$postId} from user {$event->user->id}", $event->parameters);
         $emissibileEvent = new EmissibileEvent($event->identifier);
         $this->getEmitter()->emit($emissibileEvent, $event);
     }

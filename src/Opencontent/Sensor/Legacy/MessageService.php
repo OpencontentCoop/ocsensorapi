@@ -5,6 +5,7 @@ namespace Opencontent\Sensor\Legacy;
 use eZCollaborationItemMessageLink;
 use eZCollaborationSimpleMessage;
 use eZPersistentObject;
+use Opencontent\Sensor\Api\Exception\DuplicateUuidException;
 use Opencontent\Sensor\Api\Values\Event;
 use Opencontent\Sensor\Api\Values\Message;
 use Opencontent\Sensor\Api\Values\MessageStruct;
@@ -406,12 +407,25 @@ class MessageService extends MessageServiceBase
     {
         $time = time();
 
+        if (!empty($struct->externalId)
+            && eZCollaborationSimpleMessage::fetchObject(
+                eZCollaborationSimpleMessage::definition(), null,
+                [
+                    'message_type' => $this->repository->getSensorCollaborationHandlerTypeString() . '_comment',
+                    'data_text3' => $struct->externalId,
+                ],
+                true
+            ) instanceof eZCollaborationSimpleMessage) {
+            throw new DuplicateUuidException($struct->externalId);
+        }
+
         $fields = [
             'message_type' => $this->repository->getSensorCollaborationHandlerTypeString() . '_comment',
             'data_text1' => $struct->text,
             'created' => $time,
             'modified' => $time,
             'creator_id' => $struct->creator->id,
+            'data_text3' => $struct->externalId ?? '',
         ];
         if ($struct instanceof Message\PrivateMessageStruct){
             $fields['data_int1'] = (int)$struct->isResponseProposal;
@@ -521,5 +535,22 @@ class MessageService extends MessageServiceBase
         $post->timelineItems = $this->loadTimelineItemCollectionByPost($post);
         $post->responses = $this->loadResponseCollectionByPost($post);
         $post->audits = $this->loadAuditCollectionByPost($post);
+    }
+
+    public function loadMessageFromExternalId($externalId)
+    {
+        $simpleMessage = eZCollaborationSimpleMessage::fetchObject(
+            eZCollaborationSimpleMessage::definition(), null,
+            [
+                'message_type' => $this->repository->getSensorCollaborationHandlerTypeString() . '_comment',
+                'data_text3' => $externalId,
+            ],
+            true
+        );
+        if ($simpleMessage instanceof eZCollaborationSimpleMessage){
+            return [];
+        }
+        
+        return new Message\Comment();
     }
 }

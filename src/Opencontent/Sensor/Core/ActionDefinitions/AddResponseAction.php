@@ -25,6 +25,12 @@ class AddResponseAction extends ActionDefinition
         $parameter->isRequired = true;
         $parameter->type = 'string';
         $this->parameterDefinitions[] = $parameter;
+
+        $parameter = new ActionDefinitionParameter();
+        $parameter->identifier = 'external_id';
+        $parameter->isRequired = false;
+        $parameter->type = 'string';
+        $this->parameterDefinitions[] = $parameter;
     }
 
     public function run(Repository $repository, Action $action, Post $post, User $user)
@@ -39,6 +45,7 @@ class AddResponseAction extends ActionDefinition
         $responseStruct->creator = $repository->getCurrentUser();
         $responseStruct->post = $post;
         $responseStruct->text = $text;
+        $responseStruct->externalId = $action->getParameterValue('external_id');
 
         $repository->getMessageService()->createResponse($responseStruct);
         $post = $repository->getPostService()->refreshPost($post);

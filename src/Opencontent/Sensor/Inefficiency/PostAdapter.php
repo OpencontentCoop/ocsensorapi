@@ -9,10 +9,13 @@ use eZUser;
 use eZContentClass;
 use OCCodiceFiscaleType;
 use eZDB;
+use Opencontent\Sensor\OpenApi\BuildSchemaPropertyTrait;
 use Opencontent\Sensor\OpenApi\ReferenceSchema;
 
 class PostAdapter
 {
+    use BuildSchemaPropertyTrait;
+    
     private $repository;
 
     private $payload;
@@ -21,12 +24,15 @@ class PostAdapter
 
     private $serviceSlug;
 
+    private $severityMap;
+
     private function __construct(Repository $repository, array $payload)
     {
         $this->repository = $repository;
         $this->payload = $payload;
         $this->tenants = (array)$this->repository->getSensorSettings()->get('Inefficiency')->tenants;
         $this->serviceSlug = $this->repository->getSensorSettings()->get('Inefficiency')->service_slug;
+        $this->severityMap = $this->repository->getSensorSettings()->get('Inefficiency')->severity_map;
     }
 
     public static function instance(Repository $repository, array $payload): PostAdapter
@@ -46,9 +52,9 @@ class PostAdapter
             );
     }
 
-    private function adaptType($remoteType)
+    private function adaptType($severity)
     {
-        return 'segnalazione'; //@todo
+        return $this->severityMap[$severity] ?? 'segnalazione';
     }
 
     private function adaptCategory($type)
@@ -76,7 +82,7 @@ class PostAdapter
             ];
         }
         $adapted['category'] = $this->adaptCategory($data['type'] ?? null);
-        $adapted['type'] = $this->adaptType($data['priority'] ?? null); //@tdo
+        $adapted['type'] = $this->adaptType($data['severity'] ?? null);
         $adapted['is_private'] = true;
         $links = $this->payload['links'];
         $firstLink = array_shift($links);
@@ -286,7 +292,7 @@ class PostAdapter
                                 'value' => self::buildSchemaProperty(['type' => 'string']),
                             ],
                         ]),
-                        'priority' => self::buildSchemaProperty(['type' => 'string', 'format' => 'number']),
+                        'severity' => self::buildSchemaProperty(['type' => 'string', 'format' => 'number']),
                         'images' => self::buildSchemaProperty([
                             'type' => 'array',
                             'items' => [
@@ -330,15 +336,5 @@ class PostAdapter
                 ]),
             ],
         ]);
-    }
-
-    private static function buildSchemaProperty($properties)
-    {
-        $schema = new ReferenceSchema();
-        foreach ($properties as $key => $value) {
-            $schema->{$key} = $value;
-        }
-
-        return $schema;
     }
 }

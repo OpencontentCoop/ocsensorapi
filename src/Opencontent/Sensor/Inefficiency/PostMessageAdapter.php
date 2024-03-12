@@ -4,10 +4,13 @@ namespace Opencontent\Sensor\Inefficiency;
 
 use Opencontent\Sensor\Api\Repository;
 use erasys\OpenApi\Spec\v3 as OA;
+use Opencontent\Sensor\OpenApi\BuildSchemaPropertyTrait;
 use Opencontent\Sensor\OpenApi\ReferenceSchema;
 
 class PostMessageAdapter
 {
+    use BuildSchemaPropertyTrait;
+    
     private $repository;
 
     private $payload;
@@ -42,17 +45,9 @@ class PostMessageAdapter
             'type' => 'object',
             'properties' => [
                 'id' => self::buildSchemaProperty(['type' => 'string', 'format' => 'uuid']),
+                'application' => self::buildSchemaProperty(['type' => 'string', 'format' => 'uuid']),
+                'message' => self::buildSchemaProperty(['type' => 'string']),
             ],
         ]);
-    }
-
-    private static function buildSchemaProperty($properties)
-    {
-        $schema = new ReferenceSchema();
-        foreach ($properties as $key => $value) {
-            $schema->{$key} = $value;
-        }
-
-        return $schema;
     }
 }

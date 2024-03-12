@@ -7,11 +7,14 @@ use erasys\OpenApi\Spec\v3 as OA;
 use Opencontent\Sensor\Api\StatisticFactory;
 use Opencontent\Sensor\Inefficiency\PostAdapter;
 use Opencontent\Sensor\Inefficiency\PostMessageAdapter;
+use Opencontent\Sensor\Inefficiency\CategoryAdapter;
 use Opencontent\Sensor\Legacy\SearchService;
 use Opencontent\Sensor\OpenApi;
 
 class SchemaBuilder
 {
+    use BuildSchemaPropertyTrait;
+
     private $apiSettings;
 
     private $siteIni;
@@ -45,6 +48,8 @@ class SchemaBuilder
     private $isJwtEnabled = false;
 
     private $isInefficiencyAdapterEnabled = false;
+
+    private static $languageList;
 
     public function __construct(OpenApi $apiSettings)
     {
@@ -2017,8 +2022,50 @@ class SchemaBuilder
                     ]
                 ),
             ]),
+            '/inefficiency/categories' => new OA\PathItem([
+                'get' => new OA\Operation(
+                    [
+                        '200' => new OA\Response('Successful response.', [
+                            'application/json' => new OA\MediaType([
+                                'schema' => new OA\Reference('#/components/schemas/InefficiencyCategories')
+                            ])
+                        ]),
+                        '400' => new OA\Response('Invalid search limit provided.'),
+                    ],
+                    'loadInefficiencyCategories',
+                    'Get inefficiency application categories',
+                    [
+                        'description' => 'Get inefficiency application categories',
+                        'tags' => [self::$tags['inefficiencies']],
+                        'parameters' => [
+                            new OA\Parameter('Accept-Language', OA\Parameter::IN_HEADER, 'Current Translation', [
+                                'schema' => $this->buildSchemaProperty([
+                                    'type' => 'string',
+                                    'default' => self::getLanguageList()[\eZContentObject::defaultLanguage()],
+                                    'enum' => array_values(self::getLanguageList())
+                                ]),
+                                'required' => false,
+                            ])
+                        ]
+                    ]
+                ),
+            ]),
         ];
     }
+
+    public static function getLanguageList()
+    {
+        if (self::$languageList === null) {
+            self::$languageList = [];
+            $languages = \eZINI::instance()->variable('RegionalSettings', 'SiteLanguageList');
+            foreach ($languages as $language) {
+                self::$languageList[$language] = \eZLocale::instance($language)->HTTPLocaleCode;
+            }
+        }
+
+        return self::$languageList;
+    }
+
 
     private function buildSearchParameters($keys = ['q', 'limit', 'cursor'])
     {
@@ -2179,63 +2226,6 @@ class SchemaBuilder
             $components->securitySchemes['bearerAuth'] = new OA\SecurityScheme('http', null, ['scheme' => 'bearer', 'bearerFormat' => 'JWT']);
         }
 
-        $components->requestBodies = [
-            'Post' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Reference('#/components/schemas/NewPost')
-            ])], 'Post object that needs to be created', true),
-
-            'UpdatePost' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Reference('#/components/schemas/UpdatePost')
-            ])], 'Post object that needs to be updated', true),
-
-            'User' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Reference('#/components/schemas/NewUser')
-            ])], 'User object that needs to be added or updated', true),
-
-            'PatchUser' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Reference('#/components/schemas/PatchUser')
-            ])], 'User object that needs to be patched', true),
-
-            'Operator' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Reference('#/components/schemas/NewOperator')
-            ])], 'Operator object that needs to be added or updated', true),
-
-            'Group' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Reference('#/components/schemas/NewGroup')
-            ])], 'Group object that needs to be added or updated', true),
-
-            'Area' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Reference('#/components/schemas/NewArea')
-            ])], 'Area object that needs to be added or updated', true),
-
-            'Category' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Reference('#/components/schemas/NewCategory')
-            ])], 'Category object that needs to be added or updated', true),
-
-            'Credentials' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Schema([
-                    'title' => 'Credentials',
-                    'type' => 'object',
-                    'properties' => [
-                        'username' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Username']),
-                        'password' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Password']),
-                    ]
-                ])
-            ])], 'Authorization credentials', true),
-
-            'Faq' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Reference('#/components/schemas/NewFaq')
-            ])], 'Faq object that needs to be added or updated', true),
-
-            'NewPost' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Reference('#/components/schemas/NewPost'),
-            ])], 'New post struct', true),
-
-            'UpdatePost' => new OA\RequestBody(['application/json' => new OA\MediaType([
-                'schema' => new OA\Reference('#/components/schemas/UpdatePost'),
-            ])], 'Update post struct', true),
-        ];
-
         $components->schemas = [
             'PostCollection' => $this->buildSchema('PostCollection'),
             'FeatureCollection' => $this->buildSchema('FeatureCollection'),
@@ -2301,6 +2291,54 @@ class SchemaBuilder
             'TypeCollection' => $this->buildSchema('TypeCollection'),
             'Type' => $this->buildSchema('Type'),
         ];
+
+        $components->requestBodies = [
+            'Post' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/NewPost')
+            ])], 'Post object that needs to be created', true),
+            'NewPost' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/NewPost'),
+            ])], 'New post struct', true),
+            'UpdatePost' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/UpdatePost'),
+            ])], 'Update post struct', true),
+
+            'User' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/NewUser')
+            ])], 'User object that needs to be added or updated', true),
+            'PatchUser' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/PatchUser')
+            ])], 'User object that needs to be patched', true),
+            'Operator' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/NewOperator')
+            ])], 'Operator object that needs to be added or updated', true),
+            'Group' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/NewGroup')
+            ])], 'Group object that needs to be added or updated', true),
+
+            'Area' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/NewArea')
+            ])], 'Area object that needs to be added or updated', true),
+            'Category' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/NewCategory')
+            ])], 'Category object that needs to be added or updated', true),
+
+            'Credentials' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Schema([
+                    'title' => 'Credentials',
+                    'type' => 'object',
+                    'properties' => [
+                        'username' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Username']),
+                        'password' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Password']),
+                    ]
+                ])
+            ])], 'Authorization credentials', true),
+
+            'Faq' => new OA\RequestBody(['application/json' => new OA\MediaType([
+                'schema' => new OA\Reference('#/components/schemas/NewFaq')
+            ])], 'Faq object that needs to be added or updated', true),
+        ];
+
         if ($this->isInefficiencyAdapterEnabled){
             $components->schemas['InefficiencyApplication'] = PostAdapter::buildApplicationSchema();
             $components->schemas['InefficiencyApplicationMessage'] = PostMessageAdapter::buildMessageSchema();
@@ -2310,6 +2348,7 @@ class SchemaBuilder
             $components->requestBodies['InefficiencyApplicationMessage'] = new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/InefficiencyApplicationMessage')
             ])], 'Inefficiency application message', true);
+            $components->schemas['InefficiencyCategories'] = CategoryAdapter::buildCategorySchema();
         }
         ksort($components->schemas);
         ksort($components->requestBodies);
@@ -2954,16 +2993,6 @@ class SchemaBuilder
                     'name' => $this->buildSchemaProperty(['type' => 'string', 'description' => 'Name']),
                 ];
                 break;
-        }
-
-        return $schema;
-    }
-
-    private function buildSchemaProperty($properties)
-    {
-        $schema = new ReferenceSchema();
-        foreach ($properties as $key => $value) {
-            $schema->{$key} = $value;
         }
 
         return $schema;

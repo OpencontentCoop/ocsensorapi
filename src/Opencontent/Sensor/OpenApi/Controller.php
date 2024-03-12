@@ -15,6 +15,7 @@ use Opencontent\Sensor\Api\Values\Post\Field\Image;
 use Opencontent\Sensor\Api\Values\Post\WorkflowStatus;
 use Opencontent\Sensor\Api\Values\PostCreateStruct;
 use Opencontent\Sensor\Api\Values\PostUpdateStruct;
+use Opencontent\Sensor\Inefficiency\CategoryAdapter;
 use Opencontent\Sensor\Inefficiency\PostAdapter;
 use Opencontent\Sensor\Inefficiency\PostMessageAdapter;
 use Opencontent\Sensor\OpenApi;
@@ -286,6 +287,30 @@ class Controller
             return $result;
         }
         throw new NotAcceptableException('Can not handle message payload');
+    }
+
+    public function loadInefficiencyCategories()
+    {
+        $result = new ezpRestMvcResult();
+        $result->variables = CategoryAdapter::instance($this->repository)->getCategories($this->getCurrentRequestLanguage());
+        
+        return $result;
+    }
+
+    private function getCurrentRequestLanguage()
+    {
+        $request = $this->restController->getRequest();
+        if ($request instanceof \ezpRestRequest && !empty($request->accept->languages)) {
+            $languageCode = array_shift($request->accept->languages);
+            array_unshift($request->accept->languages, $languageCode);
+            foreach (SchemaBuilder::getLanguageList() as $language => $code){
+                if ($code == $languageCode){
+                    return $language;
+                }
+            }
+        }
+
+        return \eZContentObject::defaultLanguage();
     }
 
     private function createPostFromStruct(PostCreateStruct $postCreateStruct)

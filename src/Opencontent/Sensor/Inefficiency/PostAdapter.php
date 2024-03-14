@@ -155,8 +155,9 @@ class PostAdapter
         ];
 
         if ($isAnonymousUser) {
-            $email = $userId . '-' . $email;
-
+            $parts = explode('@', $email);
+            $email = $parts[0] . '+' . $userId . '@' . $parts[1]; //avoid using not trusted mail
+            
             $user = eZUser::fetchByEmail($email);
             if ($user instanceof eZUser) {
                 return $user->id();

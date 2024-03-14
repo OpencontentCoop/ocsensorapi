@@ -3,6 +3,7 @@
 namespace Opencontent\Sensor\OpenApi;
 
 use Opencontent\Sensor\Api\Action\Action;
+use Opencontent\Sensor\Api\Exception\DuplicateUuidException;
 use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
 use Opencontent\Sensor\Api\Exception\NotAcceptableException;
@@ -19,6 +20,7 @@ use Opencontent\Sensor\Inefficiency\CategoryAdapter;
 use Opencontent\Sensor\Inefficiency\PostAdapter;
 use Opencontent\Sensor\Inefficiency\PostMessageAdapter;
 use Opencontent\Sensor\OpenApi;
+use Opencontent\Stanzadelcittadino\Client\Exceptions\FailPatchApplicationBinaryWithExternalId;
 use Opencontent\Stanzadelcittadino\Client\Request\PatchApplicationMessageWithExternalId;
 use SensorOpenApiControllerInterface;
 use ezpRestMvcResult;
@@ -83,13 +85,13 @@ class Controller
             'type' => 'type',
         ];
     }
-    
+
     private function cleanCommaSeperatedIntegers($csi)
     {
         $csi = explode(',', $csi);
         $csi = array_map('trim', $csi);
         $csi = array_map('intval', $csi);
-        
+
         return implode(',', $csi);
     }
 
@@ -114,29 +116,29 @@ class Controller
 
         $sortMap = self::getSortFieldMap();
         $sortField = 'id';
-        if ($this->getRequestParameter('sortField')){
+        if ($this->getRequestParameter('sortField')) {
             $sortField = $this->getRequestParameter('sortField');
             $parameters['sortField'] = $sortField;
         }
-        if ($sortField && !isset($sortMap[$sortField])){
+        if ($sortField && !isset($sortMap[$sortField])) {
             throw new InvalidArgumentException("Invalid sort field: $sortField");
         }
         $sortField = $sortMap[$sortField];
 
         $sortDirection = 'asc';
-        if ($this->getRequestParameter('sortDirection')){
+        if ($this->getRequestParameter('sortDirection')) {
             $sortDirection = $this->getRequestParameter('sortDirection');
             $parameters['sortDirection'] = $sortDirection;
         }
-        if ($sortDirection != 'asc' && $sortDirection != 'desc'){
+        if ($sortDirection != 'asc' && $sortDirection != 'desc') {
             throw new InvalidArgumentException("Invalid sort direction: $sortDirection");
         }
 
-        if ($authorFiscalCode){
+        if ($authorFiscalCode) {
             $parameters['authorFiscalCode'] = $authorFiscalCode;
         }
 
-        if ($this->hasRequestAcceptTypes('application/vnd.geo+json')){
+        if ($this->hasRequestAcceptTypes('application/vnd.geo+json')) {
             $parameters['format'] = 'geojson';
         }
 
@@ -149,31 +151,33 @@ class Controller
             $query = 'q = "' . $q . '" and ';
             $parameters['q'] = $q;
         }
-        if ($categories){
-            $query .= 'raw[submeta_category___id____si] in [' . $this->cleanCommaSeperatedIntegers($categories) . '] and ';
+        if ($categories) {
+            $query .= 'raw[submeta_category___id____si] in [' . $this->cleanCommaSeperatedIntegers(
+                    $categories
+                ) . '] and ';
             $parameters['categories'] = $categories;
         }
-        if ($areas){
+        if ($areas) {
             $query .= 'raw[submeta_area___id____si] in [' . $this->cleanCommaSeperatedIntegers($areas) . '] and ';
             $parameters['areas'] = $areas;
         }
-        if ($status){
+        if ($status) {
             $query .= 'raw[sensor_status_lk] = "' . $status . '" and ';
             $parameters['status'] = $status;
         }
-        if ($type){
+        if ($type) {
             $query .= 'raw[attr_type_s] = "' . $type . '" and ';
             $parameters['type'] = $type;
         }
-        if ($channel){
+        if ($channel) {
             $query .= 'raw[attr_on_behalf_of_mode_s] = "' . $channel . '" and ';
             $parameters['status'] = $channel;
         }
-        if ($publishedFrom || $publishedTo){
-            if (!$publishedFrom){
+        if ($publishedFrom || $publishedTo) {
+            if (!$publishedFrom) {
                 $publishedFrom = '*';
             }
-            if (!$publishedTo){
+            if (!$publishedTo) {
                 $publishedTo = '*';
             }
             $query .= "published range  [$publishedFrom, $publishedTo] and ";
@@ -181,11 +185,11 @@ class Controller
             $parameters['publishedTo'] = $publishedTo;
         }
 
-        if ($modifiedFrom || $modifiedTo){
-            if (!$modifiedFrom){
+        if ($modifiedFrom || $modifiedTo) {
+            if (!$modifiedFrom) {
                 $modifiedFrom = '*';
             }
-            if (!$modifiedTo){
+            if (!$modifiedTo) {
                 $modifiedTo = '*';
             }
             $query .= "modified range  [$modifiedFrom, $modifiedTo] and ";
@@ -194,7 +198,7 @@ class Controller
         }
 
 
-        if ($authorId){
+        if ($authorId) {
             $query .= 'author_id = "' . (int)$authorId . '" ';
         }
 
@@ -204,29 +208,35 @@ class Controller
             $query .= "limit $limit cursor [$cursor] ";
         }
 
-        if ($sortField && $sortDirection){
+        if ($sortField && $sortDirection) {
             $query .= "sort [$sortField=>$sortDirection] ";
         }
 
         $result = new ezpRestMvcResult();
 
         $searchResults = $this->repository->getSearchService()->searchPosts($query, $parameters);
-        if ($this->hasRequestAcceptTypes('application/vnd.geo+json')){
-            $searchResults = (array) $searchResults;
+        if ($this->hasRequestAcceptTypes('application/vnd.geo+json')) {
+            $searchResults = (array)$searchResults;
             unset($searchResults['query']);
             unset($searchResults['nextPageQuery']);
             unset($searchResults['totalCount']);
             unset($searchResults['facets']);
             $result->variables = $searchResults;
-        }else {
+        } else {
             $postSearchResults = [
-                'self' => $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->query, $parameters),
+                'self' => $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters(
+                        $searchResults->query,
+                        $parameters
+                    ),
                 'next' => null,
-                'items' => $this->serializer->setEmbedFields($this->getRequestParameter('embed'))->serializeItems($searchResults->searchHits),
+                'items' => $this->serializer->setEmbedFields($this->getRequestParameter('embed'))->serializeItems(
+                    $searchResults->searchHits
+                ),
                 'count' => (int)$searchResults->totalCount,
             ];
             if ($searchResults->nextPageQuery) {
-                $postSearchResults['next'] = $this->restController->getBaseUri() . "/posts?" . $this->convertQueryInQueryParameters($searchResults->nextPageQuery, $parameters);
+                $postSearchResults['next'] = $this->restController->getBaseUri(
+                    ) . "/posts?" . $this->convertQueryInQueryParameters($searchResults->nextPageQuery, $parameters);
             }
             $result->variables = $postSearchResults;
         }
@@ -244,7 +254,7 @@ class Controller
     {
         $payload = $this->restController->getPayload();
         $inefficiency = PostAdapter::instance($this->repository, (array)$payload);
-        if ($inefficiency->isValidPayload()){
+        if ($inefficiency->isValidPayload()) {
             $payload = $inefficiency->adaptPayload();
             $postCreateStruct = $this->loadPostStruct(new PostCreateStruct(), $payload);
             return $this->createPostFromStruct($postCreateStruct);
@@ -256,28 +266,61 @@ class Controller
     {
         $payload = $this->restController->getPayload();
         $inefficiency = PostMessageAdapter::instance($this->repository, (array)$payload);
-        if ($inefficiency->isValidPayload()){
+        if ($inefficiency->isValidPayload()) {
             $post = $this->repository->getPostService()->loadPostByUuid($payload['application']);
-            if (!$post instanceof Post){
+            if (!$post instanceof Post) {
                 throw new NotFoundException('post by uuid not found');
             }
-            $text = $payload['message'];
-            
-            $action = new Action();
-            $action->identifier = 'add_comment';
-            $action->setParameter('text', $this->cleanMessageText($text));
-            $action->setParameter('creator_id', $post->author->id); // @todo author validation?
-            $this->repository->getActionService()->runAction($action, $post);
 
-            /** @var Comment $message */
-            $message = $this->repository->getMessageService()->loadCommentCollectionByPost($post)->last();
+            try {
+                $action = new Action();
+                $action->identifier = 'add_comment';
+                $action->setParameter('text', $this->cleanMessageText($payload['message']));
+                $action->setParameter('creator_id', $post->author->id); // @todo author validation?
+                $action->setParameter('external_id', $payload['id']);
+                $this->repository->getActionService()->runAction($action, $post);
 
-            if ($this->repository instanceof \OpenPaSensorRepository) {
-                ($this->repository->getInefficiencyClient())(new PatchApplicationMessageWithExternalId(
-                    $payload['application'],
-                    $payload['id'],
-                    $message->id
-                ));
+                $binaries = [
+                    'images' => [],
+                    'files' => [],
+                ];
+                $attachments = $payload['attachments'] ?? [];
+                foreach ($attachments as $attachment) {
+                    $name = $attachment['name'];
+                    $mimeData = \eZMimeType::findByURL($name);
+                    $type = strpos($mimeData['name'], 'image/') !== false ? 'images' : 'files';
+                    $data = $this->repository->getInefficiencyClient()->downloadBinary($attachment['url']);
+                    if ($data) {
+                        $binaries[$type][] = [
+                            'file' => base64_encode($data),
+                            'filename' => $attachment['original_name'],
+                        ];
+                    }
+                }
+                if (!empty($binaries['images'])) {
+                    $this->repository->getPostService()->addImage($post, $binaries['images']);
+                }
+                if (!empty($binaries['files'])) {
+                    $this->repository->getPostService()->addFile($post, $binaries['files']);
+                }
+
+                /** @var Comment $message */
+                $message = $this->repository->getMessageService()->loadCommentCollectionByPost($post)->last();
+                if ($this->repository instanceof \OpenPaSensorRepository) {
+                    try {
+                        ($this->repository->getInefficiencyClient())(
+                            new PatchApplicationMessageWithExternalId(
+                                $payload['application'],
+                                $payload['id'],
+                                $message->id
+                            )
+                        );
+                    } catch (FailPatchApplicationBinaryWithExternalId $e) {
+                        $this->repository->getLogger()->error($e->getMessage());
+                    }
+                }
+            }catch (DuplicateUuidException $e){
+                $message = $this->repository->getMessageService()->loadMessageFromExternalId($e->getUuid());
             }
 
             header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
@@ -292,31 +335,21 @@ class Controller
     public function loadInefficiencyCategories()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = CategoryAdapter::instance($this->repository)->getCategories($this->getCurrentRequestLanguage());
-        
+        $result->variables = CategoryAdapter::instance($this->repository)->getCategories();
+        $result->cache = new \ezcMvcResultCache();
+        $result->cache->controls = ['public', 'max-age=60', 's-maxage=600'];
+        $result->cache->pragma = 'cache';
+        $result->cache->expire = (new \DateTime())->add(new \DateInterval('P1D'));
+
         return $result;
-    }
-
-    private function getCurrentRequestLanguage()
-    {
-        $request = $this->restController->getRequest();
-        if ($request instanceof \ezpRestRequest && !empty($request->accept->languages)) {
-            $languageCode = array_shift($request->accept->languages);
-            array_unshift($request->accept->languages, $languageCode);
-            foreach (SchemaBuilder::getLanguageList() as $language => $code){
-                if ($code == $languageCode){
-                    return $language;
-                }
-            }
-        }
-
-        return \eZContentObject::defaultLanguage();
     }
 
     private function createPostFromStruct(PostCreateStruct $postCreateStruct)
     {
         $post = $this->repository->getPostService()->createPost($postCreateStruct);
-        if ($postCreateStruct->imagePath) $this->cleanupTempImage($postCreateStruct->imagePath);
+        if ($postCreateStruct->imagePath) {
+            $this->cleanupTempImage($postCreateStruct->imagePath);
+        }
         if (count($postCreateStruct->imagePaths) > 0) {
             foreach ($postCreateStruct->imagePaths as $imagePath) {
                 $this->cleanupTempImage($imagePath);
@@ -345,8 +378,10 @@ class Controller
         $postUpdateStruct = $this->loadPostUpdateStruct();
         $postUpdateStruct->setPost($this->loadPost());
         $post = $this->repository->getPostService()->updatePost($postUpdateStruct);
-        if ($postUpdateStruct->imagePath) $this->cleanupTempImage($postUpdateStruct->imagePath);
-        foreach ($postUpdateStruct->imagePaths as $imagePath){
+        if ($postUpdateStruct->imagePath) {
+            $this->cleanupTempImage($postUpdateStruct->imagePath);
+        }
+        foreach ($postUpdateStruct->imagePaths as $imagePath) {
             $this->cleanupTempImage($imagePath);
         }
 
@@ -389,7 +424,7 @@ class Controller
         $action = new Action();
         $action->identifier = 'assign';
         $participantIds = (array)$this->restController->getPayload()['participant_ids'];
-        if (in_array($this->repository->getCurrentUser()->id, $participantIds) && count($participantIds) === 1){
+        if (in_array($this->repository->getCurrentUser()->id, $participantIds) && count($participantIds) === 1) {
             $action->identifier = 'auto_assign';
         }
         $action->setParameter('participant_ids', $participantIds);
@@ -433,7 +468,9 @@ class Controller
     public function getPostParticipantUsersByParticipantId()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = array_values($this->loadPost()->participants->getParticipantById($this->restController->participantId)->users);
+        $result->variables = array_values(
+            $this->loadPost()->participants->getParticipantById($this->restController->participantId)->users
+        );
 
         return $result;
     }
@@ -458,7 +495,9 @@ class Controller
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serialize($this->repository->getMessageService()->loadCommentCollectionByPost($post)->last());
+        $result->variables = $this->serializer->serialize(
+            $this->repository->getMessageService()->loadCommentCollectionByPost($post)->last()
+        );
 
         return $result;
     }
@@ -473,7 +512,11 @@ class Controller
         $this->repository->getActionService()->runAction($action, $post);
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serialize($this->repository->getMessageService()->loadCommentCollectionByPost($post)->getById($this->restController->commentId));
+        $result->variables = $this->serializer->serialize(
+            $this->repository->getMessageService()->loadCommentCollectionByPost($post)->getById(
+                $this->restController->commentId
+            )
+        );
 
         return $result;
     }
@@ -499,7 +542,9 @@ class Controller
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serialize($this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post)->last());
+        $result->variables = $this->serializer->serialize(
+            $this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post)->last()
+        );
 
         return $result;
     }
@@ -514,7 +559,11 @@ class Controller
         $this->repository->getActionService()->runAction($action, $post);
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serialize($this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post)->getById($this->restController->privateMessageId));
+        $result->variables = $this->serializer->serialize(
+            $this->repository->getMessageService()->loadPrivateMessageCollectionByPost($post)->getById(
+                $this->restController->privateMessageId
+            )
+        );
 
         return $result;
     }
@@ -537,7 +586,9 @@ class Controller
 
         header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serialize($this->repository->getMessageService()->loadResponseCollectionByPost($post)->last());
+        $result->variables = $this->serializer->serialize(
+            $this->repository->getMessageService()->loadResponseCollectionByPost($post)->last()
+        );
 
         return $result;
     }
@@ -552,7 +603,11 @@ class Controller
         $this->repository->getActionService()->runAction($action, $post);
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serialize($this->repository->getMessageService()->loadResponseCollectionByPost($post)->getById($this->restController->responseId));
+        $result->variables = $this->serializer->serialize(
+            $this->repository->getMessageService()->loadResponseCollectionByPost($post)->getById(
+                $this->restController->responseId
+            )
+        );
 
         return $result;
     }
@@ -571,15 +626,18 @@ class Controller
 
         $files = $this->restController->getPayload()['files'];
         foreach ($files as $index => $file) {
-            if ($files === '?'){
+            if ($files === '?') {
                 unset($files[$index]);
-            }elseif (!empty($file)) {
+            } elseif (!empty($file)) {
                 if (filter_var($file['file'], FILTER_VALIDATE_URL)) {
                     $context = null;
-                    $apiRequestHttpStreamContext = (array)\eZINI::instance('ocsensor.ini')->variable('SensorConfig', 'ApiRequestHttpStreamContext');
+                    $apiRequestHttpStreamContext = (array)\eZINI::instance('ocsensor.ini')->variable(
+                        'SensorConfig',
+                        'ApiRequestHttpStreamContext'
+                    );
                     if (!empty($apiRequestHttpStreamContext)) {
                         $httpOpts = [];
-                        foreach ($apiRequestHttpStreamContext as $key => $value){
+                        foreach ($apiRequestHttpStreamContext as $key => $value) {
                             $httpOpts[$key] = $value;
                         }
                         $context = stream_context_create(['http' => $httpOpts]);
@@ -783,7 +841,7 @@ class Controller
         $availableStatuses = [
             'waiting',
             'accepted',
-            'refused'
+            'refused',
         ];
 
         if (!in_array($newStatus, $availableStatuses)) {
@@ -826,7 +884,7 @@ class Controller
         $parameters = [
             'limit' => $limit,
             'cursor' => $searchResults['current'],
-            'q' => $q
+            'q' => $q,
         ];
         $results = [
             'self' => $this->restController->getBaseUri() . "/users?" . http_build_query($parameters),
@@ -849,7 +907,9 @@ class Controller
     {
         $payload = $this->restController->getPayload();
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serializeItem($this->repository->getUserService()->createUser($payload));
+        $result->variables = $this->serializer->serializeItem(
+            $this->repository->getUserService()->createUser($payload)
+        );
         return $result;
     }
 
@@ -940,7 +1000,9 @@ class Controller
         }
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serializeItem($this->repository->getUserService()->updateUser($user, $payload));
+        $result->variables = $this->serializer->serializeItem(
+            $this->repository->getUserService()->updateUser($user, $payload)
+        );
         return $result;
     }
 
@@ -953,12 +1015,16 @@ class Controller
         if (isset($payload['email']) && !empty($payload['email']) && !MailValidator::validate($payload['email'])) {
             throw new InvalidInputException("Invalid email address");
         }
-        if (isset($payload['email']) && !empty($payload['email']) && \eZUser::fetchByEmail($payload['email']) && $user->email != $payload['email']) {
+        if (isset($payload['email']) && !empty($payload['email']) && \eZUser::fetchByEmail(
+                $payload['email']
+            ) && $user->email != $payload['email']) {
             throw new InvalidInputException("Email address already exists");
         }
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serializeItem($this->repository->getUserService()->updateUser($user, $payload));
+        $result->variables = $this->serializer->serializeItem(
+            $this->repository->getUserService()->updateUser($user, $payload)
+        );
         return $result;
     }
 
@@ -977,7 +1043,7 @@ class Controller
         $parameters = [
             'limit' => $limit,
             'cursor' => $searchResults['current'],
-            'q' => $q
+            'q' => $q,
         ];
         $results = [
             'self' => $this->restController->getBaseUri() . "/operators?" . http_build_query($parameters),
@@ -1022,14 +1088,18 @@ class Controller
         }
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serializeItem($this->repository->getOperatorService()->createOperator($payload));
+        $result->variables = $this->serializer->serializeItem(
+            $this->repository->getOperatorService()->createOperator($payload)
+        );
         return $result;
     }
 
     public function getOperatorById()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serializeItem($this->repository->getOperatorService()->loadOperator($this->restController->operatorId));
+        $result->variables = $this->serializer->serializeItem(
+            $this->repository->getOperatorService()->loadOperator($this->restController->operatorId)
+        );
 
         return $result;
     }
@@ -1061,7 +1131,9 @@ class Controller
         }
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serializeItem($this->repository->getOperatorService()->updateOperator($operator, $payload));
+        $result->variables = $this->serializer->serializeItem(
+            $this->repository->getOperatorService()->updateOperator($operator, $payload)
+        );
         return $result;
     }
 
@@ -1080,7 +1152,7 @@ class Controller
         $parameters = [
             'limit' => $limit,
             'cursor' => $searchResults['current'],
-            'q' => $q
+            'q' => $q,
         ];
         $results = [
             'self' => $this->restController->getBaseUri() . "/groups?" . http_build_query($parameters),
@@ -1135,13 +1207,19 @@ class Controller
 
         $searchResults = $this->repository->getOperatorService()->loadOperatorsByGroup($group, $limit, $cursor);
         $results = [
-            'self' => $this->restController->getBaseUri() . "/groups/{$this->restController->groupId}/operators?limit=$limit&cursor=" . urlencode($searchResults['current']),
+            'self' => $this->restController->getBaseUri(
+                ) . "/groups/{$this->restController->groupId}/operators?limit=$limit&cursor=" . urlencode(
+                    $searchResults['current']
+                ),
             'next' => null,
             'items' => $searchResults['items'],
             'count' => (int)$searchResults['count'],
         ];
         if ($searchResults['next']) {
-            $results['next'] = $this->restController->getBaseUri() . "/groups/{$this->restController->groupId}/operators?limit=$limit&cursor=" . urlencode($searchResults['next']);
+            $results['next'] = $this->restController->getBaseUri(
+                ) . "/groups/{$this->restController->groupId}/operators?limit=$limit&cursor=" . urlencode(
+                    $searchResults['next']
+                );
         }
 
         $result->variables = $results;
@@ -1184,7 +1262,7 @@ class Controller
         $parameters = [
             'limit' => $limit,
             'cursor' => $searchResults['current'],
-            'q' => $q
+            'q' => $q,
         ];
         $results = [
             'self' => $this->restController->getBaseUri() . "/categories?" . http_build_query($parameters),
@@ -1216,14 +1294,18 @@ class Controller
 
 
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serialize($this->repository->getCategoryService()->createCategory($payload));
+        $result->variables = $this->serializer->serialize(
+            $this->repository->getCategoryService()->createCategory($payload)
+        );
         return $result;
     }
 
     public function getCategoryById()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serialize($this->repository->getCategoryService()->loadCategory($this->restController->categoryId));
+        $result->variables = $this->serializer->serialize(
+            $this->repository->getCategoryService()->loadCategory($this->restController->categoryId)
+        );
 
         return $result;
     }
@@ -1262,7 +1344,7 @@ class Controller
         $parameters = [
             'limit' => $limit,
             'cursor' => $searchResults['current'],
-            'q' => $q
+            'q' => $q,
         ];
         $results = [
             'self' => $this->restController->getBaseUri() . "/areas?" . http_build_query($parameters),
@@ -1297,7 +1379,9 @@ class Controller
     public function getAreaById()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = $this->serializer->serialize($this->repository->getAreaService()->loadArea($this->restController->areaId));
+        $result->variables = $this->serializer->serialize(
+            $this->repository->getAreaService()->loadArea($this->restController->areaId)
+        );
         return $result;
     }
 
@@ -1329,7 +1413,9 @@ class Controller
     public function getStatByIdentifier()
     {
         $result = new ezpRestMvcResult();
-        $factory = $this->repository->getStatisticsService()->getStatisticFactoryByIdentifier($this->restController->statIdentifier);
+        $factory = $this->repository->getStatisticsService()->getStatisticFactoryByIdentifier(
+            $this->restController->statIdentifier
+        );
         $parameters = $this->restController->getRequest()->get;
         $factory->setParameters($parameters);
         $format = isset($parameters['format']) ? $parameters['format'] : 'default';
@@ -1341,7 +1427,9 @@ class Controller
     public function getUserStatByIdentifier()
     {
         $result = new ezpRestMvcResult();
-        $factory = $this->repository->getStatisticsService()->getStatisticFactoryByIdentifier($this->restController->statIdentifier);
+        $factory = $this->repository->getStatisticsService()->getStatisticFactoryByIdentifier(
+            $this->restController->statIdentifier
+        );
         $factory->setAuthorFiscalCode($this->restController->authorFiscalCode);
         $factory->setParameter('interval', $this->getRequestParameter('interval'));
         $factory->setParameter('category', $this->getRequestParameter('category'));
@@ -1350,12 +1438,12 @@ class Controller
             'identifier' => $factory->getIdentifier(),
             'name' => $factory->getName(),
             'description' => $factory->getDescription(),
-            'data' => $factory->getData()
+            'data' => $factory->getData(),
         ];
         $result->variables = $factoryItem;
         return $result;
     }
-    
+
     public function loadFaqs()
     {
         $q = $this->getRequestParameter('q');
@@ -1371,7 +1459,7 @@ class Controller
         $parameters = [
             'limit' => $limit,
             'cursor' => $searchResults['current'],
-            'q' => $q
+            'q' => $q,
         ];
         $results = [
             'self' => $this->restController->getBaseUri() . "/faq?" . http_build_query($parameters),
@@ -1459,8 +1547,8 @@ class Controller
 
     public function getTypeByIdentifier()
     {
-        foreach ($this->repository->getPostTypeService()->loadPostTypes() as $type){
-            if ($this->restController->typeIdentifier == $type->identifier){
+        foreach ($this->repository->getPostTypeService()->loadPostTypes() as $type) {
+            if ($this->restController->typeIdentifier == $type->identifier) {
                 $result = new ezpRestMvcResult();
                 $result->variables = $type->jsonSerialize();
 
@@ -1474,7 +1562,7 @@ class Controller
     public function loadUserGroups()
     {
         $limit = (int)$this->getRequestParameter('limit');
-        if ($limit === 0){
+        if ($limit === 0) {
             $limit = 10;
         }
         $offset = (int)$this->getRequestParameter('offset');
@@ -1482,7 +1570,13 @@ class Controller
         $countUserGroups = \eZContentObjectTreeNode::subTreeCountByNodeID([
             'ClassFilterType' => 'array',
             'ClassFilterArray' => ['user_group'],
-            'AttributeFilter' => [['contentobject_id', '!=', $this->repository->getOperatorsRootNode()->attribute('contentobject_id')]],
+            'AttributeFilter' => [
+                [
+                    'contentobject_id',
+                    '!=',
+                    $this->repository->getOperatorsRootNode()->attribute('contentobject_id'),
+                ],
+            ],
         ], \eZINI::instance()->variable("UserSettings", "DefaultUserPlacement"));
 
         /** @var \eZContentObjectTreeNode[] $userGroups */
@@ -1492,11 +1586,17 @@ class Controller
             'LoadDataMap' => false,
             'Limit' => $limit,
             'Offset' => $offset,
-            'AttributeFilter' => [['contentobject_id', '!=', $this->repository->getOperatorsRootNode()->attribute('contentobject_id')]],
+            'AttributeFilter' => [
+                [
+                    'contentobject_id',
+                    '!=',
+                    $this->repository->getOperatorsRootNode()->attribute('contentobject_id'),
+                ],
+            ],
         ], \eZINI::instance()->variable("UserSettings", "DefaultUserPlacement"));
 
         $items = [];
-        foreach ($userGroups as $userGroup){
+        foreach ($userGroups as $userGroup) {
             $items[] = [
                 'id' => (int)$userGroup->attribute('contentobject_id'),
                 'name' => $userGroup->attribute('name'),
@@ -1504,7 +1604,7 @@ class Controller
         }
 
         $next = null;
-        if (($limit+$offset) < $countUserGroups){
+        if (($limit + $offset) < $countUserGroups) {
             $nextOffset = $offset + $limit;
             $next = $this->restController->getBaseUri() . "/user-groups?limit=$limit&offset=$nextOffset";
         }
@@ -1523,7 +1623,7 @@ class Controller
     public function getUserGroupById()
     {
         $groups = $this->repository->getMembersAvailableGroups();
-        if (isset($groups[(int)$this->restController->userGroupId])){
+        if (isset($groups[(int)$this->restController->userGroupId])) {
             $result = new ezpRestMvcResult();
             $result->variables = [
                 'id' => (int)$this->restController->userGroupId,
@@ -1541,7 +1641,7 @@ class Controller
         $id = $this->restController->postId;
         if (is_numeric($id)) {
             $post = $this->repository->getPostService()->loadPost($id);
-        }else {
+        } else {
             $post = $this->repository->getPostService()->loadPostByUuid($id);
         }
 
@@ -1594,10 +1694,10 @@ class Controller
         $postCreateStruct->description = $payload['description'];
 
         if (isset($payload['address']) && is_array($payload['address'])) {
-            if (isset($payload['address']['latitude']) && $payload['address']['latitude'] === '0E-15'){
+            if (isset($payload['address']['latitude']) && $payload['address']['latitude'] === '0E-15') {
                 $payload['address']['latitude'] = '0';
             }
-            if (isset($payload['address']['longitude']) && $payload['address']['longitude'] === '0E-15'){
+            if (isset($payload['address']['longitude']) && $payload['address']['longitude'] === '0E-15') {
                 $payload['address']['longitude'] = '0';
             }
             if (empty($payload['address']['address']) || empty($payload['address']['latitude']) || empty($payload['address']['longitude'])) {
@@ -1622,9 +1722,9 @@ class Controller
             $postCreateStruct->areas = (array)$payload['areas'];
         }
 
-        if (empty($postCreateStruct->areas) && $postCreateStruct->geoLocation instanceof GeoLocation){
+        if (empty($postCreateStruct->areas) && $postCreateStruct->geoLocation instanceof GeoLocation) {
             $area = $this->repository->getAreaService()->findAreaByGeoLocation($postCreateStruct->geoLocation);
-            if ($area instanceof Area){
+            if ($area instanceof Area) {
                 $postCreateStruct->areas = [(int)$area->id];
             }
         }
@@ -1633,25 +1733,25 @@ class Controller
             $postCreateStruct->categories = [(int)$payload['category']];
         }
 
-        if ($this->apiSettings->getRepository()->getSensorSettings()->get('HideTypeChoice')){
+        if ($this->apiSettings->getRepository()->getSensorSettings()->get('HideTypeChoice')) {
             $postCreateStruct->type = $this->repository->getPostTypeService()->loadPostTypes()[0]->identifier;
-        }elseif (isset($payload['type'])) {
+        } elseif (isset($payload['type'])) {
             $apiTypeMap = $this->apiSettings->getRepository()->getSensorSettings()->get('ApiTypeMap');
             $postCreateStruct->type = isset($apiTypeMap[$payload['type']]) ? $apiTypeMap[$payload['type']] : $payload['type'];
         }
 
-        if ($this->apiSettings->getRepository()->getSensorSettings()->get('HidePrivacyChoice')){
+        if ($this->apiSettings->getRepository()->getSensorSettings()->get('HidePrivacyChoice')) {
             $postCreateStruct->privacy = 'private';
-        }else {
+        } else {
             $postCreateStruct->privacy = isset($payload['is_private']) && $payload['is_private'] ? 'private' : 'public';
         }
 
         if (isset($payload['images'])) {
             $imagePaths = [];
             foreach ($payload['images'] as $index => $image) {
-                if ($image === '?'){
+                if ($image === '?') {
                     unset($payload['images'][$index]);
-                }elseif (!empty($image)) {
+                } elseif (!empty($image)) {
                     $this->isValidUpload($image);
                 }
             }
@@ -1663,8 +1763,7 @@ class Controller
             if (!empty($imagePaths)) {
                 $postCreateStruct->imagePaths = $imagePaths;
             }
-
-        }elseif (isset($payload['image'])) {
+        } elseif (isset($payload['image'])) {
             if (!empty($payload['image'])) {
                 $this->isValidUpload($payload['image']);
                 $postCreateStruct->imagePath = $this->downloadBinary($payload['image']);
@@ -1674,9 +1773,9 @@ class Controller
         if (isset($payload['files'])) {
             $filesPaths = [];
             foreach ($payload['files'] as $index => $file) {
-                if ($file === '?'){
+                if ($file === '?') {
                     unset($payload['files'][$index]);
-                }elseif (!empty($file)) {
+                } elseif (!empty($file)) {
                     $this->isValidUpload($file, 'files');
                 }
             }
@@ -1698,7 +1797,7 @@ class Controller
 
         if (isset($payload['author'])) {
             $postCreateStruct->author = $payload['author'];
-        }elseif (isset($payload['author_email'])) {
+        } elseif (isset($payload['author_email'])) {
             $postCreateStruct->author = $payload['author_email'];
         }
 
@@ -1724,25 +1823,28 @@ class Controller
 
     private function downloadBinary($image)
     {
-        if (filter_var($image, FILTER_VALIDATE_URL)){
+        if (filter_var($image, FILTER_VALIDATE_URL)) {
             $context = null;
-            $apiRequestHttpStreamContext = (array)\eZINI::instance('ocsensor.ini')->variable('SensorConfig', 'ApiRequestHttpStreamContext');
+            $apiRequestHttpStreamContext = (array)\eZINI::instance('ocsensor.ini')->variable(
+                'SensorConfig',
+                'ApiRequestHttpStreamContext'
+            );
             if (!empty($apiRequestHttpStreamContext)) {
                 $httpOpts = [];
-                foreach ($apiRequestHttpStreamContext as $key => $value){
+                foreach ($apiRequestHttpStreamContext as $key => $value) {
                     $httpOpts[$key] = $value;
                 }
                 $context = stream_context_create(['http' => $httpOpts]);
             }
             $imagePath = \eZSys::cacheDirectory() . '/' . basename($image);
             \eZFile::create(basename($imagePath), dirname($imagePath), file_get_contents($image, false, $context));
-        }else {
+        } else {
             /** @var \eZDFSFileHandler $fileHandler */
             $fileHandler = \eZClusterFileHandler::instance($image['file']);
-            if ($fileHandler->exists()){
+            if ($fileHandler->exists()) {
                 $fileHandler->fetch();
                 $imagePath = $image['file'];
-            }else {
+            } else {
                 $imagePath = \eZSys::cacheDirectory() . '/' . $image['filename'];
                 \eZFile::create(basename($imagePath), dirname($imagePath), base64_decode($image['file']));
             }
@@ -1754,7 +1856,7 @@ class Controller
     {
         /** @var \eZDFSFileHandler $fileHandler */
         $fileHandler = \eZClusterFileHandler::instance($filepath);
-        if ($fileHandler->exists()){
+        if ($fileHandler->exists()) {
             $fileHandler->delete();
             $fileHandler->purge();
         }
@@ -1768,7 +1870,7 @@ class Controller
             $this->restController->getRequest()->get
         );
 
-        if ($name == 'embed'){
+        if ($name == 'embed') {
             return isset($parameters['embed']) ? explode(',', $parameters['embed']) : [];
         }
 
@@ -1777,14 +1879,14 @@ class Controller
 
     private function hasRequestAcceptTypes($mediaType)
     {
-        if ($this->restController->getRequest()->accept instanceof \ezcMvcRequestAccept){
+        if ($this->restController->getRequest()->accept instanceof \ezcMvcRequestAccept) {
             return in_array($mediaType, $this->restController->getRequest()->accept->types);
         }
 
         return false;
     }
 
-    private function convertQueryInQueryParameters($query, $extraParameters = array())
+    private function convertQueryInQueryParameters($query, $extraParameters = [])
     {
         try {
             $queryBuilder = new QueryBuilder($this->repository->getPostApiClass());
@@ -1813,11 +1915,11 @@ class Controller
                     $data[$key] = is_array($convertedQuery[$key]) ? $convertedQuery[$key][0] : $convertedQuery[$key];
                 }
             }
-            if (isset($parameters['embed'])){
+            if (isset($parameters['embed'])) {
                 $data['embed'] = $parameters['embed'];
             }
 
-            foreach ($extraParameters as $key => $value){
+            foreach ($extraParameters as $key => $value) {
                 $data[$key] = $value;
             }
 
@@ -1831,7 +1933,6 @@ class Controller
     {
         if ($item->hasSentences()) {
             foreach ($item->getSentences() as $sentence) {
-
                 $value = $sentence->getValue();
 
                 if ($sentence instanceof Parameter) {
@@ -1840,7 +1941,7 @@ class Controller
                 } else {
                     $field = (string)$sentence->getField();
                     if (!isset($convertedQuery['filter'])) {
-                        $convertedQuery['filter'] = array();
+                        $convertedQuery['filter'] = [];
                     }
                     $convertedQuery['filter'][$field] = $this->recursiveTrim($value);
                 }
@@ -1856,7 +1957,7 @@ class Controller
     private function recursiveTrim($value)
     {
         if (is_array($value)) {
-            return array_map(array($this, 'recursiveTrim'), $value);
+            return array_map([$this, 'recursiveTrim'], $value);
         } else {
             return trim($value, "'");
         }

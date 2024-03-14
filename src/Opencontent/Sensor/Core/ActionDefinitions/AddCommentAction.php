@@ -31,6 +31,12 @@ class AddCommentAction extends ActionDefinition
         $parameter->isRequired = false;
         $parameter->type = 'integer';
         $this->parameterDefinitions[] = $parameter;
+
+        $parameter = new ActionDefinitionParameter();
+        $parameter->identifier = 'external_id';
+        $parameter->isRequired = false;
+        $parameter->type = 'string';
+        $this->parameterDefinitions[] = $parameter;
     }
 
     public function run(Repository $repository, Action $action, Post $post, User $user)
@@ -53,6 +59,7 @@ class AddCommentAction extends ActionDefinition
         $commentStruct->creator = $creator;
         $commentStruct->post = $post;
         $commentStruct->text = $text;
+        $commentStruct->externalId = $action->getParameterValue('external_id');
         if ($creator->moderationMode) {
             $commentStruct->needModeration = true;
         }

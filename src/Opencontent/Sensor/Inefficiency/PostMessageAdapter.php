@@ -47,6 +47,17 @@ class PostMessageAdapter
                 'id' => self::buildSchemaProperty(['type' => 'string', 'format' => 'uuid']),
                 'application' => self::buildSchemaProperty(['type' => 'string', 'format' => 'uuid']),
                 'message' => self::buildSchemaProperty(['type' => 'string']),
+                'attachments' => self::buildSchemaProperty([
+                    'type' => 'array',
+                    'items' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'id' => self::buildSchemaProperty(['type' => 'string', 'format' => 'uuid']),
+                            'original_name' => self::buildSchemaProperty(['type' => 'string']),
+                            'url' => self::buildSchemaProperty(['type' => 'string', 'format' => 'uri']),
+                        ],
+                    ],
+                ]),
             ],
         ]);
     }

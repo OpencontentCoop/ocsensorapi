@@ -39,6 +39,12 @@ class SendPrivateMessageAction extends ActionDefinition
         $parameter->isRequired = false;
         $parameter->type = 'boolean';
         $this->parameterDefinitions[] = $parameter;
+
+        $parameter = new ActionDefinitionParameter();
+        $parameter->identifier = 'external_id';
+        $parameter->isRequired = false;
+        $parameter->type = 'string';
+        $this->parameterDefinitions[] = $parameter;
     }
 
     public function run(Repository $repository, Action $action, Post $post, User $user)
@@ -68,6 +74,7 @@ class SendPrivateMessageAction extends ActionDefinition
         $messageStruct->text = $text;
         $messageStruct->receiverIdList = $receiverIdList;
         $messageStruct->isResponseProposal = $isResponseProposal;
+        $messageStruct->externalId = $action->getParameterValue('external_id');
 
         $repository->getMessageService()->createPrivateMessage($messageStruct);
         $post = $repository->getPostService()->refreshPost($post);

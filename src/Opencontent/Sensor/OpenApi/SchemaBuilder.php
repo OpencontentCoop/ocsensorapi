@@ -2037,33 +2037,10 @@ class SchemaBuilder
                     [
                         'description' => 'Get inefficiency application categories',
                         'tags' => [self::$tags['inefficiencies']],
-                        'parameters' => [
-                            new OA\Parameter('Accept-Language', OA\Parameter::IN_HEADER, 'Current Translation', [
-                                'schema' => $this->buildSchemaProperty([
-                                    'type' => 'string',
-                                    'default' => self::getLanguageList()[\eZContentObject::defaultLanguage()],
-                                    'enum' => array_values(self::getLanguageList())
-                                ]),
-                                'required' => false,
-                            ])
-                        ]
                     ]
                 ),
             ]),
         ];
-    }
-
-    public static function getLanguageList()
-    {
-        if (self::$languageList === null) {
-            self::$languageList = [];
-            $languages = \eZINI::instance()->variable('RegionalSettings', 'SiteLanguageList');
-            foreach ($languages as $language) {
-                self::$languageList[$language] = \eZLocale::instance($language)->HTTPLocaleCode;
-            }
-        }
-
-        return self::$languageList;
     }
 
 

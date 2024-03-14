@@ -26,6 +26,8 @@ class MessageStruct
 
     public $id;
 
+    public $externalId;
+
     public function getType()
     {
         $classNameWithNamespace = get_class($this);

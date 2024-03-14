@@ -33,6 +33,8 @@ use eZContentFunctions;
 
 class Listener extends AbstractListener
 {
+    const PENDING_RETRY_ACTION = 'inefficiency_retry';
+
     private $repository;
 
     private $postSerializer;
@@ -55,7 +57,7 @@ class Listener extends AbstractListener
     private $isRetryContext = false;
 
     private $defaultUserGroupName;
-    
+
     private $serviceIdentifier;
 
     public function __construct(\OpenPaSensorRepository $repository)
@@ -88,7 +90,10 @@ class Listener extends AbstractListener
         }
     }
 
-    protected function handleSensorEvent($sensorEvent)
+    /**
+     * @see InefficiencyRetryHandler::process()
+     */
+    public function handleSensorEvent(SensorEvent $sensorEvent): void
     {
         try {
             $this->post = $sensorEvent->post;
@@ -141,9 +146,9 @@ class Listener extends AbstractListener
     {
         $now = time();
         $action = new eZPendingActions([
-            'action' => 'inefficiency_retry',
+            'action' => self::PENDING_RETRY_ACTION,
             'created' => time(),
-            'param' => serialize($event),
+            'param' => \SQLIImportUtils::safeSerialize($event),
         ]);
         $action->store();
     }
@@ -230,11 +235,11 @@ class Listener extends AbstractListener
             $userGroup = $this->request(new CreateUserGroupWithName($this->defaultUserGroupName));
         }
 
-        $userProperties = $this->client->getCredential(Credential::OPERATOR, true)->getProperties();
+        $userProperties = $this->client->getCredential(Credential::API_USER, true)->getProperties();
         $userUuid = $userProperties['id'] ?? null;
         $this->request(
             new AssignApplication($this->remoteIdentifier, $userGroup['id'], $userUuid),
-            Credential::OPERATOR
+            Credential::API_USER
         );
     }
 
@@ -251,7 +256,7 @@ class Listener extends AbstractListener
             } catch (UserGroupByNameNotFound $e) {
                 $userGroup = $this->request(new CreateUserGroupWithName($ownerGroup->name));
             }
-            $this->request(new AssignApplication($this->remoteIdentifier, $userGroup['id']), Credential::OPERATOR);
+            $this->request(new AssignApplication($this->remoteIdentifier, $userGroup['id']), Credential::API_USER);
         } else {
             $this->repository->getLogger()->warning('Group not found', ['method' => __METHOD__]);
         }
@@ -262,10 +267,10 @@ class Listener extends AbstractListener
         if ($this->remoteIdentifier === null) {
             return;
         }
-        if ($comment->creator->id === $this->post->author->id){
+        if ($comment->creator->id === $this->post->author->id) {
             return;
         }
-        
+
         $messageStruct = $this->messageSerializer->serialize($this->post, $comment);
         try {
             $this->request(new GetApplicationMessageByText($messageStruct->message, $this->remoteIdentifier));
@@ -302,7 +307,7 @@ class Listener extends AbstractListener
         $lastResponse = $this->post->responses->last();
         $this->request(
             new AcceptApplication($this->remoteIdentifier, $lastResponse ? $lastResponse->text : null),
-            Credential::OPERATOR
+            Credential::API_USER
         );
     }
 }

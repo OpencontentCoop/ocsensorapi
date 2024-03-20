@@ -60,7 +60,7 @@ class PostAdapter
     private function adaptCategory($type)
     {
         if (is_numeric($type['value'])) {
-            return [$type['value']];
+            return $type['value'];
         }
         return [];
     }

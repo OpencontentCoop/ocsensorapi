@@ -234,6 +234,7 @@ class Listener extends AbstractListener
             $contentObject = eZContentObject::fetch($this->post->id);
             if ($contentObject instanceof eZContentObject) {
                 $contentObject->setAttribute('remote_id', $this->remoteIdentifier);
+                $contentObject->store();
                 $dataMap = $contentObject->dataMap();
                 if (isset($dataMap['meta'])) {
                     $dataMap['meta']->fromString(json_encode($meta));

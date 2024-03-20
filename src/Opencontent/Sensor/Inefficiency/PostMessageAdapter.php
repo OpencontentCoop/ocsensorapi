@@ -26,8 +26,15 @@ class PostMessageAdapter
         return new PostMessageAdapter($repository, $payload);
     }
 
+    /**
+     * @throw \RuntimeException
+     * @return bool
+     */
     public function isValidPayload(): bool
     {
+        if (isset($this->payload['external_id']) && !empty($this->payload['external_id'])){
+            throw new \RuntimeException('Avoid republish already pushed message');
+        }
         return
             isset($this->payload['related_entity_type'])
             && $this->payload['related_entity_type'] === 'application'

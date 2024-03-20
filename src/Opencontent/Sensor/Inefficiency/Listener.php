@@ -60,6 +60,17 @@ class Listener extends AbstractListener
 
     private $serviceIdentifier;
 
+    private $events = [
+        'on_create',
+        'on_approver_first_read',
+        'on_fix',
+        'on_group_assign',
+        'on_assign',
+        'on_create_comment',
+        'on_add_response',
+        'on_close',
+    ];
+
     public function __construct(\OpenPaSensorRepository $repository)
     {
         $this->repository = $repository;
@@ -86,20 +97,25 @@ class Listener extends AbstractListener
     public function handle(EventInterface $event, $param = null)
     {
         if ($param instanceof SensorEvent) {
-            $this->handleSensorEvent($param);
+            if (in_array($param->identifier, $this->events)) {
+                //$this->handleSensorEvent($param);
+                $this->addToQueue($param);
+                $this->runCommand();
+            }
         }
     }
 
     /**
      * @see InefficiencyRetryHandler::process()
      */
-    public function handleSensorEvent(SensorEvent $sensorEvent): void
+    public function handleSensorEvent(SensorEvent $sensorEvent): ?string
     {
+        $this->post = $sensorEvent->post;
+        $this->remoteIdentifier = $this->post->meta['application']['id']
+            ?? $this->post->meta['payload']['id']
+            ?? null;
+
         try {
-            $this->post = $sensorEvent->post;
-            $this->remoteIdentifier = $this->post->meta['application']['id']
-                ?? $this->post->meta['payload']['id']
-                ?? null;
             switch ($sensorEvent->identifier) {
                 case 'on_create':
                     $this->onCreate();
@@ -134,16 +150,35 @@ class Listener extends AbstractListener
                     //@todo
                     break;
             }
+
+            return "$sensorEvent->identifier $this->remoteIdentifier";
+
         } catch (\Throwable $e) {
             $this->repository->getLogger()->error($e->getMessage(), ['event' => $sensorEvent->identifier]);
             if ($e instanceof RequestException && $e->getResponse()->getStatusCode() >= 500) {
-                $this->addToRetryQueue($sensorEvent);
+                $this->addToQueue($sensorEvent);
             }
+            return "[ERROR] " . $e->getMessage() . ' ' . $this->remoteIdentifier;
         }
     }
 
-    private function addToRetryQueue(SensorEvent $event)
+    private function runCommand()
     {
+        $count = eZPendingActions::count(eZPendingActions::definition(), [
+            'action' => Listener::PENDING_RETRY_ACTION,
+        ]);
+        if ($count > 0) {
+            $command = 'php extension/sqliimport/bin/php/sqlidoimport.php -q -s'
+                . \eZSiteAccess::current()['name']
+                . ' --source-handlers=inefficiency_retry > /dev/null &';
+            $this->repository->getLogger()->debug('Run command ' . $command);
+            exec($command);
+        }
+    }
+
+    private function addToQueue(SensorEvent $event)
+    {
+        $this->repository->getLogger()->debug('Add event to queue ' . $event->identifier);
         $now = time();
         $action = new eZPendingActions([
             'action' => self::PENDING_RETRY_ACTION,

@@ -266,7 +266,17 @@ class Controller
     {
         $payload = $this->restController->getPayload();
         $inefficiency = PostMessageAdapter::instance($this->repository, (array)$payload);
-        if ($inefficiency->isValidPayload()) {
+
+        try {
+            $isValidPayload = $inefficiency->isValidPayload();
+        }catch (\RuntimeException $e){
+            header("HTTP/1.1 204 " . \ezpRestStatusResponse::$statusCodes[201]);
+            $result = new ezpRestMvcResult();
+            $result->variables = [];
+            return $result;
+        }
+
+        if ($isValidPayload) {
             $post = $this->repository->getPostService()->loadPostByUuid($payload['application']);
             if (!$post instanceof Post) {
                 throw new NotFoundException('post by uuid not found');

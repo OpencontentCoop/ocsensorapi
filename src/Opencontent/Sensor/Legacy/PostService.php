@@ -593,10 +593,9 @@ class PostService extends PostServiceBase
         $this->refreshCalls[$refreshContext][$post->id]++;
 
         $count = $this->refreshCalls['hard'][$post->id] + $this->refreshCalls['soft'][$post->id];
-        $message = '----> [' . $count . '] ';
-
-        $message .= $modifyTimestamp ? 'Hard refresh post #' . $post->id  : 'Refresh post #' . $post->id;
-        $this->repository->getLogger()->debug($message);
+//        $message = '----> [' . $count . '] ';
+//        $message .= $modifyTimestamp ? 'Hard refresh post #' . $post->id  : 'Refresh post #' . $post->id;
+//        $this->repository->getLogger()->debug($message);
 
         return $post;
     }
@@ -624,7 +623,7 @@ class PostService extends PostServiceBase
             eZContentObject::clearCache([$post->id]);
             \eZContentCacheManager::clearContentCacheIfNeeded($contentObject->attribute('id'));
             \eZSearch::addObject($contentObject, true);
-            $this->repository->getLogger()->debug('----> DO REFRESH POST');
+//            $this->repository->getLogger()->debug('----> DO REFRESH POST');
 //            $mapper = new SolrMapper($this->repository, $post);
 //            $mapper->updatePost();
 

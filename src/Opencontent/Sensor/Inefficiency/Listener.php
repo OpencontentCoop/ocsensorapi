@@ -230,6 +230,7 @@ class Listener extends AbstractListener
             $meta = $this->post->meta;
             $meta['application'] = $application;
             $meta['pingback_url'] = $this->client->getApiUri() . '/applications/' . $this->remoteIdentifier;
+            eZContentObject::clearCache();
             $contentObject = eZContentObject::fetch($this->post->id);
             if ($contentObject instanceof eZContentObject) {
                 $contentObject->setAttribute('remote_id', $this->remoteIdentifier);

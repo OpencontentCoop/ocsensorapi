@@ -330,7 +330,7 @@ class Controller
                     }
                 }
             }catch (DuplicateUuidException $e){
-                $message = $this->repository->getMessageService()->loadMessageFromExternalId($e->getUuid());
+                $message = []; //@todo $this->repository->getMessageService()->loadMessageFromExternalId($e->getUuid());
             }
 
             header("HTTP/1.1 201 " . \ezpRestStatusResponse::$statusCodes[201]);

@@ -21,7 +21,7 @@
   "license": "GPL-2.0",
   "minimum-stability": "dev",
   "autoload": {
-    "psr-0": {
+    "psr-4": {
       "Opencontent\\Sensor\\": "src/"
     }
   }

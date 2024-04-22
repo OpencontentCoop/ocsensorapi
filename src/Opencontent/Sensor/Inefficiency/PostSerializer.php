@@ -70,7 +70,7 @@ class PostSerializer
                 "lat" => $post->geoLocation->latitude,
                 "lon" => $post->geoLocation->longitude,
                 "display_name" => $addressDisplayName,
-                "address" => $address,
+                "address" => $address ?? $addressDisplayName,
             ];
         }
 

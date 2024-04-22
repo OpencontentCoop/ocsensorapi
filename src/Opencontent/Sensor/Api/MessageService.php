@@ -107,4 +107,5 @@ interface MessageService
 
     public function createAudit(Message\AuditStruct $struct);
 
+    public function loadMessageFromExternalId($externalId);
 }

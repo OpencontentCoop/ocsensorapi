@@ -536,4 +536,21 @@ class MessageService extends MessageServiceBase
         $post->responses = $this->loadResponseCollectionByPost($post);
         $post->audits = $this->loadAuditCollectionByPost($post);
     }
+
+    public function loadMessageFromExternalId($externalId)
+    {
+        $simpleMessage = eZCollaborationSimpleMessage::fetchObject(
+            eZCollaborationSimpleMessage::definition(), null,
+            [
+                'message_type' => $this->repository->getSensorCollaborationHandlerTypeString() . '_comment',
+                'data_text3' => $externalId,
+            ],
+            true
+        );
+        if ($simpleMessage instanceof eZCollaborationSimpleMessage){
+            return [];
+        }
+        
+        return new Message\Comment();
+    }
 }

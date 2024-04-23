@@ -2,7 +2,9 @@
 
 namespace Opencontent\Sensor\OpenApi;
 
+use GuzzleHttp\Exception\GuzzleException;
 use Opencontent\Sensor\Api\Action\Action;
+use Opencontent\Sensor\Api\Exception\BaseException;
 use Opencontent\Sensor\Api\Exception\DuplicateUuidException;
 use Opencontent\Sensor\Api\Exception\InvalidArgumentException;
 use Opencontent\Sensor\Api\Exception\InvalidInputException;
@@ -262,6 +264,13 @@ class Controller
         throw new NotAcceptableException('Can not handle application payload');
     }
 
+    /**
+     * @throws NotFoundException
+     * @throws \Throwable
+     * @throws GuzzleException
+     * @throws NotAcceptableException
+     * @throws BaseException
+     */
     public function createInefficiencyMessage()
     {
         $payload = $this->restController->getPayload();
@@ -270,7 +279,7 @@ class Controller
         try {
             $isValidPayload = $inefficiency->isValidPayload();
         }catch (\RuntimeException $e){
-            header("HTTP/1.1 204 " . \ezpRestStatusResponse::$statusCodes[201]);
+            header("HTTP/1.1 204 " . \ezpRestStatusResponse::$statusCodes[204]);
             $result = new ezpRestMvcResult();
             $result->variables = [];
             return $result;
@@ -319,11 +328,7 @@ class Controller
                 if ($this->repository instanceof \OpenPaSensorRepository) {
                     try {
                         ($this->repository->getInefficiencyClient())(
-                            new PatchApplicationMessageWithExternalId(
-                                $payload['application'],
-                                $payload['id'],
-                                $message->id
-                            )
+                            new PatchApplicationMessageWithExternalId($payload['application'], $payload['id'], $message->id)
                         );
                     } catch (FailPatchApplicationBinaryWithExternalId $e) {
                         $this->repository->getLogger()->error($e->getMessage());
@@ -339,7 +344,11 @@ class Controller
 
             return $result;
         }
-        throw new NotAcceptableException('Can not handle message payload');
+        header("HTTP/1.1 204 " . \ezpRestStatusResponse::$statusCodes[204]);
+        $result = new ezpRestMvcResult();
+        $result->variables = [];
+        return $result;
+        //throw new NotAcceptableException('Can not handle message payload');
     }
 
     public function loadInefficiencyCategories()

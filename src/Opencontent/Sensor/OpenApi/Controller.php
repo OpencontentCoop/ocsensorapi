@@ -112,7 +112,7 @@ class Controller
         $publishedFrom = $this->getRequestParameter('publishedFrom');
         $publishedTo = $this->getRequestParameter('publishedTo');
         $modifiedFrom = $this->getRequestParameter('modifiedFrom');
-        $$modifiedTo = $this->getRequestParameter('modifiedTo');
+        $modifiedTo = $this->getRequestParameter('modifiedTo');
 
         $parameters = [];
 

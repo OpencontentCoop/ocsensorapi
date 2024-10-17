@@ -69,10 +69,13 @@ class SchemaBuilder
      */
     public function build()
     {
-        $inefficiencyPaths = [];
+        self::$tags['inefficiencies'] = "Adapters";
+        $inefficiencyPaths = $this->buildInefficiencyPaths();
+        $loadInefficiencyPaths = [];
         if ($this->isInefficiencyAdapterEnabled){
-            self::$tags['inefficiencies'] = "Adapters";
-            $inefficiencyPaths = $this->buildInefficiencyPaths();
+            $loadInefficiencyPaths = $inefficiencyPaths;
+        } else {
+            $loadInefficiencyPaths['/inefficiency/categories'] = $inefficiencyPaths['/inefficiency/categories'];
         }
 
         $security = [
@@ -95,7 +98,7 @@ class SchemaBuilder
                 $this->buildAreaPaths(),
                 $this->buildStatisticPaths(),
                 $this->buildFaqPaths(),
-                $inefficiencyPaths
+                $loadInefficiencyPaths
             ),
             '3.0.1',
             [
@@ -2325,8 +2328,8 @@ class SchemaBuilder
             $components->requestBodies['InefficiencyApplicationMessage'] = new OA\RequestBody(['application/json' => new OA\MediaType([
                 'schema' => new OA\Reference('#/components/schemas/InefficiencyApplicationMessage')
             ])], 'Inefficiency application message', true);
-            $components->schemas['InefficiencyCategories'] = CategoryAdapter::buildCategorySchema();
         }
+        $components->schemas['InefficiencyCategories'] = CategoryAdapter::buildCategorySchema();
         ksort($components->schemas);
         ksort($components->requestBodies);
 

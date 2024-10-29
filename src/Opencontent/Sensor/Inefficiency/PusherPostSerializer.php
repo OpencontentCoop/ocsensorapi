@@ -7,6 +7,11 @@ use Opencontent\Stanzadelcittadino\Client\Request\Struct\User;
 
 class PusherPostSerializer extends PostSerializer
 {
+    public function __construct($severityMap = [])
+    {
+        parent::__construct($severityMap);
+    }
+
     public function serialize(
         Post $post,
         User $userStruct,

@@ -88,12 +88,14 @@ class PostHandler
     {
         $this->post = $post;
 
-        $this->postSerializer = new PostSerializer();
+        $this->repository = OpenPaSensorRepository::instance();
+        $this->postSerializer = new PostSerializer(
+            $this->repository->getSensorSettings()->get('Inefficiency')->severity_map ?? []
+        );
         $this->binarySerializer = new BinarySerializer();
         $this->userSerializer = new UserSerializer();
         $this->messageSerializer = new MessageSerializer();
 
-        $this->repository = OpenPaSensorRepository::instance();
         $this->logger = $logger ?? new NullLogger();
         $this->client = $client ?? $this->repository->getInefficiencyClient();
 

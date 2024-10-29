@@ -23,7 +23,7 @@ class BinarySerializer
             'original_filename' => $file->fileName ?? $file->filename,
             'size' => $file->size,
             'protocol_required' => false,
-            'mime_type' => $file->mimeType,
+            'mime_type' => $fileHandler->dataType(),
             'path' => $fileHandler->filePath
         ];
         

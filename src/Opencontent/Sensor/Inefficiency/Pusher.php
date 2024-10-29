@@ -70,7 +70,7 @@ class Pusher extends AbstractLogger
         return $client;
     }
 
-    public function run()
+    public function run($callable = null)
     {
         $objects = $this->fetch();
         $objectsCount = count($objects);
@@ -107,7 +107,17 @@ class Pusher extends AbstractLogger
         foreach ($objects as $object) {
             try {
                 $this->current = $this->repository->getPostService()->loadPost((int)$object['id']);
-                $this->push($this->current, $clientSettings);
+                if (!$this->options['dry-run']) {
+                    if (is_callable($callable)) {
+                        call_user_func($callable, $this->current, $clientSettings);
+                    } else {
+                        $this->push($this->current, $clientSettings);
+                    }
+                } else {
+                    if ($this->options['verbose']) {
+                        $this->info($this->current->id);
+                    }
+                }
             } catch (Throwable $e) {
                 $this->notify('Error on post ' . $object['id'] . ': ' . $e->getMessage());
                 $this->error($e->getMessage());
@@ -178,7 +188,7 @@ class Pusher extends AbstractLogger
                 'status' => eZContentObject::STATUS_PUBLISHED,
             ];
 
-            if ($this->options['only-closed']) {
+            if (!$this->options['only-closed']) {
                 $objects = eZPersistentObject::fetchObjectList(
                     eZContentObject::definition(),
                     ['id', 'published'],
@@ -229,14 +239,18 @@ class Pusher extends AbstractLogger
      */
     private function push(Post $post, $clientSettings)
     {
+        if ($this->options['force']){
+            unset($post->meta['application']['id']);
+        }
+
         if (isset($post->meta['application']['id'])) {
             $this->storeStatusChange($post, $post->meta['application']['id']);
             return;
         }
 
         $handler = new PostHandler($post, $this->instanceClient($clientSettings), $this);
-        $handler->setPostSerializer(new PusherPostSerializer());
-        if (!$this->options['prod']) {
+        $handler->setPostSerializer(new PusherPostSerializer($clientSettings->severity_map));
+        if ($this->options['env'] && $this->options['env'] === 'dev') {
             $handler->setUserSerializer(new PusherUserSerializer());
         }
 

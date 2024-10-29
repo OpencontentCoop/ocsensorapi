@@ -42,6 +42,11 @@ class PostAdapter
 
     public function isValidPayload(): bool
     {
+        $this->repository->getLogger()->info('Validate inefficiency payload', [
+            'id' => $this->payload['id'] ?? '',
+            'service' => $this->payload['service'] ?? '',
+            'tenant' => $this->payload['tenant'] ?? '',
+        ]);
         return
             isset($this->payload['service'])
             && $this->payload['service'] === $this->serviceSlug

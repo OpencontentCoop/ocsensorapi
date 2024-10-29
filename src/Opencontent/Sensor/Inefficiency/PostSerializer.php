@@ -7,6 +7,16 @@ use Opencontent\Stanzadelcittadino\Client\Request\Struct\User;
 
 class PostSerializer
 {
+    /**
+     * @var array
+     */
+    private $severityMap;
+
+    public function __construct($severityMap = [])
+    {
+        $this->severityMap = $severityMap;
+    }
+    
     public function serialize(
         Post $post,
         User $userStruct,
@@ -15,6 +25,9 @@ class PostSerializer
         array $files = [],
         string $serviceId = "inefficiencies"
     ): array {
+
+        $subject = sprintf('Segnalazione disservizio di %s: %s', $post->author->name, $post->subject);
+
         $extraData = [
             'submitted_at' => $post->published->format('c'),
             'modified_at' => $post->modified->format('c'),
@@ -26,6 +39,7 @@ class PostSerializer
             "status" => 1900,
             'created_at' => $post->published->format('c'),
             "data" => [
+                "application_subject" => $subject,
                 "applicant" => [
                     "data" => [
                         "email_address" => $userStruct->email,
@@ -44,13 +58,30 @@ class PostSerializer
                         "person_identifier" => $userStruct->codice_fiscale,
                     ],
                 ],
-                "type" => count($post->categories) > 0 ? $post->categories[0]->id : null,
+                "type" => null,
+                "severity" => null,
                 "details" => $post->description,
                 "subject" => $post->subject,
                 "meta" => $extraData,
                 "sequential_id" => $post->id,
             ],
         ];
+
+        if (is_array($this->severityMap)){
+            foreach ($this->severityMap as $severity => $value){
+                if ($value === $post->type->identifier){
+                    $data['severity'] = $severity;
+                    break;
+                }
+            }
+        }
+
+        if (count($post->categories)){
+            $data["data"]["type"] = [
+                "label" => $post->categories[0]->name,
+                "value" => $post->categories[0]->id,
+            ];
+        }
 
         $data["data"]["images"] = $images;
         $data["data"]["docs"] = $files;

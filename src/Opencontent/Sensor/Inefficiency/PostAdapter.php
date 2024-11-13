@@ -88,7 +88,7 @@ class PostAdapter
         }
         $adapted['category'] = $this->adaptCategory($data['type'] ?? null);
         $adapted['type'] = $this->adaptType($data['severity'] ?? null);
-        $adapted['is_private'] = true;
+        $adapted['is_private'] = !$this->repository->isModerationEnabled();
         $links = $this->payload['links'];
         $firstLink = array_shift($links);
         $findPingbackUrl = explode($this->payload['id'], $firstLink['url'] ?? '');

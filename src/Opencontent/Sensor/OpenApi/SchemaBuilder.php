@@ -2040,6 +2040,11 @@ class SchemaBuilder
                     [
                         'description' => 'Get inefficiency application categories',
                         'tags' => [self::$tags['inefficiencies']],
+                        'parameters' => [
+                            new OA\Parameter('area', OA\Parameter::IN_QUERY, 'Filter categories by area id', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true]),
+                            ])
+                        ]
                     ]
                 ),
             ]),

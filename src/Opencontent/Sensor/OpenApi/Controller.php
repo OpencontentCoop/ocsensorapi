@@ -354,7 +354,9 @@ class Controller
     public function loadInefficiencyCategories()
     {
         $result = new ezpRestMvcResult();
-        $result->variables = CategoryAdapter::instance($this->repository)->getCategories();
+        $result->variables = CategoryAdapter::instance($this->repository)->getCategories(
+            $this->getRequestParameter('area')
+        );
         $result->cache = new \ezcMvcResultCache();
         $result->cache->controls = ['public', 'max-age=60', 's-maxage=600'];
         $result->cache->pragma = 'cache';

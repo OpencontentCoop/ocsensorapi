@@ -281,6 +281,10 @@ class PostHandler
             $userGroup = $this->request(new CreateUserGroupWithName($groupName));
         }
 
+        if ($this->application['user_group_id'] === $userGroup['id']){
+            return;
+        }
+
         $this->request(
             new AssignApplication(
                 $this->application['id'],
@@ -314,5 +318,10 @@ class PostHandler
     private function request(RequestHandlerInterface $requestHandler, ?string $as = null)
     {
         return ($this->client)($requestHandler, $as);
+    }
+
+    public function getClient(): HttpClient
+    {
+        return $this->client;
     }
 }

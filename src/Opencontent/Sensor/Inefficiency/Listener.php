@@ -7,6 +7,7 @@ use GuzzleHttp\Exception\RequestException;
 use League\Event\AbstractListener;
 use League\Event\EventInterface;
 use Opencontent\Sensor\Api\Values\Event as SensorEvent;
+use Opencontent\Sensor\Api\Values\Message\AuditStruct;
 use Opencontent\Sensor\Api\Values\Participant;
 use eZPendingActions;
 use OpenPaSensorRepository;
@@ -67,7 +68,7 @@ class Listener extends AbstractListener
     /**
      * @see InefficiencyRetryHandler::process()
      */
-    public function handleSensorEvent(SensorEvent $sensorEvent): ?string
+    public function handleSensorEvent(SensorEvent $sensorEvent): void
     {
         $post = $sensorEvent->post;
         $handler = new PostHandler($post);
@@ -75,20 +76,29 @@ class Listener extends AbstractListener
             ?? $post->meta['payload']['id']
             ?? null;
 
+        $auditAction = null;
         try {
             switch ($sensorEvent->identifier) {
                 case 'on_create':
                     if ($remoteIdentifier === null) {
+                        $auditAction = 'Creazione pratica';
                         $handler->assertExistApplication();
-                        $handler->assignToDefaultGroup();
                         $remoteIdentifier = $handler->getApplicationId();
+                        $this->addAudit($handler, $post, $remoteIdentifier, "Creata pratica");
+
+                        $auditAction = 'Assegnazione pratica';
+                        $handler->assignToDefaultGroup();
+                        $this->addAudit($handler, $post, $remoteIdentifier, "Assegnata pratica al gruppo di default");
+
                     }
                     break;
 
                 case 'on_approver_first_read':
                 case 'on_fix':
                     if ($remoteIdentifier !== null) {
+                        $auditAction = 'Assegnazione pratica';
                         $handler->assignToDefaultGroup();
+                        $this->addAudit($handler, $post, $remoteIdentifier, "Assegnata pratica al gruppo di default");
                     }
                     break;
 
@@ -98,7 +108,9 @@ class Listener extends AbstractListener
                         /** @var Participant $ownerGroup */
                         $ownerGroup = $post->owners->getParticipantsByType(Participant::TYPE_GROUP)->first();
                         if ($ownerGroup) {
+                            $auditAction = 'Assegnazione pratica';
                             $handler->assignToGroup($ownerGroup->name);
+                            $this->addAudit($handler, $post, $remoteIdentifier, "Assegnata pratica al gruppo $ownerGroup->name");
                         } else {
                             $this->repository->getLogger()->warning('Group not found', ['method' => __METHOD__]);
                         }
@@ -107,19 +119,25 @@ class Listener extends AbstractListener
 
                 case 'on_create_comment':
                     if ($remoteIdentifier !== null) {
+                        $auditAction = 'Creazione commento';
                         $handler->addMessage($sensorEvent->parameters['message']);
+                        $this->addAudit($handler, $post, $remoteIdentifier, "Creato commento alla pratica");
                     }
                     break;
 
                 case 'on_add_response':
                     if ($remoteIdentifier !== null) {
+                        $auditAction = 'Creazione commento';
                         $handler->addMessage($post->responses->last());
+                        $this->addAudit($handler, $post, $remoteIdentifier, "Creato commento alla pratica");
                     }
                     break;
 
                 case 'on_close':
                     if ($remoteIdentifier !== null) {
+                        $auditAction = 'Accettazione pratica';
                         $handler->accept();
+                        $this->addAudit($handler, $post, $remoteIdentifier, "Pratica impostata come accettata");
                     }
                     break;
 
@@ -131,14 +149,36 @@ class Listener extends AbstractListener
                     break;
             }
 
-            return "$sensorEvent->identifier $post->id $remoteIdentifier";
         } catch (Throwable $e) {
             $this->repository->getLogger()->error($e->getMessage(), ['event' => $sensorEvent->identifier]);
             if ($e instanceof RequestException && $e->getResponse()->getStatusCode() >= 500) {
+                $this->addAudit($handler, $post, $remoteIdentifier, 'Sistema remoto non disponibile, attività schedulata per il retry');
                 $this->addToQueue($sensorEvent);
+            }else {
+                $error = $e->getMessage();
+                if ($e instanceof RequestException) {
+                    $error = 'Response code: ' . $e->getResponse()->getStatusCode() . ' Response: ' . $e->getResponse()->getBody();
+                }
+                $this->addAudit($handler, $post, $remoteIdentifier, "Errore eseguendo l'attività $auditAction: $error");
+                throw new PostHandlerException();
             }
-            return "[ERROR] " . $e->getMessage() . ' ' . $remoteIdentifier;
         }
+    }
+
+    private function addAudit($handler, $post, $remoteIdentifier, $auditMessage)
+    {
+        $remoteUrl = $handler->getClient()->getBaseUri();
+        if ($remoteIdentifier){
+            $remoteUrl .= "/operatori/$remoteIdentifier/detail";
+        }
+        $auditStruct = new AuditStruct();
+        $auditStruct->createdDateTime = new \DateTime();
+        $auditStruct->creator = $this->repository->getUserService()->loadUser(
+            \eZINI::instance()->variable("UserSettings", "UserCreatorID")
+        );
+        $auditStruct->post = $post;
+        $auditStruct->text = "[$remoteUrl] $auditMessage";
+        $this->repository->getMessageService()->createAudit($auditStruct);
     }
 
     private function runCommand()

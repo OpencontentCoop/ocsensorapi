@@ -85,12 +85,10 @@ class Listener extends AbstractListener
                         $handler->assertExistApplication();
                         $remoteIdentifier = $handler->getApplicationId();
                         $this->addAudit($handler, $post, $remoteIdentifier, "Creata pratica");
-
-                        $auditAction = 'Assegnazione pratica';
-                        $handler->assignToDefaultGroup();
-                        $this->addAudit($handler, $post, $remoteIdentifier, "Assegnata pratica al gruppo di default");
-
                     }
+                    $auditAction = 'Assegnazione pratica';
+                    $handler->assignToDefaultGroup();
+                    $this->addAudit($handler, $post, $remoteIdentifier, "Assegnata pratica al gruppo di default");
                     break;
 
                 case 'on_approver_first_read':

@@ -355,7 +355,8 @@ class Controller
     {
         $result = new ezpRestMvcResult();
         $result->variables = CategoryAdapter::instance($this->repository)->getCategories(
-            $this->getRequestParameter('area')
+            $this->getRequestParameter('area'),
+            $this->getRequestParameter('parent')
         );
         $result->cache = new \ezcMvcResultCache();
         $result->cache->controls = ['public', 'max-age=60', 's-maxage=600'];

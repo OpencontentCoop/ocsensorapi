@@ -2043,6 +2043,9 @@ class SchemaBuilder
                         'parameters' => [
                             new OA\Parameter('area', OA\Parameter::IN_QUERY, 'Filter categories by area id', [
                                 'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true]),
+                            ]),
+                            new OA\Parameter('parent', OA\Parameter::IN_QUERY, 'Filter categories by parent id', [
+                                'schema' => $this->buildSchemaProperty(['type' => 'string', 'nullable' => true]),
                             ])
                         ]
                     ]

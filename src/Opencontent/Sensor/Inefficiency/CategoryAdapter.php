@@ -41,6 +41,7 @@ class CategoryAdapter
             'properties' => [
                 'value' => self::buildSchemaProperty(['type' => 'string']),
                 'label' => self::buildSchemaProperty(['type' => 'string']),
+                'parent' => self::buildSchemaProperty(['type' => 'string']),
             ],
         ];
 

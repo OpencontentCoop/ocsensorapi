@@ -192,7 +192,7 @@ class PostAdapter
                     foreach ($userClass->dataMap() as $attribute) {
                         if ($attribute->attribute('data_type_string') == OCCodiceFiscaleType::DATA_TYPE_STRING) {
                             $userObject = $this->fetchObjectByFiscalCode($attribute, $fiscalCode);
-                            if ($userObject instanceof eZContentObject) {
+                            if ($userObject instanceof \eZContentObject) {
                                 $user = eZUser::fetch($userObject->attribute('id'));
                                 if ($user instanceof eZUser) {
                                     return $user->id();
@@ -250,6 +250,8 @@ class PostAdapter
             'title' => 'InefficiencyApplication',
             'type' => 'object',
             'properties' => [
+                'tenant' => self::buildSchemaProperty(['type' => 'string', 'format' => 'uuid', 'required' => true]),
+                'service' => self::buildSchemaProperty(['type' => 'string', 'format' => 'uuid', 'required' => true]),
                 'id' => self::buildSchemaProperty(['type' => 'string', 'format' => 'uuid']),
                 'user' => self::buildSchemaProperty(['type' => 'string', 'format' => 'uuid']),
                 'data' => self::buildSchemaProperty([
@@ -260,7 +262,6 @@ class PostAdapter
                         'applicant' => self::buildSchemaProperty([
                             'type' => 'object',
                             'properties' => [
-                                'email_address' => self::buildSchemaProperty(['type' => 'string']),
                                 'email_address' => self::buildSchemaProperty(['type' => 'string']),
                                 'completename' => self::buildSchemaProperty([
                                     'type' => 'object',

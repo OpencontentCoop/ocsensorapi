@@ -337,6 +337,31 @@ class SearchService extends BaseSearchService
                     }
                     $post->areas = $slimAreas;
                     $searchResults->searchHits[] = $post;
+                } else {
+                    \eZDebug::writeError('Storage field not found for post ' . $resultItem['id'], __METHOD__ . '(fallback)');
+                    $id = (int)$resultItem['id'];
+                    try {
+                        $post = $this->repository->getPostService()->loadPost($id);
+                        if ($parameters['capabilities']) {
+                            $post->capabilities = $this->repository->getPermissionService()->loadCurrentUserPostPermissionCollection($post)->getArrayCopy();
+                        }
+                        if ($parameters['executionTimes']) {
+                            $post->executionTimes = [];
+                        }
+                        if ($parameters['readingStatuses']) {
+                            $post->readingStatuses = [];
+                        }
+                        $post->commentsToModerate = $post->comments->commentsToModerate();
+                        $slimAreas = [];
+                        foreach ($post->areas as $area) {
+                            $area->geoBounding = null;
+                            $slimAreas[] = $area;
+                        }
+                        $post->areas = $slimAreas;
+                        $searchResults->searchHits[] = $post;
+                    }catch (\Exception $e){
+                        \eZDebug::writeError($e->getMessage(), __METHOD__ . '(fallback)');
+                    }
                 }
             } catch (\Exception $e) {
                 \eZDebug::writeError($e->getMessage(), __METHOD__);

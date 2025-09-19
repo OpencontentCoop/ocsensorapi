@@ -18,6 +18,8 @@ class Listener extends AbstractListener
 {
     const PENDING_RETRY_ACTION = 'inefficiency_retry';
 
+    const USE_BATCH = true;
+
     private $repository;
 
     private $events = [
@@ -29,6 +31,8 @@ class Listener extends AbstractListener
         'on_create_comment',
         'on_add_response',
         'on_close',
+        'on_add_attachment',
+        'on_reopen',
     ];
 
     public function __construct(OpenPaSensorRepository $repository)
@@ -54,8 +58,12 @@ class Listener extends AbstractListener
                     $this->repository->getLogger()->info(
                         sprintf('Enqueue %s post %s to inefficiency', $param->identifier, $param->post->id)
                     );
-                    $this->addToQueue($param);
-                    $this->runCommand();
+                    if (self::USE_BATCH) {
+                        $this->addToQueue($param);
+                        $this->runCommand();
+                    } else {
+                        $this->handleSensorEvent($param);
+                    }
                 } else {
                     $this->repository->getLogger()->info(
                         sprintf('Push %s post %s not necessary', $param->identifier, $param->post->id)
@@ -140,6 +148,44 @@ class Listener extends AbstractListener
                     break;
 
                 case 'on_add_attachment':
+                    if ($remoteIdentifier !== null) {
+                        $filename = $sensorEvent->parameters['files'][0];
+                        $files = $sensorEvent->post->attachments;
+                        $fileInfo = null;
+                        foreach ($files as $file) {
+                            $attachmentName = $file->filename ?? $file->fileName;
+                            if ($attachmentName === $filename) {
+                                $fileInfo = $this->getFileInfoFromApiUrl($file->apiUrl);
+                                break;
+                            }
+                        }
+                        if ($fileInfo) {
+                            $auditAction = 'Creazione allegato operatore';
+                            $comment = new \Opencontent\Sensor\Api\Values\Message\Comment();
+                            $comment->published = new \DateTime();
+                            $comment->text = $comment->richText = 'Si allega il file ' . $fileInfo['original_filename'];
+                            $comment->creator = $this->repository->getUserService()->loadUser(\eZUser::currentUserID());
+                            $handler->addMessage($comment, $fileInfo);
+                            $this->addAudit(
+                                $handler,
+                                $post,
+                                $remoteIdentifier,
+                                "Creato commento con allegato"
+                            );
+                        } else {
+                            throw new \Exception('Informazioni sul file non trovate');
+                        }
+                    }
+                    break;
+
+                case 'on_reopen':
+                    if ($remoteIdentifier !== null) {
+                        $auditAction = 'Riapertura pratica';
+                        $handler->reopen();
+                        $this->addAudit($handler, $post, $remoteIdentifier, "Pratica riaperta");
+                    }
+                    break;
+
                 case 'on_remove_attachment':
                 case 'on_edit_comment':
                 case 'on_edit_response':
@@ -161,6 +207,28 @@ class Listener extends AbstractListener
                 throw new PostHandlerException();
             }
         }
+    }
+
+    private function getFileInfoFromApiUrl($apiUrl): ?array
+    {
+        $fileInfo = null;
+        $parts = explode('api/sensor/file/', $apiUrl);
+        $parts = explode('/', $parts[1]);
+        [$id, $version, $language] = explode('-', $parts[0], 3);
+        $filename = $parts[1] ?? null;
+        $attribute = \eZContentObjectAttribute::fetch($id, $version, $language);
+        if ($attribute instanceof \eZContentObjectAttribute) {
+            if ($attribute->attribute('data_type_string') == \OCMultiBinaryType::DATA_TYPE_STRING) {
+                $fileInfo = \OCMultiBinaryType::storedSingleFileInformation($attribute, base64_decode($filename));
+            } else {
+                $fileInfo = $attribute->storedFileInformation(
+                    $attribute->object(),
+                    $attribute->object()->attribute('current_version'),
+                    $attribute->attribute('language_code')
+                );
+            }
+        }
+        return $fileInfo;
     }
 
     private function addAudit($handler, $post, $remoteIdentifier, $auditMessage)

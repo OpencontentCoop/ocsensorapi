@@ -22,6 +22,7 @@ use Opencontent\Stanzadelcittadino\Client\Request\GetApplicationByUuid;
 use Opencontent\Stanzadelcittadino\Client\Request\GetApplicationMessageByText;
 use Opencontent\Stanzadelcittadino\Client\Request\GetUserByFiscalCode;
 use Opencontent\Stanzadelcittadino\Client\Request\GetUserGroupByName;
+use Opencontent\Stanzadelcittadino\Client\Request\ReopenApplication;
 use Opencontent\Stanzadelcittadino\Client\Request\Struct\User as UserStruct;
 use Opencontent\Stanzadelcittadino\Client\RequestHandlerInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -225,16 +226,32 @@ class PostHandler
     /**
      * @throws FailBinaryCreate|Throwable
      */
-    public function addMessage($message)
+    public function addMessage($message, ?array $fileInfo = null)
     {
         if (!$message instanceof Response && !$message instanceof Comment) {
             return;
         }
 
-        if ($message instanceof Comment && $message->creator->id === $this->post->author->id) {
-            return;
-        }
+//        if ($message instanceof Comment && $message->creator->id === $this->post->author->id) {
+//            return;
+//        }
+
         $messageStruct = $this->messageSerializer->serialize($this->post, $message);
+
+        if ($fileInfo !== null) {
+            $fileHandler = \eZClusterFileHandler::instance($fileInfo['filepath']);
+            if (!$fileHandler->exists()){
+                throw new \RuntimeException(sprintf("File path %s not found", $fileInfo['filepath']));
+            }
+            $messageStruct->attachments[] = [
+                'name' => $fileInfo['original_filename'],
+                'original_filename' => $fileInfo['original_filename'],
+                'file' => base64_encode($fileHandler->fetchContents()),
+                'mime_type' => $fileHandler->dataType(),
+                'protocol_required' => false,
+            ];
+        }
+
         $this->assertExistApplication();
 
         try {
@@ -258,6 +275,15 @@ class PostHandler
         $lastResponse = $this->post->responses->last();
         $this->request(
             new AcceptApplication($this->application['id'], $lastResponse ? $lastResponse->text : null),
+            Credential::API_USER
+        );
+    }
+
+    public function reopen()
+    {
+        $this->assertExistApplication();
+        $this->request(
+            new ReopenApplication($this->application['id']),
             Credential::API_USER
         );
     }

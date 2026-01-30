@@ -179,11 +179,11 @@ class Listener extends AbstractListener
                     break;
 
                 case 'on_reopen':
-                    if ($remoteIdentifier !== null) {
-                        $auditAction = 'Riapertura pratica';
-                        $handler->reopen();
-                        $this->addAudit($handler, $post, $remoteIdentifier, "Pratica riaperta");
-                    }
+//                    if ($remoteIdentifier !== null) {
+//                        $auditAction = 'Riapertura pratica';
+//                        $handler->reopen();
+//                        $this->addAudit($handler, $post, $remoteIdentifier, "Pratica riaperta");
+//                    }
                     break;
 
                 case 'on_remove_attachment':

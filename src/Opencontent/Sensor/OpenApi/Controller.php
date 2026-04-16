@@ -1867,9 +1867,14 @@ class Controller
                 $fileHandler->fetch();
                 $imagePath = $image['file'];
             } else {
-                $imagePath = \eZSys::cacheDirectory() . '/' . $image['filename'];
+                $tempDirectory = \eZSys::varDirectory() . '/fileupload/' . $this->repository->getCurrentUser()->id;
+                $imagePath = $tempDirectory . '/' . $image['filename'];
                 \eZFile::create(basename($imagePath), dirname($imagePath), base64_decode($image['file']));
             }
+        }
+        $mime = \eZMimeType::findByURL($imagePath);
+        if ($mime['name'] === 'image/heic') {
+            $imagePath = \SensorBinaryUploadHandler::convertHeicImage($imagePath);
         }
         return $imagePath;
     }

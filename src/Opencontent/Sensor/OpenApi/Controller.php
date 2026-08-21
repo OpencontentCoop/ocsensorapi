@@ -1722,14 +1722,23 @@ class Controller
             if (isset($payload['address']['longitude']) && $payload['address']['longitude'] === '0E-15') {
                 $payload['address']['longitude'] = '0';
             }
-            if (empty($payload['address']['address']) || empty($payload['address']['latitude']) || empty($payload['address']['longitude'])) {
-                throw new InvalidInputException("Field address has wrong format");
+            if (empty($payload['address']['latitude']) && empty($payload['address']['longitude'])) {
+                if ($this->isGeolocationFieldRequired()) {
+                    throw new InvalidInputException("Field address is required");
+                }
+            } else {
+                if (empty($payload['address']['address'])) {
+                    $payload['address']['address'] = '-';
+                }
+                if (empty($payload['address']['latitude']) || empty($payload['address']['longitude'])) {
+                    throw new InvalidInputException("Field address has wrong format (latitude or longitude is empty)");
+                }
+                $geoLocation = new GeoLocation();
+                $geoLocation->address = $payload['address']['address'];
+                $geoLocation->latitude = $payload['address']['latitude'];
+                $geoLocation->longitude = $payload['address']['longitude'];
+                $postCreateStruct->geoLocation = $geoLocation;
             }
-            $geoLocation = new GeoLocation();
-            $geoLocation->address = $payload['address']['address'];
-            $geoLocation->latitude = $payload['address']['latitude'];
-            $geoLocation->longitude = $payload['address']['longitude'];
-            $postCreateStruct->geoLocation = $geoLocation;
         } elseif ($this->isGeolocationFieldRequired()) {
             throw new InvalidInputException("Field address is required");
         }
